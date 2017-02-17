@@ -9,8 +9,18 @@
 import XCTest
 @testable import Sudoku__
 
-class Sudoku__Tests: XCTestCase {
-    
+private let puzzle = [0, 0, 0, 0, 0, 0, 0, 0, 0,
+              9, 0, 0, 0, 0, 0, 0, 8, 4,
+              0, 6, 2, 3, 0, 0, 0, 5, 0,
+              0, 0, 0, 6, 0, 0, 0, 4, 5,
+              3, 0, 0, 0, 1, 0, 0, 0, 6,
+              0, 0, 0, 9, 0, 0, 0, 7, 0,
+              0, 0, 0, 1, 0, 0, 0, 0, 0,
+              4, 0, 5, 0, 0, 2, 0, 0, 0,
+              0, 3, 0, 8, 0, 0, 0, 0, 9]
+
+class Sudoku__Tests: XCTestCase
+{
     override func setUp() {
         super.setUp()
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -21,16 +31,50 @@ class Sudoku__Tests: XCTestCase {
         super.tearDown()
     }
     
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
+    func testPerformanceCCreate()
+    {
         self.measure {
-            // Put the code you want to measure the time of here.
+            for _ in 0 ..< 10000 {
+                let b = generatePuzzleWithOrder(3, MCPuzzleDifficultyZero)
+                destroyContext(b)
+            }
         }
     }
     
+    func testGenerate()
+    {
+        self.measure {
+            for _ in 0 ..< 1 {
+                let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .insane)
+                XCTAssertNotNil(board)
+//                NSLog("\(board?.description ?? "")")
+            }
+        }
+    }
+    
+    func testSolve()
+    {
+        self.measure {
+            for _ in 0 ..< 100 {
+                let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
+                for (index, cell) in board.board.enumerated() {
+                    cell.number = puzzle[index]
+                    cell.isGiven = puzzle[index] != 0
+                }
+                XCTAssertTrue(board.solve())
+            }
+        }
+    }
+    
+    func testSolveC()
+    {
+        let board = generatePuzzleWithOrder(3, MCPuzzleDifficultyInsane)!
+        for _ in 0 ..< 100 {
+            let b = generatePuzzleWithOrder(3, MCPuzzleDifficultyZero)!
+            for i in 0 ..< Int(b.pointee.cellCount) { b.pointee.problem[i] = board.pointee.problem[i] }
+            XCTAssertTrue(solveContext(b) != 0)
+            XCTAssertEqual(b.pointee.difficulty, board.pointee.difficulty)
+            XCTAssertEqual(b.pointee.difficultyScore, board.pointee.difficultyScore)
+        }
+    }
 }
