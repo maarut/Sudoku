@@ -38,6 +38,16 @@
                ReferencedContainer = "container:Sudoku++.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "E36C68531E5E427B00F0FFE9"
+               BuildableName = "SudokuEngineTests.xctest"
+               BlueprintName = "SudokuEngineTests"
+               ReferencedContainer = "container:Sudoku++.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference

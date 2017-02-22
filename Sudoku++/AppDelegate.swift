@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SudokuEngine
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate
@@ -14,9 +15,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate
 
     var window: UIWindow?
     
+    override convenience init()
+    {
+        self.init(withWindow: UIWindow.buildWindow())
+    }
+    
+    init(withWindow window: UIWindow)
+    {
+        super.init()
+        self.window = window
+    }
+    
     func application(_ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool
     {
+        let rootVC = MainViewController(nibName: nil, bundle: nil)
+        window!.rootViewController = rootVC
+        window!.makeKeyAndVisible()
+        
         return true
     }
 

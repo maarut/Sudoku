@@ -7,10 +7,19 @@
 //
 
 import Foundation
+import MCSudokuEngine
 
 // MARK: - PuzzleDifficulty Enum
 enum PuzzleDifficulty: Int
 {
+    case blank
+    case noSolution
+    case multipleSolutions
+    case easy
+    case normal
+    case hard
+    case insane
+    
     fileprivate init(difficulty: MCPuzzleDifficulty) {
         switch difficulty {
         case MCPuzzleDifficultyEasy:    self = .easy
@@ -39,14 +48,6 @@ enum PuzzleDifficulty: Int
         default:                                return false
         }
     }
-    
-    case blank
-    case noSolution
-    case multipleSolutions
-    case easy
-    case normal
-    case hard
-    case insane
 }
 
 // MARK: - Cell Implementation
@@ -90,17 +91,11 @@ class SudokuBoard: NSCoding
  
     var isSolved: Bool {
         get {
-            if hasSolution {
-                for cell in board {
-                    if cell.number != cell.solution { return false }
-                }
-                return true
-            }
-            return false
+            return hasUniqueSolution && !board.contains(where: { $0.number != $0.solution })
         }
     }
     
-    var hasSolution: Bool { get { return difficulty.isSolvable() } }
+    var hasUniqueSolution: Bool { get { return difficulty.isSolvable() } }
     
     public var solutionDescription: String {
         get {
@@ -133,21 +128,17 @@ class SudokuBoard: NSCoding
     {
         var context = generatePuzzleWithOrder(CUnsignedInt(order), MCPuzzleDifficultyZero)!
         defer { destroyContext(context) }
-        for i in 0 ..< board.count {
-            context.pointee.problem[i] = CUnsignedInt(board[i].number ?? 0)
-        }
+        for (i, cell) in board.enumerated() { context.pointee.problem[i] = CUnsignedInt(cell.number ?? 0) }
         if solveContext(context) == 0 {
-            for i in 0 ..< board.count {
-                context.pointee.problem[i] = board[i].isGiven ? CUnsignedInt(board[i].number ?? 0) : 0
+            for (i, cell) in board.enumerated() {
+                context.pointee.problem[i] = cell.isGiven ? CUnsignedInt(cell.number ?? 0) : 0
             }
             if solveContext(context) == 0 {
                 difficulty = context.pointee.solutionCount > 0 ? .multipleSolutions : .noSolution
                 return false
             }
         }
-        for i in 0 ..< board.count {
-            board[i].solution = Int(context.pointee.solution[i])
-        }
+        for (i, cell) in board.enumerated() { cell.solution = Int(context.pointee.solution[i]) }
         difficulty = PuzzleDifficulty(difficulty: context.pointee.difficulty)
         difficultyScore = Int(context.pointee.difficultyScore)
         return true
@@ -157,11 +148,7 @@ class SudokuBoard: NSCoding
     {
         let allPencilMarks = Set(1 ... dimensionality)
         
-        board.forEach { cell in
-            if cell.number == nil {
-                cell.pencilMarks = allPencilMarks
-            }
-        }
+        board.forEach { if $0.number == nil { $0.pencilMarks = allPencilMarks } }
         board.forEach { cell in
             if let number = cell.number {
                 cell.neighbours.forEach { $0.pencilMarks.remove(number) }
@@ -174,18 +161,25 @@ class SudokuBoard: NSCoding
         board.forEach { $0.pencilMarks.removeAll() }
     }
     
+    func setPuzzle()
+    {
+        guard difficulty == .blank else { return }
+        board.forEach { $0.isGiven = $0.number != nil }
+        let _ = solve()
+    }
+    
     // MARK: - Lifecycle
     fileprivate convenience init?(withPuzzle puzzle : MCSudokuSolveContext)
     {
         self.init(withOrder: Int(puzzle.order), dimensionality: Int(puzzle.dimensionality))
         difficulty = PuzzleDifficulty(difficulty: puzzle.difficulty)
         difficultyScore = Int(puzzle.difficultyScore)
-        for i in 0 ..< board.count {
+        for (i, cell) in board.enumerated() {
             let number = Int(puzzle.problem[i])
             let solution = Int(puzzle.solution[i])
-            board[i].number = number == 0 ? nil : number
-            board[i].solution = solution == 0 ? nil : solution
-            board[i].isGiven = number != 0
+            cell.number = number == 0 ? nil : number
+            cell.solution = solution == 0 ? nil : solution
+            cell.isGiven = number != 0
         }
     }
     
@@ -203,9 +197,9 @@ class SudokuBoard: NSCoding
         difficulty = PuzzleDifficulty(difficulty: context.pointee.difficulty)
         difficultyScore = Int(context.pointee.difficultyScore)
         for _ in 0 ..< context.pointee.cellCount { board.append(Cell()) }
-        for i in 0 ..< board.count {
+        for (i, cell) in board.enumerated() {
             for j in 0 ..< Int(context.pointee.neighbourCount) {
-                board[i].neighbours.append(board[Int(context.pointee.neighbourMap[i]![j])])
+                cell.neighbours.append(board[Int(context.pointee.neighbourMap[i]![j])])
             }
         }
     }

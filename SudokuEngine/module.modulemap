@@ -1,0 +1,4 @@
+module MCSudokuEngine {
+    header "MCSudokuEngine.h"
+    export *
+}
