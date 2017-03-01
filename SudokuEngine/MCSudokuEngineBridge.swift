@@ -7,10 +7,10 @@
 //
 
 import Foundation
-import MCSudokuEngine
+import SudokuEngineC
 
 // MARK: - PuzzleDifficulty Enum
-enum PuzzleDifficulty: Int
+public enum PuzzleDifficulty: Int
 {
     case blank
     case noSolution
@@ -41,7 +41,7 @@ enum PuzzleDifficulty: Int
         }
     }
     
-    func isSolvable() -> Bool
+    public func isSolvable() -> Bool
     {
         switch self {
         case .easy, .normal, .hard, .insane:    return true
@@ -51,13 +51,13 @@ enum PuzzleDifficulty: Int
 }
 
 // MARK: - Cell Implementation
-class Cell: NSCoding
+public class Cell: NSCoding
 {
-    var number: Int?
-    var solution: Int?
-    var pencilMarks = Set<Int>()
-    var neighbours = [Cell]()
-    var isGiven = false
+    public var number: Int?
+    internal (set) public var solution: Int?
+    public var pencilMarks = Set<Int>()
+    internal (set) public var neighbours = [Cell]()
+    internal (set) public var isGiven = false
     
     public init() { }
     
@@ -81,21 +81,19 @@ class Cell: NSCoding
 }
 
 // MARK: - SudokuBoard Implementation
-class SudokuBoard: NSCoding
+public class SudokuBoard: NSCoding
 {
-    let order: Int
-    let dimensionality: Int
-    var board = [Cell]()
-    var difficulty = PuzzleDifficulty.blank
-    var difficultyScore = 0
+    public let order: Int
+    public let dimensionality: Int
+    private (set) public var board = [Cell]()
+    private (set) public var difficulty = PuzzleDifficulty.blank
+    private (set) public var difficultyScore = 0
  
-    var isSolved: Bool {
+    public var isSolved: Bool {
         get {
-            return hasUniqueSolution && !board.contains(where: { $0.number != $0.solution })
+            return difficulty.isSolvable() && !board.contains(where: { $0.number != $0.solution } )
         }
     }
-    
-    var hasUniqueSolution: Bool { get { return difficulty.isSolvable() } }
     
     public var solutionDescription: String {
         get {
@@ -111,7 +109,7 @@ class SudokuBoard: NSCoding
     }
     
     // MARK: - Class Functions
-    static func generatePuzzle(ofOrder order: Int, difficulty: PuzzleDifficulty) -> SudokuBoard?
+    public class func generatePuzzle(ofOrder order: Int, difficulty: PuzzleDifficulty) -> SudokuBoard?
     {
         if [.multipleSolutions, .noSolution].contains(difficulty) { return nil }
         let cOrder = CUnsignedInt(order)
@@ -124,7 +122,7 @@ class SudokuBoard: NSCoding
     }
     
     // MARK: - Public Functions
-    func solve() -> Bool
+    public func solve() -> Bool
     {
         var context = generatePuzzleWithOrder(CUnsignedInt(order), MCPuzzleDifficultyZero)!
         defer { destroyContext(context) }
@@ -144,7 +142,7 @@ class SudokuBoard: NSCoding
         return true
     }
     
-    func markupBoard()
+    public func markupBoard()
     {
         let allPencilMarks = Set(1 ... dimensionality)
         
@@ -156,12 +154,12 @@ class SudokuBoard: NSCoding
         }
     }
     
-    func unmarkBoard()
+    public func unmarkBoard()
     {
         board.forEach { $0.pencilMarks.removeAll() }
     }
     
-    func setPuzzle()
+    public func setPuzzle()
     {
         guard difficulty == .blank else { return }
         board.forEach { $0.isGiven = $0.number != nil }

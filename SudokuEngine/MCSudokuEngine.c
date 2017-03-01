@@ -13,7 +13,7 @@
 #include <string.h>
 #include <limits.h>
 
-#pragma mark Static Variables and Typedefs
+#pragma mark Typedefs
 
 // This shouldn't really be a type, but it sits in MCSudokuSolveContext.opaque.
 typedef struct _MCSudokuSolveContextStopSolve {
@@ -573,6 +573,16 @@ static void destroyTrial(MCSudokuSolveContext *trial)
     free(trial->opaque);
 }
 
+static void stopGuessing(MCSudokuSolveContext trials[], uint trialCount)
+{
+    for (int i = 0; i < trialCount; i++) {
+        MCSudokuSolveContextStopSolve *stopSolve = trials[i].opaque;
+        dispatch_semaphore_wait(stopSolve->lock, DISPATCH_TIME_FOREVER);
+        stopSolve->stopSolve = 1;
+        dispatch_semaphore_signal(stopSolve->lock);
+    }
+}
+
 static void solveContextRecursive(MCSudokuSolveContext *context);
 static void makeGuess(MCSudokuSolveContext *context)
 {
@@ -589,44 +599,40 @@ static void makeGuess(MCSudokuSolveContext *context)
         }
         j++;
     }
-    dispatch_semaphore_t semaphore = dispatch_semaphore_create(1);
+    dispatch_semaphore_t solutionsLock = dispatch_semaphore_create(1);
     __block int solutions = 0;
     dispatch_apply(trialCount, dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^(size_t i) {
         MCSudokuSolveContext *trial = &trials[i];
         solveContextRecursive(trial);
         if (trial->solutionCount == 0) { return; }
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        dispatch_semaphore_wait(solutionsLock, DISPATCH_TIME_FOREVER);
         solutions += trial->solutionCount;
         memcpy(context->solution, trial->solution, sizeof(uint) * context->cellCount);
-        if (solutions > 1) {
-            for (int j = 0; j < trialCount; j++) {
-                MCSudokuSolveContextStopSolve *stopSolve = trials[j].opaque;
-                dispatch_semaphore_wait(stopSolve->lock, DISPATCH_TIME_FOREVER);
-                stopSolve->stopSolve = 1;
-                dispatch_semaphore_signal(stopSolve->lock);
-            }
-        }
+        if (solutions > 1) { stopGuessing(trials, trialCount); }
         else { context->difficultyScore = trial->difficultyScore + 100; }
-        dispatch_semaphore_signal(semaphore);
+        dispatch_semaphore_signal(solutionsLock);
         
     });
     context->solutionCount = solutions;
-    dispatch_release(semaphore);
+    dispatch_release(solutionsLock);
     for (uint i = 0; i < trialCount; i++) { destroyTrial(&trials[i]); }
     free(trials);
 }
 
 #pragma mark Main Solve Functions
 
+static int shouldStopSolve(MCSudokuSolveContext *context)
+{
+    MCSudokuSolveContextStopSolve *stopSolve = context->opaque;
+    dispatch_semaphore_wait(stopSolve->lock, DISPATCH_TIME_FOREVER);
+    int shouldStop = stopSolve->stopSolve;
+    dispatch_semaphore_signal(stopSolve->lock);
+    return shouldStop;
+}
+
 static void solveContextRecursive(MCSudokuSolveContext *context)
 {
-    {
-        MCSudokuSolveContextStopSolve *stopSolve = context->opaque;
-        dispatch_semaphore_wait(stopSolve->lock, DISPATCH_TIME_FOREVER);
-        char shouldStop = stopSolve->stopSolve;
-        dispatch_semaphore_signal(stopSolve->lock);
-        if (shouldStop) { return; }
-    }
+    if (shouldStopSolve(context)) { return; }
     if (isSolved(context) && valid(context)) {
         if (context->solutionCount == 0) {
             memcpy(context->solution, context->board, sizeof(uint) * context->cellCount);

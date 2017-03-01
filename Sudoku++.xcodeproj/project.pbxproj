@@ -16,6 +16,8 @@
 		E36C68591E5E427B00F0FFE9 /* SudokuEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */; };
 		E36C685F1E5E42B300F0FFE9 /* Sudoku++Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68561E5E427B00F0FFE9 /* Sudoku++Tests.swift */; };
 		E36C68601E5E42B800F0FFE9 /* SudokuEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD866C1E452AA500C8B780 /* SudokuEngineTests.swift */; };
+		E36C68811E609F6600F0FFE9 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68801E609F6600F0FFE9 /* CellView.swift */; };
+		E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */; };
 		E39FC0B01E58BED200C7AC10 /* UIWindow+Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */; };
 		E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD86571E452AA500C8B780 /* AppDelegate.swift */; };
 		E3FD865A1E452AA500C8B780 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD86591E452AA500C8B780 /* MainViewController.swift */; };
@@ -72,6 +74,8 @@
 		E36C68541E5E427B00F0FFE9 /* SudokuEngineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SudokuEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E36C68561E5E427B00F0FFE9 /* Sudoku++Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sudoku++Tests.swift"; sourceTree = "<group>"; };
 		E36C68581E5E427B00F0FFE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E36C68801E609F6600F0FFE9 /* CellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CellView.swift; path = "Sudoku++/CellView.swift"; sourceTree = "<group>"; };
+		E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+Convenience.swift"; sourceTree = "<group>"; };
 		E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIWindow+Builder.swift"; sourceTree = "<group>"; };
 		E3FD86541E452AA500C8B780 /* Sudoku++.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sudoku++.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3FD86571E452AA500C8B780 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -140,10 +144,20 @@
 			path = SudokuEngineTests;
 			sourceTree = "<group>";
 		};
+		E36C687F1E609F3E00F0FFE9 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E36C68801E609F6600F0FFE9 /* CellView.swift */,
+			);
+			name = Views;
+			path = ..;
+			sourceTree = "<group>";
+		};
 		E39FC0B11E58F5C100C7AC10 /* util */ = {
 			isa = PBXGroup;
 			children = (
 				E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */,
+				E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */,
 			);
 			name = util;
 			sourceTree = "<group>";
@@ -181,6 +195,7 @@
 		E3FD86561E452AA500C8B780 /* Sudoku++ */ = {
 			isa = PBXGroup;
 			children = (
+				E36C687F1E609F3E00F0FFE9 /* Views */,
 				E39FC0B21E58F5CD00C7AC10 /* View Controllers */,
 				E39FC0B11E58F5C100C7AC10 /* util */,
 				E3FD86571E452AA500C8B780 /* AppDelegate.swift */,
@@ -399,8 +414,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				E3FD865A1E452AA500C8B780 /* MainViewController.swift in Sources */,
+				E36C68811E609F6600F0FFE9 /* CellView.swift in Sources */,
 				E39FC0B01E58BED200C7AC10 /* UIWindow+Builder.swift in Sources */,
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
+				E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -678,6 +695,7 @@
 				E36C682D1E5E2F9E00F0FFE9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E36C685C1E5E427B00F0FFE9 /* Build configuration list for PBXNativeTarget "SudokuEngineTests" */ = {
 			isa = XCConfigurationList;
@@ -686,6 +704,7 @@
 				E36C685E1E5E427B00F0FFE9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		E3FD864F1E452AA500C8B780 /* Build configuration list for PBXProject "Sudoku++" */ = {
 			isa = XCConfigurationList;

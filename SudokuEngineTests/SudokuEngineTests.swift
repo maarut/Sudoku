@@ -82,13 +82,13 @@ class SudokuEngineTests: XCTestCase
     func testSudokuBoardHasSolution()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .easy)!
-        XCTAssertTrue(board.hasUniqueSolution)
+        XCTAssertTrue(board.difficulty.isSolvable())
     }
     
     func testBlankSudokuBoardHasNoSolution()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
-        XCTAssertFalse(board.hasUniqueSolution)
+        XCTAssertFalse(board.difficulty.isSolvable())
     }
     
     func testFilledSetBlankSudokuBoardHasSolution()
@@ -98,7 +98,7 @@ class SudokuEngineTests: XCTestCase
             cell.number = puzzle[i]
         }
         board.setPuzzle()
-        XCTAssertTrue(board.hasUniqueSolution)
+        XCTAssertTrue(board.difficulty.isSolvable())
     }
     
     func testFilledUnsetBlankSudokuBoardHasSolution()
@@ -107,7 +107,7 @@ class SudokuEngineTests: XCTestCase
         for (i, cell) in board.board.enumerated() {
             cell.number = puzzle[i]
         }
-        XCTAssertFalse(board.hasUniqueSolution)
+        XCTAssertFalse(board.difficulty.isSolvable())
     }
     
     func testMarkupBoard()

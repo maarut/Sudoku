@@ -1,4 +1,4 @@
-module MCSudokuEngine {
+module SudokuEngineC {
     header "MCSudokuEngine.h"
     export *
 }
