@@ -21,16 +21,13 @@ class CellView: UIView
  
     
     // MARK: - Lifecycle
-    init(frame: CGRect, order: Int, cellColour: UIColor)
+    init(frame: CGRect, order: Int, pencilMarkTitles: [String], cellColour: UIColor)
     {
         self.order = order
-        let pmWidth = frame.width / CGFloat(order)
-        pencilMarks = (1 ... order * order).map {
-            let text = $0 < 10 ? "\($0)" : "\(Character(UnicodeScalar($0 + 55)!))"
-            let pencilMarkFrame = CGRect(x: 0, y: 0, width: pmWidth, height: pmWidth)
+        pencilMarks = pencilMarkTitles.map {
+            let pencilMarkFrame = CGRect.zero
             let l = UILabel(frame: pencilMarkFrame)
-            l.text = text
-            l.font = UIFont.systemFont(ofSize: pmWidth * 0.75)
+            l.text = $0
             l.textAlignment = .center
             l.isHidden = true
             return l
@@ -48,10 +45,8 @@ class CellView: UIView
         v.addSubview(number)
         super.init(frame: frame)
         addSubview(v)
-        for (i, pm) in pencilMarks.enumerated() {
-            let x = CGFloat(i % order) * pmWidth
-            let y = CGFloat(i / order) * pmWidth
-            let view = UIView(frame: CGRect(x: x, y: y, width: pmWidth, height: pmWidth))
+        for pm in pencilMarks {
+            let view = UIView()
             view.addSubview(pm)
             addSubview(view)
         }
@@ -60,7 +55,7 @@ class CellView: UIView
     
     convenience override init(frame: CGRect)
     {
-        self.init(frame: frame, order: 0, cellColour: UIColor.lightGray)
+        self.init(frame: frame, order: 0, pencilMarkTitles: [], cellColour: UIColor.white)
     }
     
     required init?(coder aDecoder: NSCoder)
@@ -153,14 +148,14 @@ fileprivate extension CellView
     {
         view.isHidden = false
         view.layer.opacity = 0.0
-        view.layer.transform = CATransform3DMakeScale(0.9, 0.9, 1.0)
+        view.layer.transform = CATransform3DMakeScale(0.5, 0.5, 1.0)
         let animation = CASpringAnimation(keyPath: "transform.scale")
-        animation.fromValue = 0.9
+        animation.fromValue = 0.5
         animation.toValue = 1.0
         animation.stiffness = 100
         animation.damping = 10
-        animation.initialVelocity = -100
-        animation.duration = animation.settlingDuration + 0.3
+        animation.initialVelocity = -20
+        animation.duration = animation.settlingDuration + 0.1
         let opacityAnimation = CABasicAnimation(keyPath: "opacity")
         opacityAnimation.fromValue = 0.0
         opacityAnimation.toValue = 1.0
@@ -191,21 +186,5 @@ fileprivate extension CellView
         view.layer.add(animation, forKey: "bounce")
         view.layer.transform = CATransform3DMakeScale(2.0, 2.0, 1.0)
         view.layer.opacity = 0.0
-    }
-}
-
-// MARK: - HideAnimationDelegate Implementation
-private class PrivateAnimationDelegate: NSObject, CAAnimationDelegate
-{
-    var f: (() -> Void)?
-    
-    init(completionHandler f: (() -> Void)?)
-    {
-        self.f = f
-    }
-    
-    func animationDidStop(_ anim: CAAnimation, finished flag: Bool)
-    {
-        f?()
     }
 }
