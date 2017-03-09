@@ -11,9 +11,9 @@ import UIKit
 class PrivateAnimationDelegate: NSObject, CAAnimationDelegate
 {
     var start: (() -> Void)?
-    var end: (() -> Void)?
+    var end: ((Bool) -> Void)?
     
-    init(startHandler: (() -> Void)? = nil, completionHandler: (() -> Void)? = nil)
+    init(startHandler: (() -> Void)? = nil, completionHandler: ((Bool) -> Void)? = nil)
     {
         start = startHandler
         end = completionHandler
@@ -25,6 +25,6 @@ class PrivateAnimationDelegate: NSObject, CAAnimationDelegate
     
     func animationDidStop(_ anim: CAAnimation, finished flag: Bool)
     {
-        end?()
+        end?(flag)
     }
 }

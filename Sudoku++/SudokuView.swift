@@ -12,6 +12,9 @@ private let π: CGFloat = CGFloat(M_PI)
 private let BOX_SPACING: CGFloat = 0.02
 private let CELL_SPACING: CGFloat = 0.01
 
+private typealias Degree = UInt32
+
+// MARK: - SudokuView Implementation
 class SudokuView: UIView
 {
     private var cells: [CellView]
@@ -19,16 +22,15 @@ class SudokuView: UIView
     private let dimensionality: Int
     private var animator: UIDynamicAnimator!
     
+    // MARK: - Lifecycle
     init(frame: CGRect, order: Int, pencilMarkTitles: [String])
     {
-        let correctedFrame = CGRect(origin: frame.origin, size: CGSize(width: frame.width, height: frame.width))
         self.order = order
         dimensionality = order * order
         cells = (0 ..< dimensionality * dimensionality).map { _ in
-            CellView(frame: CGRect.zero, order: order, pencilMarkTitles: pencilMarkTitles,
-                cellColour: UIColor.lightGray)
+            CellView(frame: CGRect.zero, order: order, pencilMarkTitles: pencilMarkTitles)
         }
-        super.init(frame: correctedFrame)
+        super.init(frame: frame)
         for c in cells { addSubview(c) }
         animator = UIDynamicAnimator(referenceView: self)
     }
@@ -54,11 +56,11 @@ class SudokuView: UIView
         aCoder.encode(order, forKey: "order")
     }
     
+    // MARK: - Overriden Functions
     override func layoutSubviews()
     {
-        var correctedFrame = frame
-        correctedFrame.size.height = correctedFrame.width
-        frame = correctedFrame
+        super.layoutSubviews()
+        frame.size.height = frame.size.width
         let dimensionality = order * order
         let boxSpacing = frame.width * BOX_SPACING
         let cellSpacing = frame.width * CELL_SPACING
@@ -77,6 +79,7 @@ class SudokuView: UIView
         }
     }
     
+    // MARK: - Internal Functions
     func cellAt(row: Int, column: Int) -> CellView
     {
         return cells[row * dimensionality + column]
@@ -92,7 +95,7 @@ class SudokuView: UIView
             cell.layer.opacity = 0.0
             addSubview(snapshot)
             let push = UIPushBehavior(items: [snapshot], mode: .instantaneous)
-            let angle = (arc4random() % 90).radianValue + 5.0 / 4.0 * π
+            let angle = Degree(arc4random() % 90).radianValue + 1.25 * π
             push.setAngle(angle, magnitude: 0.5)
             push.setTargetOffsetFromCenter(generateOffset(for: snapshot), for: snapshot)
             animator.addBehavior(push)
@@ -103,15 +106,16 @@ class SudokuView: UIView
             animation.beginTime = CACurrentMediaTime() + 1.0
             animation.duration = 1.0
             animation.delegate = PrivateAnimationDelegate(
-                startHandler: { snapshot.layer.opacity = 0.0 },
-                completionHandler: {
+                startHandler: { [weak snapshot] in snapshot?.layer.opacity = 0.0 },
+                completionHandler: { _ in
                     self.animator.removeBehavior(push)
                     snapshot.removeFromSuperview()
                     let animation = CABasicAnimation(keyPath: "opacity")
                     animation.fromValue = 0.0
                     animation.toValue = 1.0
                     animation.beginTime = CACurrentMediaTime() + 0.5
-                    animation.delegate = PrivateAnimationDelegate(startHandler: { cell.layer.opacity = 1.0 })
+                    animation.delegate = PrivateAnimationDelegate(
+                        startHandler: { [weak cell] in cell?.layer.opacity = 1.0 })
                     cell.layer.add(animation, forKey: "opacity")
             })
             snapshot.layer.add(animation, forKey: "opacity")
@@ -120,6 +124,7 @@ class SudokuView: UIView
     }
 }
 
+// MARK: - Private Functions
 fileprivate extension SudokuView
 {
     func generateOffset(for view: UIView) -> UIOffset
@@ -130,7 +135,8 @@ fileprivate extension SudokuView
     }
 }
 
-fileprivate extension UInt32
+
+fileprivate extension Degree
 {
     var radianValue: CGFloat { return π * CGFloat(self) / 180.0 }
 }

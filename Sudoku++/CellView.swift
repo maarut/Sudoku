@@ -12,16 +12,19 @@ import QuartzCore
 // MARK: - CellView Implementation
 class CellView: UIView
 {
-    var cellColour: UIColor
+    var cellColour: UIColor = UIColor(hexValue: 0xF0F0DC) {
+        didSet {
+            backgroundColor = cellColour
+        }
+    }
     
     private let order: Int
-    private var pencilMarks: [UILabel]
+    private let pencilMarks: [UILabel]
     private weak var number: UILabel!
     private var isHighlighted = false
- 
-    
+
     // MARK: - Lifecycle
-    init(frame: CGRect, order: Int, pencilMarkTitles: [String], cellColour: UIColor)
+    init(frame: CGRect, order: Int, pencilMarkTitles: [String])
     {
         self.order = order
         pencilMarks = pencilMarkTitles.map {
@@ -41,7 +44,6 @@ class CellView: UIView
         number.text = ""
         number.isHidden = true
         self.number = number
-        self.cellColour = cellColour
         v.addSubview(number)
         super.init(frame: frame)
         addSubview(v)
@@ -55,7 +57,7 @@ class CellView: UIView
     
     convenience override init(frame: CGRect)
     {
-        self.init(frame: frame, order: 0, pencilMarkTitles: [], cellColour: UIColor.white)
+        self.init(frame: frame, order: 0, pencilMarkTitles: [])
     }
     
     required init?(coder aDecoder: NSCoder)
@@ -64,11 +66,6 @@ class CellView: UIView
         pencilMarks = aDecoder.decodeObject(forKey: "pencilMarks") as! [UILabel]
         cellColour = aDecoder.decodeObject(forKey: "cellColour") as! UIColor
         super.init(coder: aDecoder)
-    }
-    
-    deinit
-    {
-        pencilMarks = []
     }
     
     // MARK: - Overrides
@@ -82,7 +79,8 @@ class CellView: UIView
     
     override func layoutSubviews()
     {
-        let frame = CGRect(x: 0, y: 0, width: self.frame.width, height: self.frame.height)
+        super.layoutSubviews()
+        let frame = CGRect(origin: CGPoint.zero, size: self.frame.size)
         number.superview?.frame = frame
         number.frame = frame
         number.font = number.font.withSize(self.frame.width * 0.75)
@@ -125,13 +123,13 @@ class CellView: UIView
     {
         guard position < pencilMarks.count else { return }
         let mark = pencilMarks[position]
-        mark.isHidden ? show(view: mark) : hide(view: mark, completionHandler: { mark.isHidden = true } )
+        mark.isHidden ? show(view: mark) : hide(view: mark, completionHandler: { _ in mark.isHidden = true } )
     }
     
     func setNumber(number: String)
     {
         if number.isEmpty {
-            hide(view: self.number) { self.number.text = number }
+            hide(view: self.number) { _ in self.number.text = number }
         }
         else {
             for (i, pm) in pencilMarks.enumerated() { if !pm.isHidden { toggleVisibilityOfPencilMark(inPosition: i) } }
@@ -166,7 +164,7 @@ fileprivate extension CellView
         view.layer.transform = CATransform3DIdentity
     }
     
-    func hide(view: UIView, completionHandler f: (() -> Void)? = nil)
+    func hide(view: UIView, completionHandler f: ((Bool) -> Void)? = nil)
     {
         view.layer.transform = CATransform3DIdentity
         view.layer.removeAllAnimations()
