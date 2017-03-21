@@ -30,7 +30,7 @@ class MainViewController: UIViewController
     weak var undoButton: UIButton!
     weak var setPuzzleButton: UIButton!
     weak var settingsButton: UIButton!
-    weak var clearCellButton: UIButton!
+    weak var clearCellButton: HighlightableButton!
     
     fileprivate var currentState = MainScreenState.begin
     
@@ -59,10 +59,15 @@ class MainViewController: UIViewController
         let settingsButton = UIButton(type: .system)
         settingsButton.setTitle("S", for: .normal)
         settingsButton.frame.size = settingsButton.intrinsicContentSize
-        let clearCellButton = UIButton(type: .system)
+        let clearCellButton = HighlightableButton()
         clearCellButton.setTitle("C", for: .normal)
         clearCellButton.frame.size = clearCellButton.intrinsicContentSize
-        clearCellButton.addTarget(self, action: #selector(clearButtonTapped(_:)), for: .touchUpInside)
+        clearCellButton.frame.size.width = clearCellButton.frame.height
+        clearCellButton.addTarget(self, action: #selector(clearButtonTouchUpInside(_:)), for: .touchUpInside)
+        clearCellButton.addTarget(self, action: #selector(clearButtonDragExit(_:)),
+            for: [.touchDragExit, .touchUpOutside])
+        clearCellButton.addTarget(self, action: #selector(clearButtonTouchDown(_:)), for: .touchDown)
+        
         tabBar.addSubview(newGameButton)
         tabBar.addSubview(undoButton)
         tabBar.addSubview(setPuzzleButton)
@@ -129,7 +134,20 @@ class MainViewController: UIViewController
 // MARK: - Event Handlers
 extension MainViewController
 {
-    func clearButtonTapped(_ sender: UIButton)
+    func clearButtonDragExit(_ sender: HighlightableButton)
+    {
+        switch currentState {
+        case .highlightClear:   sender.select()
+        default:                sender.unhighlight()
+        }
+    }
+    
+    func clearButtonTouchDown(_ sender: HighlightableButton)
+    {
+        sender.highlight()
+    }
+    
+    func clearButtonTouchUpInside(_ sender: HighlightableButton)
     {
         switch currentState {
         case .highlightCell(row: let row, column: let column):  clearCellAt(row: row, column: column)
@@ -138,11 +156,14 @@ extension MainViewController
         currentState = currentState.advanceWith(action: .selectedClear)
         switch currentState {
         case .highlightClear:
-            break // highlight clear button
+            removeHighlights()
+            sender.select()
+            break
         case .highlightCell(row: let row, column: let column):
             highlightCellAt((row, column))
-            break
+            fallthrough
         default:
+            sender.unhighlight()
             break
         }
     }
@@ -175,6 +196,7 @@ extension MainViewController: NumberSelectionViewDelegate
 {
     func numberSelectionView(_ view: NumberSelectionView, didSelect number: Int)
     {
+        clearCellButton.unhighlight()
         switch view {
         case numberSelectionView:   numberSelectionView(selectedNumber: number)
         case pencilSelectionView:   pencilMarkSelectionView(selectedNumber: number)
@@ -209,7 +231,7 @@ fileprivate extension MainViewController
             break
         case .highlightNumber(let number):
             highlightCellsContaining(number)
-            numberSelectionView.highlight(number: number)
+            numberSelectionView.select(number: number)
             pencilSelectionView.clearSelection()
             break
         default:
@@ -240,7 +262,7 @@ fileprivate extension MainViewController
             break
         case .highlightPencilMark(let number):
             highlightCellsContaining(number)
-            pencilSelectionView.highlight(number: number)
+            pencilSelectionView.select(number: number)
             numberSelectionView.clearSelection()
             break
         default:
@@ -292,6 +314,7 @@ fileprivate extension MainViewController
             let cellView = sudokuView.cellAt(row: row, column: column)!
             cellView.unhighlight()
         }
+        clearCellButton.unhighlight()
         numberSelectionView.clearSelection()
         pencilSelectionView.clearSelection()
     }

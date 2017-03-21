@@ -16,19 +16,10 @@ protocol NumberSelectionViewDelegate: NSObjectProtocol
 class NumberSelectionView: UIView
 {
     fileprivate let order: Int
-    fileprivate let buttons: [UIButton]
+    fileprivate let buttons: [HighlightableButton]
     fileprivate var selectedNumber: Int?
     fileprivate let displayLargeNumbers: Bool
     
-    var buttonColour:                   UIColor = UIColor(hexValue: 0xF0F0DC)
-    var buttonHighlightedColour:        UIColor = UIColor(hexValue: 0xFF0000)
-    var buttonSelectedColour:           UIColor = UIColor(hexValue: 0xFFFFFF)
-    var buttonBorderColour:             UIColor = UIColor(hexValue: 0xA0AAA0)
-    var buttonHighlightedBorderColour:  UIColor = UIColor(hexValue: 0xFF0000)
-    var buttonSelectedBorderColour:     UIColor = UIColor(hexValue: 0xFF0000)
-    var buttonTextColour:               UIColor = UIColor(hexValue: 0x000000)
-    var buttonHighlightedTextColour:    UIColor = UIColor(hexValue: 0xFFFFFF)
-    var buttonSelectedTextColour:       UIColor = UIColor(hexValue: 0xFF0000)
     
     weak var delegate: NumberSelectionViewDelegate?
     
@@ -36,12 +27,8 @@ class NumberSelectionView: UIView
     {
         self.order = order
         buttons = buttonTitles.map {
-            let button = UIButton(type: .custom)
+            let button = HighlightableButton()
             button.setTitle($0, for: .normal)
-            let circleShape = CAShapeLayer()
-            button.layer.addSublayer(circleShape)
-            let mask = CAShapeLayer()
-            button.layer.mask = mask
             return button
         }
         self.displayLargeNumbers = displayLargeNumbers
@@ -56,7 +43,7 @@ class NumberSelectionView: UIView
     
     required init?(coder aDecoder: NSCoder)
     {
-        buttons = aDecoder.decodeObject(forKey: "buttons") as! [UIButton]
+        buttons = aDecoder.decodeObject(forKey: "buttons") as! [HighlightableButton]
         order = aDecoder.decodeInteger(forKey: "order")
         selectedNumber = aDecoder.decodeObject(forKey: "selectedNumber") as! Int?
         displayLargeNumbers = aDecoder.decodeBool(forKey: "displayLargeNumbers")
@@ -85,94 +72,49 @@ class NumberSelectionView: UIView
             let xOffset = CGFloat(i % order) * (buttonSize.width + spacing)
             let yOffset = CGFloat(i / order) * (buttonSize.width + spacing)
             button.frame = CGRect(origin: CGPoint(x: xOffset, y: yOffset), size: buttonSize)
-            button.setTitleColor(buttonTextColour, for: .normal)
             
             button.titleLabel!.font = button.titleLabel!.font.withSize(fontSize)
-            button.layer.backgroundColor = buttonColour.cgColor
-            let mask = button.layer.mask! as! CAShapeLayer
-            mask.path = UIBezierPath(roundedRect: button.bounds, cornerRadius: buttonSize.width / 2).cgPath
-            let circleStrokeWidth = buttonSize.width * 0.02
-            var pathBounds = button.bounds
-            pathBounds.origin.x += circleStrokeWidth
-            pathBounds.origin.y += circleStrokeWidth
-            pathBounds.size.width -= circleStrokeWidth * 2
-            pathBounds.size.height -= circleStrokeWidth * 2
-            let path = UIBezierPath(roundedRect: pathBounds, cornerRadius: buttonSize.width / 2)
-            path.lineWidth = circleStrokeWidth
-            let circleShape = button.layer.sublayers!.first! as! CAShapeLayer
-            circleShape.path = path.cgPath
-            circleShape.fillColor = UIColor.clear.cgColor
-            circleShape.strokeColor = buttonBorderColour.cgColor
         }
     }
     
-    func highlight(number: Int)
+    func select(number: Int)
     {
-        animate(button: buttons[number - 1], circle: buttonSelectedBorderColour.cgColor,
-            background: buttonSelectedColour.cgColor, text: buttonSelectedTextColour)
+        guard number <= buttons.count else { return }
+        buttons[number - 1].select()
         selectedNumber = number
     }
     
     func clearSelection()
     {
         guard let selectedNumber = selectedNumber else { return }
-        animate(button: buttons[selectedNumber - 1], circle: buttonBorderColour.cgColor,
-            background: buttonColour.cgColor, text: buttonTextColour)
-        
+        buttons[selectedNumber - 1].unhighlight()
         self.selectedNumber = nil
     }
 }
 
 fileprivate extension NumberSelectionView
 {
-    @objc func buttonTouchUpInside(_ sender: UIButton)
+    @objc func buttonTouchUpInside(_ sender: HighlightableButton)
     {
         let newNumber = buttons.index(of: sender)! + 1
         clearSelection()
         selectedNumber = newNumber
         delegate?.numberSelectionView(self, didSelect: newNumber)
     }
-    
-    @objc func buttonTouchDown(_ sender: UIButton)
+
+    @objc func buttonTouchDown(_ sender: HighlightableButton)
     {
-        sender.layer.backgroundColor = buttonHighlightedColour.cgColor
-        let circleShape = sender.layer.sublayers!.first! as! CAShapeLayer
-        circleShape.strokeColor = buttonHighlightedBorderColour.cgColor
-        circleShape.setNeedsDisplay()
-        sender.setTitleColor(buttonHighlightedTextColour, for: .normal)
+        sender.highlight()
     }
     
-    @objc func buttonDragExit(_ sender: UIButton)
+    @objc func buttonDragExit(_ sender: HighlightableButton)
     {
         if selectedNumber != nil && sender === buttons[selectedNumber! - 1] {
-            animate(button: sender, circle: buttonSelectedBorderColour.cgColor,
-                background: buttonSelectedColour.cgColor, text: buttonSelectedTextColour)
+            sender.select()
         }
         else {
-            animate(button: sender, circle: buttonBorderColour.cgColor, background: buttonColour.cgColor,
-                text: buttonTextColour)
+            sender.unhighlight()
         }
-        
-    }
-    
-    func animate(button: UIButton, circle: CGColor, background: CGColor, text: UIColor)
-    {
-        button.layer.removeAllAnimations()
-        
-        let animation = CABasicAnimation(keyPath: "backgroundColor")
-        animation.fromValue = button.layer.backgroundColor
-        animation.toValue = background
-        animation.duration = 0.3
-        button.layer.add(animation, forKey: nil)
-        button.layer.backgroundColor = background
-        
-        let circleShape = button.layer.sublayers!.first! as! CAShapeLayer
-        let circleAnimation = CABasicAnimation(keyPath: "strokeColor")
-        circleAnimation.fromValue = circleShape.strokeColor
-        circleAnimation.toValue = circle
-        circleAnimation.duration = 0.3
-        circleShape.add(circleAnimation, forKey: nil)
-        circleShape.strokeColor = circle
-        button.setTitleColor(text, for: .normal)
     }
 }
+
