@@ -8,19 +8,27 @@
 
 import UIKit
 
-private let π: CGFloat = CGFloat(M_PI)
-private let BOX_SPACING: CGFloat = 0.02
-private let CELL_SPACING: CGFloat = 0.01
+private let π: CGFloat = CGFloat.pi
+private let BOX_SPACING: CGFloat = 0.015
+private let CELL_SPACING: CGFloat = 0.0075
 
 private typealias Degree = UInt32
+
+protocol SudokuViewDelegate: NSObjectProtocol
+{
+    func sudokuView(_ view: SudokuView, didSelectCellAt: (row: Int, column: Int))
+}
 
 // MARK: - SudokuView Implementation
 class SudokuView: UIView
 {
-    private var cells: [CellView]
-    private let order: Int
-    private let dimensionality: Int
-    private var animator: UIDynamicAnimator!
+    fileprivate var cells: [CellView]
+    fileprivate let order: Int
+    fileprivate let dimensionality: Int
+    fileprivate var animator: UIDynamicAnimator!
+    private (set) var tapGestureRecogniser: UITapGestureRecognizer!
+    
+    weak var delegate: SudokuViewDelegate?
     
     // MARK: - Lifecycle
     init(frame: CGRect, order: Int, pencilMarkTitles: [String])
@@ -31,6 +39,10 @@ class SudokuView: UIView
             CellView(frame: CGRect.zero, order: order, pencilMarkTitles: pencilMarkTitles)
         }
         super.init(frame: frame)
+        isUserInteractionEnabled = true
+        let gestureRecogniser = UITapGestureRecognizer(target: self, action: #selector(tapRecognised(_:)))
+        self.tapGestureRecogniser = gestureRecogniser
+        addGestureRecognizer(gestureRecogniser)
         for c in cells { addSubview(c) }
         animator = UIDynamicAnimator(referenceView: self)
     }
@@ -80,8 +92,9 @@ class SudokuView: UIView
     }
     
     // MARK: - Internal Functions
-    func cellAt(row: Int, column: Int) -> CellView
+    func cellAt(row: Int, column: Int) -> CellView?
     {
+        guard row < dimensionality && column < dimensionality else { return nil }
         return cells[row * dimensionality + column]
     }
     
@@ -121,6 +134,45 @@ class SudokuView: UIView
             snapshot.layer.add(animation, forKey: "opacity")
         }
         animator.addBehavior(gravity)
+    }
+}
+
+// MARK: - Gesture Recognition
+fileprivate extension SudokuView
+{
+    @objc func tapRecognised(_ recogniser: UITapGestureRecognizer)
+    {
+        let point = recogniser.location(in: self)
+        if let tappedView = hitTest(point, with: nil) {
+            let row: Int
+            let column: Int
+            if tappedView === self {
+                row = nearestRow(yCoord: point.y)
+                column = nearestColumn(xCoord: point.x)
+            }
+            else if let tappedView = tappedView as? CellView {
+                let index = cells.index(of: tappedView)!
+                row = index / (order * order)
+                column = index % (order * order)
+                
+            }
+            else { return }
+            delegate?.sudokuView(self, didSelectCellAt: (row, column))
+        }
+    }
+    
+    func nearestRow(yCoord: CGFloat) -> Int
+    {
+        let heightOfCell = frame.height / CGFloat(order * order)
+        let distance = yCoord / heightOfCell
+        return Int(distance.rounded(.towardZero))
+    }
+    
+    func nearestColumn(xCoord: CGFloat) -> Int
+    {
+        let widthOfCell = frame.width / CGFloat(order * order)
+        let distance = xCoord / widthOfCell
+        return Int(distance.rounded(.towardZero))
     }
 }
 

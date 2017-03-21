@@ -10,8 +10,7 @@ import UIKit
 
 protocol NumberSelectionViewDelegate: NSObjectProtocol
 {
-    func didSelect(number: Int)
-    func didDeselect(number: Int)
+    func numberSelectionView(_ view: NumberSelectionView, didSelect number: Int)
 }
 
 class NumberSelectionView: UIView
@@ -76,11 +75,12 @@ class NumberSelectionView: UIView
     override func layoutSubviews()
     {
         super.layoutSubviews()
+        frame.size.height = frame.width
         let totalSpacing = frame.width * 0.1
         let spacing = totalSpacing / CGFloat(order - 1)
         let buttonSize = CGSize(width: (frame.width - totalSpacing) / CGFloat(order),
             height: (frame.width - totalSpacing) / CGFloat(order))
-        let fontSize = displayLargeNumbers ? buttonSize.width * 0.45 : buttonSize.width * 0.3
+        let fontSize = displayLargeNumbers ? buttonSize.width * 0.4 : buttonSize.width * 0.25
         for (i, button) in buttons.enumerated() {
             let xOffset = CGFloat(i % order) * (buttonSize.width + spacing)
             let yOffset = CGFloat(i / order) * (buttonSize.width + spacing)
@@ -91,7 +91,7 @@ class NumberSelectionView: UIView
             button.layer.backgroundColor = buttonColour.cgColor
             let mask = button.layer.mask! as! CAShapeLayer
             mask.path = UIBezierPath(roundedRect: button.bounds, cornerRadius: buttonSize.width / 2).cgPath
-            let circleStrokeWidth = buttonSize.width * 0.01
+            let circleStrokeWidth = buttonSize.width * 0.02
             var pathBounds = button.bounds
             pathBounds.origin.x += circleStrokeWidth
             pathBounds.origin.y += circleStrokeWidth
@@ -106,6 +106,12 @@ class NumberSelectionView: UIView
         }
     }
     
+    func highlight(number: Int)
+    {
+        animate(button: buttons[number - 1], circle: buttonSelectedBorderColour.cgColor,
+            background: buttonSelectedColour.cgColor, text: buttonSelectedTextColour)
+        selectedNumber = number
+    }
     
     func clearSelection()
     {
@@ -113,7 +119,6 @@ class NumberSelectionView: UIView
         animate(button: buttons[selectedNumber - 1], circle: buttonBorderColour.cgColor,
             background: buttonColour.cgColor, text: buttonTextColour)
         
-        delegate?.didDeselect(number: selectedNumber)
         self.selectedNumber = nil
     }
 }
@@ -123,15 +128,9 @@ fileprivate extension NumberSelectionView
     @objc func buttonTouchUpInside(_ sender: UIButton)
     {
         let newNumber = buttons.index(of: sender)! + 1
-        let currentNumber = selectedNumber
         clearSelection()
-        
-        if newNumber != currentNumber {
-            animate(button: sender, circle: buttonSelectedBorderColour.cgColor,
-                background: buttonSelectedColour.cgColor, text: buttonSelectedTextColour)
-            selectedNumber = newNumber
-            delegate?.didSelect(number: newNumber)
-        }
+        selectedNumber = newNumber
+        delegate?.numberSelectionView(self, didSelect: newNumber)
     }
     
     @objc func buttonTouchDown(_ sender: UIButton)
@@ -159,11 +158,12 @@ fileprivate extension NumberSelectionView
     func animate(button: UIButton, circle: CGColor, background: CGColor, text: UIColor)
     {
         button.layer.removeAllAnimations()
+        
         let animation = CABasicAnimation(keyPath: "backgroundColor")
         animation.fromValue = button.layer.backgroundColor
         animation.toValue = background
         animation.duration = 0.3
-        button.layer.add(animation, forKey: "backgroundColour")
+        button.layer.add(animation, forKey: nil)
         button.layer.backgroundColor = background
         
         let circleShape = button.layer.sublayers!.first! as! CAShapeLayer
@@ -171,9 +171,8 @@ fileprivate extension NumberSelectionView
         circleAnimation.fromValue = circleShape.strokeColor
         circleAnimation.toValue = circle
         circleAnimation.duration = 0.3
-        circleShape.add(circleAnimation, forKey: "strokeColour")
+        circleShape.add(circleAnimation, forKey: nil)
         circleShape.strokeColor = circle
-        
         button.setTitleColor(text, for: .normal)
     }
 }

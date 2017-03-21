@@ -9,19 +9,24 @@
 import UIKit
 import QuartzCore
 
+private let FONT_SCALE_FACTOR: CGFloat = 0.65
+
 // MARK: - CellView Implementation
 class CellView: UIView
 {
-    var cellColour: UIColor = UIColor(hexValue: 0xF0F0DC) {
+    var cellColour = UIColor(hexValue: 0xF0F0DC) {
         didSet {
             backgroundColor = cellColour
         }
     }
+    var highlightedCellBackgroundColour = UIColor.white
+    var highlightedCellBorderColour = UIColor.red
+    var highlightedCellTextColour = UIColor.red
+    private (set) var isHighlighted = false
     
     private let order: Int
     private let pencilMarks: [UILabel]
     private weak var number: UILabel!
-    private var isHighlighted = false
 
     // MARK: - Lifecycle
     init(frame: CGRect, order: Int, pencilMarkTitles: [String])
@@ -37,7 +42,7 @@ class CellView: UIView
         }
         let v = UIView(frame: CGRect(origin: CGPoint.zero, size: frame.size))
         let number = UILabel()
-        number.font = UIFont.systemFont(ofSize: frame.width * 0.75)
+        number.font = UIFont.systemFont(ofSize: frame.width * FONT_SCALE_FACTOR)
         number.textAlignment = .center
         number.adjustsFontSizeToFitWidth = true
         number.minimumScaleFactor = 0.5
@@ -53,6 +58,7 @@ class CellView: UIView
             addSubview(view)
         }
         backgroundColor = cellColour
+        layer.borderColor = highlightedCellBorderColour.cgColor
     }
     
     convenience override init(frame: CGRect)
@@ -83,47 +89,77 @@ class CellView: UIView
         let frame = CGRect(origin: CGPoint.zero, size: self.frame.size)
         number.superview?.frame = frame
         number.frame = frame
-        number.font = number.font.withSize(self.frame.width * 0.75)
+        number.font = number.font.withSize(self.frame.width * FONT_SCALE_FACTOR)
         let pencilMarkDims = frame.width / CGFloat(order)
         for (i, v) in pencilMarks.enumerated() {
             let xOffset = CGFloat(i % order) * pencilMarkDims
             let yOffset = CGFloat(i / order) * pencilMarkDims
             v.superview?.frame = CGRect(x: xOffset, y: yOffset, width: pencilMarkDims, height: pencilMarkDims)
             v.frame.size = CGSize(width: pencilMarkDims, height: pencilMarkDims)
-            v.font = v.font.withSize(pencilMarkDims * 0.75)
+            v.font = v.font.withSize(pencilMarkDims * FONT_SCALE_FACTOR)
         }
         
     }
     
-    // MARK: - Internal Functions
-    func highlight(withColour colour: UIColor?)
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView?
     {
-        isHighlighted = !isHighlighted
-        let newBackgroundColour = isHighlighted ? UIColor.white.cgColor : cellColour.cgColor
-        let width: CGFloat = colour == nil ? 0.0 : 3.0
-        let newBorderColour = colour?.cgColor ?? UIColor.clear.cgColor
+        return self.point(inside: point, with: event) ? self : nil
+    }
+    
+    // MARK: - Internal Functions
+    func unhighlight()
+    {
+        guard isHighlighted else { return }
+        isHighlighted = false
+        let newBackgroundColour = cellColour.cgColor
+        let width: CGFloat = 0.0
         let backgroundColour = CABasicAnimation(keyPath: "backgroundColor")
         backgroundColour.fromValue = layer.backgroundColor
         backgroundColour.toValue = newBackgroundColour
-        let borderColour = CABasicAnimation(keyPath: "borderColor")
-        borderColour.fromValue = layer.borderColor
-        borderColour.toValue = newBorderColour
         let borderWidth = CABasicAnimation(keyPath: "borderWidth")
         borderWidth.fromValue = layer.borderWidth
         borderWidth.toValue = width
-        layer.add(borderColour, forKey: "borderColour")
         layer.add(borderWidth, forKey:  "borderWidth")
         layer.add(backgroundColour, forKey: "backgroundColour")
-        layer.borderColor = newBorderColour
         layer.borderWidth = width
         layer.backgroundColor = newBackgroundColour
+        number.textColor =  UIColor.black
+        for pm in pencilMarks { pm.textColor = UIColor.black }
     }
     
-    func toggleVisibilityOfPencilMark(inPosition position: Int)
+    func highlight()
+    {
+        guard !isHighlighted else { return }
+        isHighlighted = true
+        let newBackgroundColour = highlightedCellBackgroundColour.cgColor
+        let width: CGFloat = frame.width * 0.05
+        let backgroundColour = CABasicAnimation(keyPath: "backgroundColor")
+        backgroundColour.fromValue = layer.backgroundColor
+        backgroundColour.toValue = newBackgroundColour
+        let borderWidth = CABasicAnimation(keyPath: "borderWidth")
+        borderWidth.fromValue = layer.borderWidth
+        borderWidth.toValue = width
+        layer.add(borderWidth, forKey:  "borderWidth")
+        layer.add(backgroundColour, forKey: "backgroundColour")
+        layer.borderColor = highlightedCellBorderColour.cgColor
+        layer.borderWidth = width
+        layer.backgroundColor = newBackgroundColour
+        number.textColor = highlightedCellTextColour
+        for pm in pencilMarks { pm.textColor = highlightedCellTextColour }
+    }
+    
+    func showPencilMark(inPosition position: Int)
     {
         guard position < pencilMarks.count else { return }
         let mark = pencilMarks[position]
-        mark.isHidden ? show(view: mark) : hide(view: mark, completionHandler: { _ in mark.isHidden = true } )
+        if mark.isHidden { show(view: mark) }
+    }
+    
+    func hidePencilMark(inPosition position: Int)
+    {
+        guard position < pencilMarks.count else { return }
+        let mark = pencilMarks[position]
+        if !mark.isHidden { hide(view: mark, completionHandler: { _ in mark.isHidden = true } ) }
     }
     
     func setNumber(number: String)
@@ -132,7 +168,7 @@ class CellView: UIView
             hide(view: self.number) { _ in self.number.text = number }
         }
         else {
-            for (i, pm) in pencilMarks.enumerated() { if !pm.isHidden { toggleVisibilityOfPencilMark(inPosition: i) } }
+            for i in 0 ..< pencilMarks.count { hidePencilMark(inPosition: i) }
             self.number.text = number
             show(view: self.number)
         }

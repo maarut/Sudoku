@@ -8,13 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */; };
-		E36C68261E5E2F9E00F0FFE9 /* SudokuEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = E36C68241E5E2F9E00F0FFE9 /* SudokuEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		E36C68291E5E2F9E00F0FFE9 /* SudokuEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */; };
-		E36C682A1E5E2F9E00F0FFE9 /* SudokuEngine.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		E36C682E1E5E30DD00F0FFE9 /* MCSudokuEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = E36C67FE1E5E111900F0FFE9 /* MCSudokuEngine.c */; };
-		E36C682F1E5E30DF00F0FFE9 /* MCSudokuEngineBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68001E5E111900F0FFE9 /* MCSudokuEngineBridge.swift */; };
-		E36C68311E5E30F500F0FFE9 /* MCSudokuEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = E36C67FF1E5E111900F0FFE9 /* MCSudokuEngine.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		E36C68591E5E427B00F0FFE9 /* SudokuEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */; };
+		E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758D1E699F7100A2A736 /* NumberSelectionView.swift */; };
+		E35275D21E76A2E300A2A736 /* SudokuEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */; };
+		E35275D31E76A2E300A2A736 /* SudokuEngine.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		E35275D71E76A4AB00A2A736 /* MCSudokuEngine.c in Sources */ = {isa = PBXBuildFile; fileRef = E36C67FE1E5E111900F0FFE9 /* MCSudokuEngine.c */; };
+		E35275D81E76A4AB00A2A736 /* MCSudokuEngineBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68001E5E111900F0FFE9 /* MCSudokuEngineBridge.swift */; };
+		E35275DA1E76A4F300A2A736 /* SudokuEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = E36C68241E5E2F9E00F0FFE9 /* SudokuEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		E35275DC1E799DE800A2A736 /* MainScreenState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35275DB1E799DE800A2A736 /* MainScreenState.swift */; };
 		E36C685F1E5E42B300F0FFE9 /* Sudoku++Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68561E5E427B00F0FFE9 /* Sudoku++Tests.swift */; };
 		E36C68601E5E42B800F0FFE9 /* SudokuEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD866C1E452AA500C8B780 /* SudokuEngineTests.swift */; };
 		E36C68811E609F6600F0FFE9 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68801E609F6600F0FFE9 /* CellView.swift */; };
@@ -28,18 +28,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		E36C68271E5E2F9E00F0FFE9 /* PBXContainerItemProxy */ = {
+		E35275D01E76A2E300A2A736 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E3FD864C1E452AA500C8B780 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = E36C68211E5E2F9E00F0FFE9;
-			remoteInfo = SudokuEngine;
-		};
-		E36C685A1E5E427B00F0FFE9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E3FD864C1E452AA500C8B780 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = E36C68211E5E2F9E00F0FFE9;
+			remoteGlobalIDString = E35275CA1E76A2E300A2A736;
 			remoteInfo = SudokuEngine;
 		};
 		E3FD86691E452AA500C8B780 /* PBXContainerItemProxy */ = {
@@ -58,7 +51,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				E36C682A1E5E2F9E00F0FFE9 /* SudokuEngine.framework in Embed Frameworks */,
+				E35275D31E76A2E300A2A736 /* SudokuEngine.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -67,10 +60,12 @@
 
 /* Begin PBXFileReference section */
 		E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivateAnimationDelegate.swift; sourceTree = "<group>"; };
+		E352758D1E699F7100A2A736 /* NumberSelectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NumberSelectionView.swift; path = "Sudoku++/NumberSelectionView.swift"; sourceTree = "<group>"; };
+		E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SudokuEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		E35275DB1E799DE800A2A736 /* MainScreenState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenState.swift; sourceTree = "<group>"; };
 		E36C67FE1E5E111900F0FFE9 /* MCSudokuEngine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = MCSudokuEngine.c; path = SudokuEngine/MCSudokuEngine.c; sourceTree = "<group>"; };
 		E36C67FF1E5E111900F0FFE9 /* MCSudokuEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCSudokuEngine.h; path = SudokuEngine/MCSudokuEngine.h; sourceTree = "<group>"; };
 		E36C68001E5E111900F0FFE9 /* MCSudokuEngineBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MCSudokuEngineBridge.swift; path = SudokuEngine/MCSudokuEngineBridge.swift; sourceTree = "<group>"; };
-		E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SudokuEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E36C68241E5E2F9E00F0FFE9 /* SudokuEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = SudokuEngine.h; path = SudokuEngine/SudokuEngine.h; sourceTree = "<group>"; };
 		E36C68251E5E2F9E00F0FFE9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = SudokuEngine/Info.plist; sourceTree = "<group>"; };
 		E36C684F1E5E37B200F0FFE9 /* module.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; name = module.modulemap; path = SudokuEngine/module.modulemap; sourceTree = "<group>"; };
@@ -93,7 +88,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		E36C681E1E5E2F9E00F0FFE9 /* Frameworks */ = {
+		E35275C71E76A2E300A2A736 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -104,7 +99,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36C68591E5E427B00F0FFE9 /* SudokuEngine.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,7 +106,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36C68291E5E2F9E00F0FFE9 /* SudokuEngine.framework in Frameworks */,
+				E35275D21E76A2E300A2A736 /* SudokuEngine.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,12 +133,13 @@
 			name = SudokuEngine;
 			sourceTree = "<group>";
 		};
-		E36C68551E5E427B00F0FFE9 /* SudokuEngineTests */ = {
+		E36C68551E5E427B00F0FFE9 /* SudokuEngine Tests */ = {
 			isa = PBXGroup;
 			children = (
 				E3FD866C1E452AA500C8B780 /* SudokuEngineTests.swift */,
 				E36C68581E5E427B00F0FFE9 /* Info.plist */,
 			);
+			name = "SudokuEngine Tests";
 			path = SudokuEngineTests;
 			sourceTree = "<group>";
 		};
@@ -153,6 +148,7 @@
 			children = (
 				E36C68801E609F6600F0FFE9 /* CellView.swift */,
 				E36C68CA1E66F27200F0FFE9 /* SudokuView.swift */,
+				E352758D1E699F7100A2A736 /* NumberSelectionView.swift */,
 			);
 			name = Views;
 			path = ..;
@@ -171,6 +167,7 @@
 		E39FC0B21E58F5CD00C7AC10 /* View Controllers */ = {
 			isa = PBXGroup;
 			children = (
+				E35275DB1E799DE800A2A736 /* MainScreenState.swift */,
 				E3FD86591E452AA500C8B780 /* MainViewController.swift */,
 			);
 			name = "View Controllers";
@@ -181,8 +178,8 @@
 			children = (
 				E36C67FD1E5E109A00F0FFE9 /* SudokuEngine */,
 				E3FD86561E452AA500C8B780 /* Sudoku++ */,
-				E3FD866B1E452AA500C8B780 /* SudokuEngineTests */,
-				E36C68551E5E427B00F0FFE9 /* SudokuEngineTests */,
+				E3FD866B1E452AA500C8B780 /* Sudoku++ Tests */,
+				E36C68551E5E427B00F0FFE9 /* SudokuEngine Tests */,
 				E3FD86551E452AA500C8B780 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -192,8 +189,8 @@
 			children = (
 				E3FD86541E452AA500C8B780 /* Sudoku++.app */,
 				E3FD86681E452AA500C8B780 /* Sudoku++Tests.xctest */,
-				E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */,
 				E36C68541E5E427B00F0FFE9 /* SudokuEngineTests.xctest */,
+				E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -201,6 +198,7 @@
 		E3FD86561E452AA500C8B780 /* Sudoku++ */ = {
 			isa = PBXGroup;
 			children = (
+				E3FD867B1E70134300C8B780 /* Appearance */,
 				E36C687F1E609F3E00F0FFE9 /* Views */,
 				E39FC0B21E58F5CD00C7AC10 /* View Controllers */,
 				E39FC0B11E58F5C100C7AC10 /* util */,
@@ -212,39 +210,45 @@
 			path = "Sudoku++";
 			sourceTree = "<group>";
 		};
-		E3FD866B1E452AA500C8B780 /* SudokuEngineTests */ = {
+		E3FD866B1E452AA500C8B780 /* Sudoku++ Tests */ = {
 			isa = PBXGroup;
 			children = (
 				E36C68561E5E427B00F0FFE9 /* Sudoku++Tests.swift */,
 				E3FD866E1E452AA500C8B780 /* Info.plist */,
 			);
-			name = SudokuEngineTests;
+			name = "Sudoku++ Tests";
 			path = "Sudoku++Tests";
+			sourceTree = "<group>";
+		};
+		E3FD867B1E70134300C8B780 /* Appearance */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Appearance;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		E36C681F1E5E2F9E00F0FFE9 /* Headers */ = {
+		E35275C81E76A2E300A2A736 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36C68261E5E2F9E00F0FFE9 /* SudokuEngine.h in Headers */,
-				E36C68311E5E30F500F0FFE9 /* MCSudokuEngine.h in Headers */,
+				E35275DA1E76A4F300A2A736 /* SudokuEngine.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		E36C68211E5E2F9E00F0FFE9 /* SudokuEngine */ = {
+		E35275CA1E76A2E300A2A736 /* SudokuEngine */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E36C682B1E5E2F9E00F0FFE9 /* Build configuration list for PBXNativeTarget "SudokuEngine" */;
+			buildConfigurationList = E35275D41E76A2E300A2A736 /* Build configuration list for PBXNativeTarget "SudokuEngine" */;
 			buildPhases = (
-				E36C681D1E5E2F9E00F0FFE9 /* Sources */,
-				E36C681E1E5E2F9E00F0FFE9 /* Frameworks */,
-				E36C681F1E5E2F9E00F0FFE9 /* Headers */,
-				E36C68201E5E2F9E00F0FFE9 /* Resources */,
+				E35275C61E76A2E300A2A736 /* Sources */,
+				E35275C71E76A2E300A2A736 /* Frameworks */,
+				E35275C81E76A2E300A2A736 /* Headers */,
+				E35275C91E76A2E300A2A736 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -252,7 +256,7 @@
 			);
 			name = SudokuEngine;
 			productName = SudokuEngine;
-			productReference = E36C68221E5E2F9E00F0FFE9 /* SudokuEngine.framework */;
+			productReference = E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		E36C68531E5E427B00F0FFE9 /* SudokuEngineTests */ = {
@@ -266,7 +270,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				E36C685B1E5E427B00F0FFE9 /* PBXTargetDependency */,
 			);
 			name = SudokuEngineTests;
 			productName = SudokuEngineTests;
@@ -285,7 +288,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				E36C68281E5E2F9E00F0FFE9 /* PBXTargetDependency */,
+				E35275D11E76A2E300A2A736 /* PBXTargetDependency */,
 			);
 			name = "Sudoku++";
 			productName = "Sudoku++";
@@ -320,7 +323,7 @@
 				LastUpgradeCheck = 0820;
 				ORGANIZATIONNAME = "Maarut Chandegra";
 				TargetAttributes = {
-					E36C68211E5E2F9E00F0FFE9 = {
+					E35275CA1E76A2E300A2A736 = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = F53K8XZ6AA;
 						ProvisioningStyle = Automatic;
@@ -358,14 +361,14 @@
 			targets = (
 				E3FD86531E452AA500C8B780 /* Sudoku++ */,
 				E3FD86671E452AA500C8B780 /* Sudoku++Tests */,
-				E36C68211E5E2F9E00F0FFE9 /* SudokuEngine */,
 				E36C68531E5E427B00F0FFE9 /* SudokuEngineTests */,
+				E35275CA1E76A2E300A2A736 /* SudokuEngine */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		E36C68201E5E2F9E00F0FFE9 /* Resources */ = {
+		E35275C91E76A2E300A2A736 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -398,12 +401,12 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		E36C681D1E5E2F9E00F0FFE9 /* Sources */ = {
+		E35275C61E76A2E300A2A736 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E36C682E1E5E30DD00F0FFE9 /* MCSudokuEngine.c in Sources */,
-				E36C682F1E5E30DF00F0FFE9 /* MCSudokuEngineBridge.swift in Sources */,
+				E35275D71E76A4AB00A2A736 /* MCSudokuEngine.c in Sources */,
+				E35275D81E76A4AB00A2A736 /* MCSudokuEngineBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -425,6 +428,8 @@
 				E36C68CB1E66F27200F0FFE9 /* SudokuView.swift in Sources */,
 				E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */,
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
+				E35275DC1E799DE800A2A736 /* MainScreenState.swift in Sources */,
+				E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */,
 				E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -440,15 +445,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		E36C68281E5E2F9E00F0FFE9 /* PBXTargetDependency */ = {
+		E35275D11E76A2E300A2A736 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = E36C68211E5E2F9E00F0FFE9 /* SudokuEngine */;
-			targetProxy = E36C68271E5E2F9E00F0FFE9 /* PBXContainerItemProxy */;
-		};
-		E36C685B1E5E427B00F0FFE9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = E36C68211E5E2F9E00F0FFE9 /* SudokuEngine */;
-			targetProxy = E36C685A1E5E427B00F0FFE9 /* PBXContainerItemProxy */;
+			target = E35275CA1E76A2E300A2A736 /* SudokuEngine */;
+			targetProxy = E35275D01E76A2E300A2A736 /* PBXContainerItemProxy */;
 		};
 		E3FD866A1E452AA500C8B780 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -469,7 +469,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		E36C682C1E5E2F9E00F0FFE9 /* Debug */ = {
+		E35275D51E76A2E300A2A736 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
@@ -493,7 +493,7 @@
 			};
 			name = Debug;
 		};
-		E36C682D1E5E2F9E00F0FFE9 /* Release */ = {
+		E35275D61E76A2E300A2A736 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
@@ -696,11 +696,11 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E36C682B1E5E2F9E00F0FFE9 /* Build configuration list for PBXNativeTarget "SudokuEngine" */ = {
+		E35275D41E76A2E300A2A736 /* Build configuration list for PBXNativeTarget "SudokuEngine" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E36C682C1E5E2F9E00F0FFE9 /* Debug */,
-				E36C682D1E5E2F9E00F0FFE9 /* Release */,
+				E35275D51E76A2E300A2A736 /* Debug */,
+				E35275D61E76A2E300A2A736 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
