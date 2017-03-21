@@ -20,7 +20,8 @@ public enum PuzzleDifficulty: Int
     case hard
     case insane
     
-    fileprivate init(difficulty: MCPuzzleDifficulty) {
+    fileprivate init(difficulty: MCPuzzleDifficulty)
+    {
         switch difficulty {
         case MCPuzzleDifficultyEasy:    self = .easy
         case MCPuzzleDifficultyNormal:  self = .normal
@@ -166,10 +167,16 @@ public class SudokuBoard: NSCoding
         let _ = solve()
     }
     
+    public func cellAt(row: Int, column: Int) -> Cell?
+    {
+        guard row < dimensionality && column < dimensionality else { return nil }
+        return board[row * dimensionality + column]
+    }
+    
     // MARK: - Lifecycle
     fileprivate convenience init?(withPuzzle puzzle : MCSudokuSolveContext)
     {
-        self.init(withOrder: Int(puzzle.order), dimensionality: Int(puzzle.dimensionality))
+        self.init(withOrder: Int(puzzle.order))
         difficulty = PuzzleDifficulty(difficulty: puzzle.difficulty)
         difficultyScore = Int(puzzle.difficultyScore)
         for (i, cell) in board.enumerated() {
@@ -181,7 +188,7 @@ public class SudokuBoard: NSCoding
         }
     }
     
-    private init?(withOrder order : Int, dimensionality : Int)
+    private init?(withOrder order : Int)
     {
         guard order >= 3 else {
             self.order = 0
@@ -191,7 +198,7 @@ public class SudokuBoard: NSCoding
         var context = generatePuzzleWithOrder(CUnsignedInt(order), MCPuzzleDifficultyZero)!
         defer { destroyContext(context) }
         self.order = order
-        self.dimensionality = dimensionality
+        self.dimensionality = order * order
         difficulty = PuzzleDifficulty(difficulty: context.pointee.difficulty)
         difficultyScore = Int(context.pointee.difficultyScore)
         for _ in 0 ..< context.pointee.cellCount { board.append(Cell()) }

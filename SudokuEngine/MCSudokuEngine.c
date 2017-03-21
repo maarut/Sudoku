@@ -8,7 +8,6 @@
 
 #include "MCSudokuEngine.h"
 #include <stdlib.h>
-#include <stdio.h>
 #include <dispatch/dispatch.h>
 #include <string.h>
 #include <limits.h>
@@ -30,6 +29,8 @@ typedef struct _MCPencilMarkSet {
 #pragma mark Debug Logging
 
 #ifdef DEBUG
+
+#include <stdio.h>
 
 typedef enum _MCSudokuSolveContextAspect {
     MCSudokuSolveContextAspectBoard,
@@ -86,7 +87,7 @@ void MCLogContext(MCSudokuSolveContext *context, MCSudokuSolveContextAspect aspe
     printf("%s\n", linebreak);
 }
 
-#endif
+#endif // DEBUG
 
 #pragma mark Single Reduction
 
@@ -754,13 +755,13 @@ static void removeNumbersFromBoard(MCSudokuSolveContext *context, MCPuzzleDiffic
                 convertDifficultyScore(testContext->difficultyScore, testContext->order) <= expectedDifficulty) {
                 
                 dispatch_semaphore_wait(lock, DISPATCH_TIME_FOREVER);
-                uint newPuzzleDistanceFromTarget = targetDifficulty < testContext->difficultyScore ?
+                uint targetDeltaMagnitude = targetDifficulty < testContext->difficultyScore ?
                     testContext->difficultyScore - targetDifficulty :
                     targetDifficulty - testContext->difficultyScore;
-                uint hardestDifficultyDistanceFromTarget = targetDifficulty < hardestDifficulty ?
+                uint hardestDeltaMagnitude = targetDifficulty < hardestDifficulty ?
                     hardestDifficulty - targetDifficulty :
                     targetDifficulty - hardestDifficulty;
-                if (newPuzzleDistanceFromTarget < hardestDifficultyDistanceFromTarget) {
+                if (targetDeltaMagnitude < hardestDeltaMagnitude) {
                     hardestDifficulty = testContext->difficultyScore;
                     memcpy(targetProblem, testContext->problem, puzzleSize);
                 }
