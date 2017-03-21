@@ -41,7 +41,7 @@
                             <constraint firstItem="PFx-Gy-LXe" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="AzQ-y7-svR"/>
                             <constraint firstItem="o2V-tg-Rgz" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="B4D-28-jD0"/>
                             <constraint firstItem="PFx-Gy-LXe" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="Fcj-g3-Uv3"/>
-                            <constraint firstItem="o2V-tg-Rgz" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="20" symbolic="YES" id="Ry6-h9-rwu"/>
+                            <constraint firstItem="o2V-tg-Rgz" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="20" symbolic="YES" id="Ry6-h9-rwu"/>
                         </constraints>
                     </view>
                 </viewController>
