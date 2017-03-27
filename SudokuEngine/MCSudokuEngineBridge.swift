@@ -9,6 +9,9 @@
 import Foundation
 import SudokuEngineC
 
+// MARK: - Type Aliases
+public typealias SudokuBoardIndex = (row: Int, column: Int)
+
 // MARK: - PuzzleDifficulty Enum
 public enum PuzzleDifficulty: Int
 {
@@ -167,10 +170,10 @@ public class SudokuBoard: NSCoding
         let _ = solve()
     }
     
-    public func cellAt(row: Int, column: Int) -> Cell?
+    public func cellAt(_ index: SudokuBoardIndex) -> Cell?
     {
-        guard row < dimensionality && column < dimensionality else { return nil }
-        return board[row * dimensionality + column]
+        guard index.row < dimensionality && index.column < dimensionality else { return nil }
+        return board[index.row * dimensionality + index.column]
     }
     
     // MARK: - Lifecycle
@@ -190,7 +193,7 @@ public class SudokuBoard: NSCoding
     
     private init?(withOrder order : Int)
     {
-        guard order >= 3 else {
+        guard order > 1 else {
             self.order = 0
             self.dimensionality = 0
             return nil

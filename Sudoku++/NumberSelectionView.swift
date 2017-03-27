@@ -8,7 +8,7 @@
 
 import UIKit
 
-protocol NumberSelectionViewDelegate: NSObjectProtocol
+protocol NumberSelectionViewDelegate: class
 {
     func numberSelectionView(_ view: NumberSelectionView, didSelect number: Int)
 }
@@ -80,14 +80,14 @@ class NumberSelectionView: UIView
     func select(number: Int)
     {
         guard number <= buttons.count else { return }
+        if let selectedNumber = selectedNumber { buttons[selectedNumber - 1].reset() }
         buttons[number - 1].select()
         selectedNumber = number
     }
     
     func clearSelection()
     {
-        guard let selectedNumber = selectedNumber else { return }
-        buttons[selectedNumber - 1].unhighlight()
+        for button in buttons { button.reset() }
         self.selectedNumber = nil
     }
 }
@@ -97,8 +97,6 @@ fileprivate extension NumberSelectionView
     @objc func buttonTouchUpInside(_ sender: HighlightableButton)
     {
         let newNumber = buttons.index(of: sender)! + 1
-        clearSelection()
-        selectedNumber = newNumber
         delegate?.numberSelectionView(self, didSelect: newNumber)
     }
 
@@ -113,7 +111,7 @@ fileprivate extension NumberSelectionView
             sender.select()
         }
         else {
-            sender.unhighlight()
+            sender.reset()
         }
     }
 }

@@ -14,16 +14,16 @@ private let FONT_SCALE_FACTOR: CGFloat = 0.65
 // MARK: - CellView Implementation
 class CellView: UIView
 {
-    var cellColour = UIColor(hexValue: 0xF0F0DC) {
-        didSet {
-            backgroundColor = cellColour
-        }
-    }
-    var highlightedCellBackgroundColour = UIColor.white
-    var highlightedCellBorderColour = UIColor.red
-    var highlightedCellTextColour = UIColor.red
-    private (set) var isHighlighted = false
+    var cellColour = UIColor(hexValue: 0xF0F0DC) { didSet { resetColours() } }
+    var textColour = UIColor.black  { didSet { resetColours() } }
     
+    var pencilMarkCount: Int { return pencilMarks.count }
+    
+    var highlightedCellBackgroundColour = UIColor.white { didSet { resetColours() } }
+    var highlightedCellBorderColour = UIColor.red { didSet { resetColours() } }
+    var highlightedCellTextColour = UIColor.red { didSet { resetColours() } }
+    
+    private (set) var isHighlighted = false
     private let order: Int
     private let pencilMarks: [UILabel]
     private weak var number: UILabel!
@@ -107,15 +107,19 @@ class CellView: UIView
     }
     
     // MARK: - Internal Functions
-    func unhighlight()
+    func deselect()
     {
         guard isHighlighted else { return }
         isHighlighted = false
         let newBackgroundColour = cellColour.cgColor
         let width: CGFloat = 0.0
+        let animationDelegate = PrivateAnimationDelegate(startHandler: nil) { _ in
+            for pm in self.pencilMarks { pm.textColor = self.textColour }
+        }
         let backgroundColour = CABasicAnimation(keyPath: "backgroundColor")
         backgroundColour.fromValue = layer.backgroundColor
         backgroundColour.toValue = newBackgroundColour
+        backgroundColour.delegate = animationDelegate
         let borderWidth = CABasicAnimation(keyPath: "borderWidth")
         borderWidth.fromValue = layer.borderWidth
         borderWidth.toValue = width
@@ -124,10 +128,9 @@ class CellView: UIView
         layer.borderWidth = width
         layer.backgroundColor = newBackgroundColour
         number.textColor =  UIColor.black
-        for pm in pencilMarks { pm.textColor = UIColor.black }
     }
     
-    func highlight()
+    func select()
     {
         guard !isHighlighted else { return }
         isHighlighted = true
@@ -173,11 +176,27 @@ class CellView: UIView
             show(view: self.number)
         }
     }
+    
+    private func resetColours()
+    {
+        if isHighlighted {
+            backgroundColor = highlightedCellBackgroundColour
+            number.textColor = highlightedCellTextColour
+            layer.borderColor = highlightedCellBorderColour.cgColor
+            for pm in pencilMarks { pm.textColor = highlightedCellTextColour }
+        }
+        else {
+            backgroundColor = cellColour
+            number.textColor = textColour
+            for pm in pencilMarks { pm.textColor = textColour }
+        }
+    }
 }
 
 // MARK: - Private Functions
 fileprivate extension CellView
 {
+    
     func show(view: UIView)
     {
         view.isHidden = false

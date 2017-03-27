@@ -14,7 +14,9 @@ private let CELL_SPACING: CGFloat = 0.0075
 
 private typealias Degree = UInt32
 
-protocol SudokuViewDelegate: NSObjectProtocol
+typealias SudokuBoardViewIndex = (row: Int, column: Int)
+
+protocol SudokuViewDelegate: class
 {
     func sudokuView(_ view: SudokuView, didSelectCellAt: (row: Int, column: Int))
 }
@@ -24,10 +26,10 @@ class SudokuView: UIView
 {
     fileprivate var cells: [CellView]
     fileprivate let order: Int
-    fileprivate let dimensionality: Int
     fileprivate var animator: UIDynamicAnimator!
     private (set) var tapGestureRecogniser: UITapGestureRecognizer!
     
+    let dimensionality: Int
     weak var delegate: SudokuViewDelegate?
     
     // MARK: - Lifecycle
@@ -92,10 +94,10 @@ class SudokuView: UIView
     }
     
     // MARK: - Internal Functions
-    func cellAt(row: Int, column: Int) -> CellView?
+    func cellAt(_ index: SudokuBoardViewIndex) -> CellView?
     {
-        guard row < dimensionality && column < dimensionality else { return nil }
-        return cells[row * dimensionality + column]
+        guard index.row < dimensionality && index.column < dimensionality else { return nil }
+        return cells[index.row * dimensionality + index.column]
     }
     
     func gameEnded()

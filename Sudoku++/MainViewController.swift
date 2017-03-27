@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import SudokuEngine
 
 private let order = 3
 
@@ -20,7 +19,7 @@ fileprivate func convertNumberToString(_ number: Int) -> String
 
 class MainViewController: UIViewController
 {
-    var sudokuBoard: SudokuBoard!
+    weak var viewModel: MainViewModel!
     
     weak var sudokuView: SudokuView!
     weak var numberSelectionView: NumberSelectionView!
@@ -32,7 +31,11 @@ class MainViewController: UIViewController
     weak var settingsButton: UIButton!
     weak var clearCellButton: HighlightableButton!
     
-    fileprivate var currentState = MainScreenState.begin
+    convenience init(withViewModel viewModel: MainViewModel)
+    {
+        self.init()
+        self.viewModel = viewModel
+    }
     
     override func loadView()
     {
@@ -92,8 +95,8 @@ class MainViewController: UIViewController
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        sudokuBoard = SudokuBoard.generatePuzzle(ofOrder: order, difficulty: .easy)!
-        sudokuBoard.markupBoard()
+        viewModel.delegate = self
+        viewModel.sendState()
         numberSelectionView.delegate = self
         pencilSelectionView.delegate = self
         sudokuView.delegate = self
@@ -104,13 +107,6 @@ class MainViewController: UIViewController
         sudokuView.frame = CGRect(x: 0, y: 0, width: bounds.width - (2 * MARGIN), height: 0)
         numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
         pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
-        for (i, c) in sudokuBoard.board.enumerated() {
-            let row = i / sudokuBoard.dimensionality
-            let column = i % sudokuBoard.dimensionality
-            let cellView = sudokuView.cellAt(row: row, column: column)!
-            if let number = c.number { cellView.setNumber(number: convertNumberToString(number)) }
-            else { for pm in c.pencilMarks { cellView.showPencilMark(inPosition: pm - 1) } }
-        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
@@ -136,58 +132,26 @@ extension MainViewController
 {
     func clearButtonDragExit(_ sender: HighlightableButton)
     {
-        switch currentState {
-        case .highlightClear:   sender.select()
-        default:                sender.unhighlight()
-        }
+        viewModel.selectClear(event: .release)
     }
     
     func clearButtonTouchDown(_ sender: HighlightableButton)
     {
-        sender.highlight()
+        viewModel.selectClear(event: .press)
     }
     
     func clearButtonTouchUpInside(_ sender: HighlightableButton)
     {
-        switch currentState {
-        case .highlightCell(row: let row, column: let column):  clearCellAt(row: row, column: column)
-        default:                                                break
-        }
-        currentState = currentState.advanceWith(action: .selectedClear)
-        switch currentState {
-        case .highlightClear:
-            removeHighlights()
-            sender.select()
-            break
-        case .highlightCell(row: let row, column: let column):
-            highlightCellAt((row, column))
-            fallthrough
-        default:
-            sender.unhighlight()
-            break
-        }
+        viewModel.selectClear(event: .releaseActivate)
     }
 }
 
 // MARK: - SudokuViewDelegate Implementation
 extension MainViewController: SudokuViewDelegate
 {
-    func sudokuView(_ view: SudokuView, didSelectCellAt index: (row: Int, column: Int))
+    func sudokuView(_ view: SudokuView, didSelectCellAt index: SudokuBoardIndex)
     {
-        switch currentState {
-        case .highlightNumber(let number):          setNumber(number, forCellAt: index)
-        case .highlightPencilMark(let pencilMark):  setPencilMark(pencilMark, forCellAt: index)
-        case .highlightClear:                       clearCellAt(index)
-        default:                                    break
-        }
-        currentState = currentState.advanceWith(action: .selectedCell(row: index.row, column: index.column))
-        switch currentState {
-        case .begin:                                            removeHighlights()
-        case .highlightNumber(let number):                      highlightCellsContaining(number)
-        case .highlightPencilMark(let pencilMark):              highlightCellsContaining(pencilMark)
-        case .highlightClear:                                   break
-        case .highlightCell(row: let row, column: let column):  highlightCellAt((row, column))
-        }
+        viewModel.selectCell(atIndex: index)
     }
 }
 
@@ -196,169 +160,18 @@ extension MainViewController: NumberSelectionViewDelegate
 {
     func numberSelectionView(_ view: NumberSelectionView, didSelect number: Int)
     {
-        clearCellButton.unhighlight()
         switch view {
-        case numberSelectionView:   numberSelectionView(selectedNumber: number)
-        case pencilSelectionView:   pencilMarkSelectionView(selectedNumber: number)
+        case numberSelectionView:   viewModel.selectNumber(number, event: .releaseActivate)
+        case pencilSelectionView:   viewModel.selectPencilMark(number, event: .releaseActivate)
         default:                    break
         }
         
     }
 }
 
-// MARK: - Private Functions
+// MARK: - Layout Functions
 fileprivate extension MainViewController
 {
-    func numberSelectionView(selectedNumber number: Int)
-    {
-        switch currentState {
-        case .highlightCell(row: let row, column: let column):
-            setNumber(number, forCellAt: (row, column))
-            break
-        default:
-            break
-        }
-        
-        currentState = currentState.advanceWith(action: .selectedNumber(number))
-        
-        switch currentState {
-        case .begin:
-            removeHighlights()
-            break
-        case .highlightCell(row: _, column: _):
-            numberSelectionView.clearSelection()
-            pencilSelectionView.clearSelection()
-            break
-        case .highlightNumber(let number):
-            highlightCellsContaining(number)
-            numberSelectionView.select(number: number)
-            pencilSelectionView.clearSelection()
-            break
-        default:
-            break
-        }
-    }
-    
-    func pencilMarkSelectionView(selectedNumber number: Int)
-    {
-        switch currentState {
-        case .highlightCell(row: let row, column: let column):
-            setPencilMark(number, forCellAt: (row, column))
-            break
-        default:
-            break
-        }
-        
-        currentState = currentState.advanceWith(action: .selectedPencilMark(number))
-        
-        switch currentState {
-        case .begin:
-            removeHighlights()
-            break
-        case .highlightCell(row: let row, column: let column):
-            highlightCellAt((row, column))
-            numberSelectionView.clearSelection()
-            pencilSelectionView.clearSelection()
-            break
-        case .highlightPencilMark(let number):
-            highlightCellsContaining(number)
-            pencilSelectionView.select(number: number)
-            numberSelectionView.clearSelection()
-            break
-        default:
-            break
-        }
-    }
-    
-    func setPencilMark(_ number: Int, forCellAt index: (row: Int, column: Int))
-    {
-        let cell = sudokuBoard.cellAt(row: index.row, column: index.column)!
-        let cellView = sudokuView.cellAt(row: index.row, column: index.column)!
-        if !cell.isGiven && cell.number == nil {
-            if cell.pencilMarks.contains(number) {
-                cell.pencilMarks.remove(number)
-                cellView.hidePencilMark(inPosition: number - 1)
-            }
-            else {
-                cell.pencilMarks.insert(number)
-                cellView.showPencilMark(inPosition: number - 1)
-            }
-        }
-    }
-    
-    func setNumber(_ number: Int, forCellAt index: (row: Int, column: Int))
-    {
-        let cell = sudokuBoard.cellAt(row: index.row, column: index.column)!
-        let cellView = sudokuView.cellAt(row: index.row, column: index.column)!
-        if !cell.isGiven {
-            if cell.number == number {
-                cell.number = nil
-                cellView.setNumber(number: "")
-                highlightCellAt(index)
-            }
-            else {
-                cell.number = number
-                cell.pencilMarks.removeAll()
-                cellView.setNumber(number: convertNumberToString(number))
-                cellView.highlight()
-                highlightCellsContaining(number)
-            }
-        }
-    }
-    
-    func removeHighlights()
-    {
-        for i in 0 ..< sudokuBoard.board.count {
-            let row = i / sudokuBoard.dimensionality
-            let column = i % sudokuBoard.dimensionality
-            let cellView = sudokuView.cellAt(row: row, column: column)!
-            cellView.unhighlight()
-        }
-        clearCellButton.unhighlight()
-        numberSelectionView.clearSelection()
-        pencilSelectionView.clearSelection()
-    }
-    
-    func highlightCellsContaining(_ number: Int)
-    {
-        for (i, cell) in sudokuBoard.board.enumerated() {
-            let row = i / sudokuBoard.dimensionality
-            let column = i % sudokuBoard.dimensionality
-            let cellView = sudokuView.cellAt(row: row, column: column)!
-            if shouldHighlight(cellView: cellView, given: cell, and: number) { cellView.highlight() }
-            if shouldUnhighlight(cellView: cellView, given: cell, and: number) { cellView.unhighlight() }
-        }
-    }
-    
-    func clearCellAt(_ index: (row: Int, column: Int))
-    {
-        let cell = sudokuBoard.cellAt(row: index.row, column: index.column)!
-        let cellView = sudokuView.cellAt(row: index.row, column: index.column)!
-        if !cell.isGiven {
-            cell.number = nil
-            cellView.setNumber(number: "")
-            for pm in cell.pencilMarks { cellView.hidePencilMark(inPosition: pm - 1) }
-            cell.pencilMarks.removeAll()
-        }
-    }
-    
-    func highlightCellAt(_ index: (row: Int, column: Int))
-    {
-        let cell = sudokuBoard.cellAt(row: index.row, column: index.column)!
-        if cell.number != nil { highlightCellsContaining(cell.number!) }
-        else {
-            for i in 0 ..< sudokuBoard.board.count {
-                let r = i / sudokuBoard.dimensionality
-                let c = i % sudokuBoard.dimensionality
-                let cellView = sudokuView.cellAt(row: r, column: c)!
-                if index.row == r && index.column == c { cellView.highlight() }
-                else { cellView.unhighlight() }
-            }
-        }
-        pencilSelectionView.clearSelection()
-        numberSelectionView.clearSelection()
-    }
-    
     func setLayoutPortrait()
     {
         let buttonCount = CGFloat(tabBar.subviews.count)
@@ -429,15 +242,116 @@ fileprivate extension MainViewController
         if width > height { setLayoutLandscapeLeft() }
         else { setLayoutPortrait() }
     }
-    
-    func shouldHighlight(cellView: CellView, given cell: Cell, and number: Int) -> Bool
+}
+
+// MARK: - MainViewModelDelegate Implementation
+extension MainViewController: MainViewModelDelegate
+{
+    func numberSelection(newState state: ButtonState, forNumber number: Int?)
     {
-        return cell.number == number || cell.pencilMarks.contains(number)
+        switch number {
+        case .some(let n):
+            switch state {
+            case .highlighted, .selected: numberSelectionView.select(number: n)
+            case .normal:                 numberSelectionView.clearSelection()
+            }
+            break
+        case .none:
+            numberSelectionView.clearSelection()
+            break
+        }
     }
     
-    func shouldUnhighlight(cellView: CellView, given cell: Cell, and number: Int) -> Bool
+    func pencilMarkSelection(newState state: ButtonState, forNumber number: Int?)
     {
-        return cell.number != number && (cell.number != nil || !cell.pencilMarks.contains(number))
+        switch number {
+        case .some(let n):
+            switch state {
+            case .highlighted, .selected: pencilSelectionView.select(number: n)
+            case .normal:                 pencilSelectionView.clearSelection()
+            }
+            break
+        case .none:
+            pencilSelectionView.clearSelection()
+            break
+        }
+    }
+    
+    func clearButton(newState state: ButtonState)
+    {
+        switch state {
+        case .highlighted:  clearCellButton.highlight()
+        case .selected:     clearCellButton.select()
+        case .normal:       clearCellButton.reset()
+        }
+    }
+    
+    func removeHighlights()
+    {
+        for row in 0 ..< sudokuView.dimensionality {
+            for column in 0 ..< sudokuView.dimensionality {
+                let cellView = sudokuView.cellAt(row: row, column: column)!
+                cellView.deselect()
+            }
+        }
+        clearCellButton.reset()
+        numberSelectionView.clearSelection()
+        pencilSelectionView.clearSelection()
+    }
+    
+    func sudokuCells(atIndexes indexes: [SudokuBoardIndex], newState state: ButtonState)
+    {
+        switch state {
+        case .normal:                   for index in indexes { sudokuView.cellAt(index)!.deselect() }
+        case .selected, .highlighted:   for index in indexes { sudokuView.cellAt(index)!.select() }
+        }
+    }
+    
+    func sudokuCells(atIndexes indexes: [SudokuBoardIndex], newState state: SudokuCellState)
+    {
+        for i in indexes {
+            let cell = sudokuView.cellAt(i)!
+            switch state {
+            case .given:
+                cell.cellColour = UIColor(hexValue: 0xE0E0CC)
+                cell.textColour = UIColor.black
+                cell.highlightedCellBackgroundColour = UIColor.white
+                cell.highlightedCellTextColour = UIColor.red
+                cell.highlightedCellBorderColour = UIColor.red
+                cell.setNeedsDisplay()
+                break
+            case .editable:
+                cell.cellColour = UIColor(hexValue: 0xF0F0DC)
+                cell.textColour = UIColor.black
+                cell.highlightedCellBackgroundColour = UIColor.white
+                cell.highlightedCellTextColour = UIColor.red
+                cell.highlightedCellBorderColour = UIColor.red
+                cell.setNeedsDisplay()
+                break
+            }
+        }
+    }
+    
+    func setNumber(_ number: String, forCellAt index: SudokuBoardIndex)
+    {
+        let cellView = sudokuView.cellAt(index)!
+        cellView.setNumber(number: number)
+    }
+    
+    func showPencilMarks(_ pencilMarks: [Int], forCellAt index: SudokuBoardIndex)
+    {
+        var sortedPencilMarks = pencilMarks.sorted(by: <).makeIterator()
+        let cellView = sudokuView.cellAt(index)!
+        var pencilMark = sortedPencilMarks.next()
+        for i in 0 ..< cellView.pencilMarkCount {
+            if pencilMark == (i + 1) {
+                cellView.showPencilMark(inPosition: i)
+                pencilMark = sortedPencilMarks.next()
+            }
+            else {
+                cellView.hidePencilMark(inPosition: i)
+            }
+        }
     }
 }
 

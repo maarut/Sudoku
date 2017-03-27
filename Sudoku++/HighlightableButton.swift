@@ -85,10 +85,9 @@ class HighlightableButton: UIButton
             text: buttonHighlightedTextColour)
     }
     
-    func unhighlight()
+    func reset()
     {
-        animate(circle: buttonBorderColour.cgColor, background: buttonColour.cgColor,
-            text: buttonTextColour)
+        animate(circle: buttonBorderColour.cgColor, background: buttonColour.cgColor, text: buttonTextColour)
     }
     
     func select()
@@ -106,15 +105,18 @@ fileprivate extension HighlightableButton
         animation.fromValue = layer.backgroundColor
         animation.toValue = background
         animation.duration = 0.3
-        layer.add(animation, forKey: nil)
+        animation.isCumulative = true
+        layer.add(animation, forKey: "backgroundColor")
         layer.backgroundColor = background
         
         let circleAnimation = CABasicAnimation(keyPath: "strokeColor")
         circleAnimation.fromValue = borderShape.strokeColor
         circleAnimation.toValue = circle
         circleAnimation.duration = 0.3
-        borderShape.add(circleAnimation, forKey: nil)
+        circleAnimation.isCumulative = true
+        borderShape.add(circleAnimation, forKey: "strokeColor")
         borderShape.strokeColor = circle
+        
         setTitleColor(text, for: .normal)
         
     }

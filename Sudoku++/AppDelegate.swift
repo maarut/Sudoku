@@ -12,7 +12,7 @@ import SudokuEngine
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate
 {
-
+    var mainViewModel: MainViewModel!
     var window: UIWindow?
     
     override convenience init()
@@ -30,6 +30,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate
         didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool
     {
         let rootVC = MainViewController(nibName: nil, bundle: nil)
+        let viewModel = MainViewModel(withSudokuBoard: SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .easy)!)
+        rootVC.viewModel = viewModel
+        self.mainViewModel = viewModel
         window!.rootViewController = rootVC
         window!.makeKeyAndVisible()
         
