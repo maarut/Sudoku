@@ -9,6 +9,7 @@
 import Foundation
 import SudokuEngine
 
+// MARK: - Private Functions
 fileprivate func convertNumberToString(_ number: Int?) -> String
 {
     switch number ?? 0 {
@@ -18,13 +19,10 @@ fileprivate func convertNumberToString(_ number: Int?) -> String
     }
 }
 
-typealias SudokuBoardIndex = (row: Int, column: Int)
+// MARK: - SudokuBoardIndex Definition
+public typealias SudokuBoardIndex = SudokuEngine.SudokuBoardIndex
 
-func ==(lhs: SudokuBoardIndex, rhs: SudokuBoardIndex) -> Bool
-{
-    return lhs.row == rhs.row && lhs.column == rhs.column
-}
-
+// MARK: - MainScreenAction Definition
 private enum MainScreenAction
 {
     case selectedCell(SudokuBoardIndex)
@@ -33,6 +31,7 @@ private enum MainScreenAction
     case selectedClear
 }
 
+// MARK: - MainScreenState Definition
 private enum MainScreenState
 {
     case highlightCell(SudokuBoardIndex)
@@ -81,27 +80,31 @@ private enum MainScreenState
     }
 }
 
-enum ButtonEvent
+// MARK: - ButtonEvent Definition
+public enum ButtonEvent
 {
     case press
     case releaseActivate
     case release
 }
 
-enum ButtonState
+// MARK: - ButtonState Definition
+public enum ButtonState
 {
     case normal
     case highlighted
     case selected
 }
 
-enum SudokuCellState
+// MARK: - SudokuCellState Definition
+public enum SudokuCellState
 {
     case given
     case editable
 }
 
-protocol MainViewModelDelegate: class
+// MARK: - MainViewModelDelegate Definition
+public protocol MainViewModelDelegate: class
 {
     func numberSelection(newState: ButtonState, forNumber: Int?)
     func pencilMarkSelection(newState: ButtonState, forNumber: Int?)
@@ -112,17 +115,32 @@ protocol MainViewModelDelegate: class
     func sudokuCells(atIndexes: [SudokuBoardIndex], newState: ButtonState)
     func setNumber(_: String, forCellAt: SudokuBoardIndex)
     func showPencilMarks(_: [Int], forCellAt: SudokuBoardIndex)
+    func timerTextDidChange(_: String)
 }
 
-class MainViewModel
+// MARK: - MainViewModel Implementation
+public class MainViewModel
 {
     weak var delegate: MainViewModelDelegate?
     fileprivate var currentState = MainScreenState.begin
-    fileprivate var sudokuBoard: SudokuBoard
+    fileprivate var sudokuBoard: SudokuBoardProtocol
+    fileprivate var timer: Timer!
+    fileprivate var counter = 0
     
-    init(withSudokuBoard b: SudokuBoard)
+    init(withSudokuBoard b: SudokuBoardProtocol)
     {
         sudokuBoard = b
+    }
+    
+    func startTimer()
+    {
+        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(timerFired(_:)),
+            userInfo: nil, repeats: true)
+    }
+    
+    func stopTimer()
+    {
+        timer.invalidate()
     }
     
     func selectCell(atIndex index: SudokuBoardIndex)
@@ -138,8 +156,14 @@ class MainViewModel
         case .begin:                                delegate?.removeHighlights()
         case .highlightNumber(let number):          highlightCellsContaining(number)
         case .highlightPencilMark(let pencilMark):  highlightCellsContaining(pencilMark)
-        case .highlightCell(let cell):              highlightCellAt(cell)
-        case .highlightClear:                       break
+        case .highlightCell(let cell):
+            highlightCellAt(cell)
+            delegate?.numberSelection(newState: .normal, forNumber: nil)
+            delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
+            delegate?.clearButton(newState: .normal)
+            break
+        case .highlightClear:
+            break
         }
     }
     
@@ -156,8 +180,8 @@ class MainViewModel
         case .begin:
             delegate?.removeHighlights()
             break
-        case .highlightCell(row: let row, column: let column):
-            highlightCellAt((row, column))
+        case .highlightCell(let index):
+            highlightCellAt(index)
             delegate?.numberSelection(newState: .normal, forNumber: nil)
             delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
             delegate?.clearButton(newState: .normal)
@@ -187,7 +211,8 @@ class MainViewModel
         case .begin:
             delegate?.removeHighlights()
             break
-        case .highlightCell(_):
+        case .highlightCell(let index):
+            highlightCellAt(index)
             delegate?.numberSelection(newState: .normal, forNumber: nil)
             delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
             delegate?.clearButton(newState: .normal)
@@ -219,15 +244,17 @@ class MainViewModel
         var editableCells = [SudokuBoardIndex]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
-                let cell = sudokuBoard.cellAt((row, column))!
+                let cell = sudokuBoard.cellAt(SudokuBoardIndex(row: row, column: column))!
                 if let number = cell.number {
-                    delegate?.setNumber(convertNumberToString(number), forCellAt: (row, column))
+                    delegate?.setNumber(convertNumberToString(number),
+                        forCellAt: SudokuBoardIndex(row: row, column: column))
                 }
                 else {
-                    delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: (row, column))
+                    delegate?.showPencilMarks(Array(cell.pencilMarks),
+                        forCellAt: SudokuBoardIndex(row: row, column: column))
                 }
-                if cell.isGiven { givenCells.append((row, column)) }
-                else            { editableCells.append((row, column)) }
+                if cell.isGiven { givenCells.append(SudokuBoardIndex(row: row, column: column)) }
+                else            { editableCells.append(SudokuBoardIndex(row: row, column: column)) }
             }
         }
         delegate?.sudokuCells(atIndexes: givenCells, newState: .given)
@@ -291,29 +318,39 @@ fileprivate extension MainViewModel
     }
 }
 
-// MARK: - Private Functions
+// MARK: - MainViewModel Private Functions
 fileprivate extension MainViewModel
 {
+    dynamic func timerFired(_ timer: Timer)
+    {
+        counter += 1
+        
+        let seconds = counter % 60
+        let minutes = (counter / 60) % 60
+        let hours = counter / 3600
+        let elapsedMinutesAndSeconds = String(format: "%.2i:%.2i", minutes, seconds)
+        let hoursString = hours == 0 ? "" : String(format: "%.2i:", hours)
+        delegate?.timerTextDidChange(hoursString + elapsedMinutesAndSeconds)
+    }
+    
     func setNumber(_ number: Int, forCellAt index: SudokuBoardIndex)
     {
-        let cell = sudokuBoard.cellAt(index)!
+        guard let cell = sudokuBoard.cellAt(index) else { return }
         if cell.isGiven { return }
         if cell.number == number {
             cell.number = nil
-            highlightCellAt(index)
         }
         else {
             cell.pencilMarks.removeAll()
             cell.number = number
-            highlightCellsContaining(number)
         }
         delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
-        delegate?.setNumber(convertNumberToString(cell.number ?? 0), forCellAt: index)
+        delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
     }
     
     func setPencilMark(_ number: Int, forCellAt index: SudokuBoardIndex)
     {
-        let cell = sudokuBoard.cellAt(index)!
+        guard let cell = sudokuBoard.cellAt(index) else { return }
         if cell.isGiven { return }
         if cell.pencilMarks.contains(number)    { cell.pencilMarks.remove(number) }
         else                                    { cell.pencilMarks.insert(number) }
@@ -322,7 +359,7 @@ fileprivate extension MainViewModel
     
     func highlightCellAt(_ index: SudokuBoardIndex)
     {
-        let cell = sudokuBoard.cellAt(index)!
+        guard let cell = sudokuBoard.cellAt(index) else { return }
         if cell.number != nil {
             highlightCellsContaining(cell.number!)
         }
@@ -330,8 +367,6 @@ fileprivate extension MainViewModel
             delegate?.sudokuCells(atIndexes: [index], newState: .selected)
             delegate?.sudokuCells(atIndexes: allCellsExcluding(index), newState: .normal)
         }
-        delegate?.numberSelection(newState: .normal, forNumber: nil)
-        delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
     }
     
     func highlightCellsContaining(_ number: Int)
@@ -340,12 +375,12 @@ fileprivate extension MainViewModel
         var normalIndexes = [SudokuBoardIndex]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
-                let cell = sudokuBoard.cellAt((row, column))!
+                let cell = sudokuBoard.cellAt(SudokuBoardIndex(row: row, column: column))!
                 if cell.number == number || cell.pencilMarks.contains(number) {
-                    selectedIndexes.append((row, column))
+                    selectedIndexes.append(SudokuBoardIndex(row: row, column: column))
                 }
                 else {
-                    normalIndexes.append((row, column))
+                    normalIndexes.append(SudokuBoardIndex(row: row, column: column))
                 }
             }
         }
@@ -355,7 +390,7 @@ fileprivate extension MainViewModel
     
     func clearCellAt(_ index: SudokuBoardIndex)
     {
-        let cell = sudokuBoard.cellAt(index)!
+        guard let cell = sudokuBoard.cellAt(index) else { return }
         if !cell.isGiven {
             cell.number = nil
             cell.pencilMarks.removeAll()
@@ -369,7 +404,9 @@ fileprivate extension MainViewModel
         var indexes = [SudokuBoardIndex]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
-                if (row, column) != index { indexes.append((row, column)) }
+                if SudokuBoardIndex(row: row, column: column) != index {
+                    indexes.append(SudokuBoardIndex(row: row, column: column))
+                }
             }
         }
         return indexes

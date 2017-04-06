@@ -10,7 +10,37 @@ import Foundation
 import SudokuEngineC
 
 // MARK: - Type Aliases
-public typealias SudokuBoardIndex = (row: Int, column: Int)
+public struct SudokuBoardIndex: Equatable
+{
+    public let row: Int
+    public let column: Int
+    
+    public init(row: Int, column: Int) { self.row = row; self.column = column }
+    
+    public static func ==(lhs: SudokuBoardIndex, rhs: SudokuBoardIndex) -> Bool
+    {
+        return lhs.column == rhs.column && lhs.row == rhs.row
+    }
+}
+
+// MARK: - SudokuBoardProtocol Definition
+public protocol SudokuBoardProtocol
+{
+    var order: Int { get }
+    var dimensionality: Int { get }
+    var board: [Cell] { get }
+    var difficulty: PuzzleDifficulty { get }
+    var difficultyScore: Int { get }
+    
+    var isSolved: Bool { get }
+    
+    func solve() -> Bool
+    func markupBoard()
+    func unmarkBoard()
+    func setPuzzle()
+    func cellAt(_ index: SudokuBoardIndex) -> Cell?
+    
+}
 
 // MARK: - PuzzleDifficulty Enum
 public enum PuzzleDifficulty: Int
@@ -85,7 +115,7 @@ public class Cell: NSCoding
 }
 
 // MARK: - SudokuBoard Implementation
-public class SudokuBoard: NSCoding
+public class SudokuBoard: SudokuBoardProtocol, NSCoding
 {
     public let order: Int
     public let dimensionality: Int
@@ -94,20 +124,16 @@ public class SudokuBoard: NSCoding
     private (set) public var difficultyScore = 0
  
     public var isSolved: Bool {
-        get {
-            return difficulty.isSolvable() && !board.contains(where: { $0.number != $0.solution } )
-        }
+        return difficulty.isSolvable() && !board.contains(where: { $0.number != $0.solution } )
     }
     
     public var solutionDescription: String {
-        get {
-            return description {
-                let number = board[$0].solution
-                switch number ?? 0 {
-                case 1 ... 9:   return "\(number!)"
-                case 10 ... 36: return "\(UnicodeScalar(55 + number!)!)"
-                default:        return nil
-                }
+        return description {
+            let number = board[$0].solution
+            switch number ?? 0 {
+            case 1 ... 9:   return "\(number!)"
+            case 10 ... 36: return "\(UnicodeScalar(55 + number!)!)"
+            default:        return nil
             }
         }
     }

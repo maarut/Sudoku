@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E3378B921E93982600275F4D /* MockImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3378B911E93982600275F4D /* MockImpl.swift */; };
 		E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */; };
 		E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758D1E699F7100A2A736 /* NumberSelectionView.swift */; };
 		E35275D21E76A2E300A2A736 /* SudokuEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */; };
@@ -21,7 +22,11 @@
 		E36C68811E609F6600F0FFE9 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68801E609F6600F0FFE9 /* CellView.swift */; };
 		E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */; };
 		E36C68CB1E66F27200F0FFE9 /* SudokuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68CA1E66F27200F0FFE9 /* SudokuView.swift */; };
+		E38CB7E11E9666A400F7A565 /* MockViewModelDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38CB7E01E9666A400F7A565 /* MockViewModelDelegate.swift */; };
+		E38CB7E61E96676300F7A565 /* MockSudokuBoard.swift in Sources */ = {isa = PBXBuildFile; fileRef = E38CB7E51E96676300F7A565 /* MockSudokuBoard.swift */; };
 		E39FC0B01E58BED200C7AC10 /* UIWindow+Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */; };
+		E3E8457A1E8ABA1300243A98 /* Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E845791E8ABA1300243A98 /* Mock.swift */; };
+		E3E8457C1E8ACCD700243A98 /* MainScreenClearButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E8457B1E8ACCD700243A98 /* MainScreenClearButtonTests.swift */; };
 		E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD86571E452AA500C8B780 /* AppDelegate.swift */; };
 		E3FD865A1E452AA500C8B780 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD86591E452AA500C8B780 /* MainViewController.swift */; };
 		E3FD865F1E452AA500C8B780 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E3FD865E1E452AA500C8B780 /* Assets.xcassets */; };
@@ -60,6 +65,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E3378B911E93982600275F4D /* MockImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockImpl.swift; sourceTree = "<group>"; };
 		E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivateAnimationDelegate.swift; sourceTree = "<group>"; };
 		E352758D1E699F7100A2A736 /* NumberSelectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NumberSelectionView.swift; path = "Sudoku++/NumberSelectionView.swift"; sourceTree = "<group>"; };
 		E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SudokuEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -77,7 +83,11 @@
 		E36C68801E609F6600F0FFE9 /* CellView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = CellView.swift; path = "Sudoku++/CellView.swift"; sourceTree = "<group>"; };
 		E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIColor+Convenience.swift"; sourceTree = "<group>"; };
 		E36C68CA1E66F27200F0FFE9 /* SudokuView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SudokuView.swift; path = "Sudoku++/SudokuView.swift"; sourceTree = "<group>"; };
+		E38CB7E01E9666A400F7A565 /* MockViewModelDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockViewModelDelegate.swift; sourceTree = "<group>"; };
+		E38CB7E51E96676300F7A565 /* MockSudokuBoard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockSudokuBoard.swift; sourceTree = "<group>"; };
 		E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIWindow+Builder.swift"; sourceTree = "<group>"; };
+		E3E845791E8ABA1300243A98 /* Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mock.swift; sourceTree = "<group>"; };
+		E3E8457B1E8ACCD700243A98 /* MainScreenClearButtonTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenClearButtonTests.swift; sourceTree = "<group>"; };
 		E3FD86541E452AA500C8B780 /* Sudoku++.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sudoku++.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3FD86571E452AA500C8B780 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E3FD86591E452AA500C8B780 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -165,6 +175,32 @@
 			path = ..;
 			sourceTree = "<group>";
 		};
+		E38CB7E21E9666A900F7A565 /* Mock */ = {
+			isa = PBXGroup;
+			children = (
+				E3E845791E8ABA1300243A98 /* Mock.swift */,
+				E3378B911E93982600275F4D /* MockImpl.swift */,
+			);
+			name = Mock;
+			sourceTree = "<group>";
+		};
+		E38CB7E31E9666B200F7A565 /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				E38CB7E01E9666A400F7A565 /* MockViewModelDelegate.swift */,
+				E38CB7E51E96676300F7A565 /* MockSudokuBoard.swift */,
+			);
+			name = Mocks;
+			sourceTree = "<group>";
+		};
+		E38CB7E41E9666BC00F7A565 /* MainViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				E3E8457B1E8ACCD700243A98 /* MainScreenClearButtonTests.swift */,
+			);
+			name = MainViewModel;
+			sourceTree = "<group>";
+		};
 		E39FC0B11E58F5C100C7AC10 /* util */ = {
 			isa = PBXGroup;
 			children = (
@@ -224,6 +260,9 @@
 		E3FD866B1E452AA500C8B780 /* Sudoku++ Tests */ = {
 			isa = PBXGroup;
 			children = (
+				E38CB7E41E9666BC00F7A565 /* MainViewModel */,
+				E38CB7E31E9666B200F7A565 /* Mocks */,
+				E38CB7E21E9666A900F7A565 /* Mock */,
 				E36C68561E5E427B00F0FFE9 /* Sudoku++Tests.swift */,
 				E3FD866E1E452AA500C8B780 /* Info.plist */,
 			);
@@ -450,7 +489,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E3E8457C1E8ACCD700243A98 /* MainScreenClearButtonTests.swift in Sources */,
+				E3378B921E93982600275F4D /* MockImpl.swift in Sources */,
 				E36C685F1E5E42B300F0FFE9 /* Sudoku++Tests.swift in Sources */,
+				E38CB7E61E96676300F7A565 /* MockSudokuBoard.swift in Sources */,
+				E38CB7E11E9666A400F7A565 /* MockViewModelDelegate.swift in Sources */,
+				E3E8457A1E8ABA1300243A98 /* Mock.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

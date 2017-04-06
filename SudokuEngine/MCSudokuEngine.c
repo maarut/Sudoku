@@ -656,40 +656,37 @@ static void solveContextRecursive(MCSudokuSolveContext *context)
 #pragma mark Generating Puzzles
 
 static MCPuzzleDifficulty convertDifficultyScore(uint difficultyScore, uint order)
-{
-    uint orderMult = order - 2;
-    
-    if      (difficultyScore < (MCPuzzleDifficultyEasy   * orderMult))  { return MCPuzzleDifficultyZero;    }
-    else if (difficultyScore < (MCPuzzleDifficultyNormal * orderMult))  { return MCPuzzleDifficultyEasy;    }
-    else if (difficultyScore < (MCPuzzleDifficultyHard   * orderMult))  { return MCPuzzleDifficultyNormal;  }
-    else if (difficultyScore < (MCPuzzleDifficultyInsane * orderMult))  { return MCPuzzleDifficultyHard;    }
+{   
+    if      (difficultyScore < (MCPuzzleDifficultyEasy   * order))  { return MCPuzzleDifficultyZero;    }
+    else if (difficultyScore < (MCPuzzleDifficultyNormal * order))  { return MCPuzzleDifficultyEasy;    }
+    else if (difficultyScore < (MCPuzzleDifficultyHard   * order))  { return MCPuzzleDifficultyNormal;  }
+    else if (difficultyScore < (MCPuzzleDifficultyInsane * order))  { return MCPuzzleDifficultyHard;    }
     
     return MCPuzzleDifficultyInsane;
 }
 
 static uint targetDifficultyScore(MCPuzzleDifficulty difficulty, uint order)
 {
-    uint orderMult = order - 2;
     switch (difficulty) {
         case MCPuzzleDifficultyEasy:
         {
-            uint score = arc4random() % (orderMult * (MCPuzzleDifficultyNormal - MCPuzzleDifficultyEasy));
-            return MCPuzzleDifficultyEasy * orderMult + score;
+            uint score = arc4random() % (order * (MCPuzzleDifficultyNormal - MCPuzzleDifficultyEasy));
+            return MCPuzzleDifficultyEasy * order + score;
         }
         case MCPuzzleDifficultyNormal:
         {
-            uint score = arc4random() % (orderMult * (MCPuzzleDifficultyHard - MCPuzzleDifficultyNormal));
-            return MCPuzzleDifficultyNormal * orderMult + score;
+            uint score = arc4random() % (order * (MCPuzzleDifficultyHard - MCPuzzleDifficultyNormal));
+            return MCPuzzleDifficultyNormal * order + score;
         }
         case MCPuzzleDifficultyHard:
         {
-            uint score = arc4random() % (orderMult * (MCPuzzleDifficultyInsane - MCPuzzleDifficultyHard));
-            return MCPuzzleDifficultyHard * orderMult + score;
+            uint score = arc4random() % (order * (MCPuzzleDifficultyInsane - MCPuzzleDifficultyHard));
+            return MCPuzzleDifficultyHard * order + score;
         }
         case MCPuzzleDifficultyInsane:
         {
-            uint score = arc4random() % (orderMult * MCPuzzleDifficultyInsane);
-            return MCPuzzleDifficultyInsane * orderMult + score;
+            uint score = arc4random() % (order * MCPuzzleDifficultyInsane);
+            return MCPuzzleDifficultyInsane * order + score;
         }
         case MCPuzzleDifficultyZero:
         default:

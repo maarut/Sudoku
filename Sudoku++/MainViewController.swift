@@ -30,6 +30,7 @@ class MainViewController: UIViewController
     weak var setPuzzleButton: UIButton!
     weak var settingsButton: UIButton!
     weak var clearCellButton: HighlightableButton!
+    weak var timerLabel: UILabel!
     
     convenience init(withViewModel viewModel: MainViewModel)
     {
@@ -50,6 +51,12 @@ class MainViewController: UIViewController
             displayLargeNumbers: false)
         let tabBar = UIView()
         tabBar.backgroundColor = UIColor.lightGray
+        let timerLabel = UILabel()
+        timerLabel.text = "00:00"
+        timerLabel.textAlignment = .center
+        timerLabel.frame.size = timerLabel.intrinsicContentSize
+        timerLabel.frame.size.height *= 1.2
+        timerLabel.frame.size.width *= 1.2
         let newGameButton = UIButton(type: .system)
         newGameButton.setTitle("N", for: .normal)
         newGameButton.frame.size = newGameButton.intrinsicContentSize
@@ -62,6 +69,7 @@ class MainViewController: UIViewController
         let settingsButton = UIButton(type: .system)
         settingsButton.setTitle("S", for: .normal)
         settingsButton.frame.size = settingsButton.intrinsicContentSize
+        settingsButton.addTarget(self, action: #selector(settingsTapped(_:)), for: .touchUpInside)
         let clearCellButton = HighlightableButton()
         clearCellButton.setTitle("C", for: .normal)
         clearCellButton.frame.size = clearCellButton.intrinsicContentSize
@@ -81,6 +89,7 @@ class MainViewController: UIViewController
         view.addSubview(pencilSelectionView)
         view.addSubview(tabBar)
         view.addSubview(clearCellButton)
+        view.addSubview(timerLabel)
         self.sudokuView = sudokuView
         self.numberSelectionView = numberSelectionView
         self.pencilSelectionView = pencilSelectionView
@@ -90,6 +99,7 @@ class MainViewController: UIViewController
         self.setPuzzleButton = setPuzzleButton
         self.settingsButton = settingsButton
         self.clearCellButton = clearCellButton
+        self.timerLabel = timerLabel
     }
     
     override func viewDidLoad()
@@ -114,6 +124,18 @@ class MainViewController: UIViewController
         super.viewWillTransition(to: size, with: coordinator)
     }
     
+    override func viewWillAppear(_ animated: Bool)
+    {
+        super.viewWillAppear(animated)
+        viewModel.startTimer()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool)
+    {
+        super.viewWillDisappear(animated)
+        viewModel.stopTimer()
+    }
+    
     override func viewWillLayoutSubviews()
     {
         super.viewWillLayoutSubviews()
@@ -130,6 +152,11 @@ class MainViewController: UIViewController
 // MARK: - Event Handlers
 extension MainViewController
 {
+    func settingsTapped(_ sender: UIButton)
+    {
+        sudokuView.gameEnded()
+    }
+    
     func clearButtonDragExit(_ sender: HighlightableButton)
     {
         viewModel.selectClear(event: .release)
@@ -149,9 +176,9 @@ extension MainViewController
 // MARK: - SudokuViewDelegate Implementation
 extension MainViewController: SudokuViewDelegate
 {
-    func sudokuView(_ view: SudokuView, didSelectCellAt index: SudokuBoardIndex)
+    func sudokuView(_ view: SudokuView, didSelectCellAt index: (row: Int, column: Int))
     {
-        viewModel.selectCell(atIndex: index)
+        viewModel.selectCell(atIndex: SudokuBoardIndex(row: index.row, column: index.column))
     }
 }
 
@@ -165,7 +192,6 @@ extension MainViewController: NumberSelectionViewDelegate
         case pencilSelectionView:   viewModel.selectPencilMark(number, event: .releaseActivate)
         default:                    break
         }
-        
     }
 }
 
@@ -182,15 +208,16 @@ fileprivate extension MainViewController
         for (i, button) in [newGameButton, undoButton, setPuzzleButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: CGFloat(i * 2 + 1) * buttonSpacing, y: 22)
         }
-        let width = numberSelectionView.frame.width
         let endOfSudokuFrame = sudokuView.frame.origin.y + sudokuView.frame.width
         let beginningOfToolbar = tabBar.frame.origin.y
-        let midY = endOfSudokuFrame + ((beginningOfToolbar - endOfSudokuFrame) / 2)
+        let width = numberSelectionView.frame.width
+        let midY = endOfSudokuFrame + (beginningOfToolbar - endOfSudokuFrame) / 2
         numberSelectionView.center = CGPoint(x: MARGIN + width / 2, y: midY)
         pencilSelectionView.center = CGPoint(x: view.frame.width - MARGIN - width / 2, y: midY)
+        clearCellButton.center = CGPoint(x: view.frame.width / 2, y: midY)
         let endOfNumberSelectionFrame = numberSelectionView.frame.origin.y + numberSelectionView.frame.height
-        let clearCellCenterY = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
-        clearCellButton.center = CGPoint(x: view.frame.width / 2, y: clearCellCenterY)
+        let timerLabelCenterY = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
+        timerLabel.center = CGPoint(x: view.frame.width / 2, y: timerLabelCenterY)
     }
     
     func setLayoutLandscapeLeft()
@@ -209,9 +236,9 @@ fileprivate extension MainViewController
         let midX = endOfSudokuFrame + ((beginningOfToolbar - endOfSudokuFrame) / 2)
         numberSelectionView.center = CGPoint(x: midX, y: MARGIN + height / 2)
         pencilSelectionView.center = CGPoint(x: midX, y: view.frame.height - MARGIN - height / 2)
-        let endOfNumberSelectionFrame = numberSelectionView.frame.origin.x + numberSelectionView.frame.width
-        let clearCellCenterX = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
-        clearCellButton.center = CGPoint(x: clearCellCenterX, y: view.frame.height / 2)
+        clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
+        timerLabel.center.y = view.frame.height / 2
+        timerLabel.frame.origin.x = beginningOfToolbar - timerLabel.frame.width - MARGIN
     }
     
     func setLayoutLandscapeRight()
@@ -230,9 +257,9 @@ fileprivate extension MainViewController
         let midX = endOfToolbar + ((beginningOfSudokuFrame - endOfToolbar) / 2)
         numberSelectionView.center = CGPoint(x: midX, y: MARGIN + height / 2)
         pencilSelectionView.center = CGPoint(x: midX, y: view.frame.height - MARGIN - height / 2)
-        let beginningOfNumberSelectionFrame = numberSelectionView.frame.origin.x
-        let clearCellCenterX = endOfToolbar + (beginningOfNumberSelectionFrame - endOfToolbar) / 2
-        clearCellButton.center = CGPoint(x: clearCellCenterX, y: view.frame.height / 2)
+        clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
+        timerLabel.center.y = view.frame.height / 2
+        timerLabel.frame.origin.x = endOfToolbar + MARGIN
     }
     
     func setLayoutUnknown()
@@ -247,111 +274,139 @@ fileprivate extension MainViewController
 // MARK: - MainViewModelDelegate Implementation
 extension MainViewController: MainViewModelDelegate
 {
+    func timerTextDidChange(_ text: String)
+    {
+        DispatchQueue.main.async {
+            self.timerLabel.text = text
+        }
+    }
+    
     func numberSelection(newState state: ButtonState, forNumber number: Int?)
     {
-        switch number {
-        case .some(let n):
-            switch state {
-            case .highlighted, .selected: numberSelectionView.select(number: n)
-            case .normal:                 numberSelectionView.clearSelection()
+        DispatchQueue.main.async {
+            switch number {
+            case .some(let n):
+                switch state {
+                case .highlighted, .selected: self.numberSelectionView.select(number: n)
+                case .normal:                 self.numberSelectionView.clearSelection()
+                }
+                break
+            case .none:
+                self.numberSelectionView.clearSelection()
+                break
             }
-            break
-        case .none:
-            numberSelectionView.clearSelection()
-            break
         }
     }
     
     func pencilMarkSelection(newState state: ButtonState, forNumber number: Int?)
     {
-        switch number {
-        case .some(let n):
-            switch state {
-            case .highlighted, .selected: pencilSelectionView.select(number: n)
-            case .normal:                 pencilSelectionView.clearSelection()
+        DispatchQueue.main.async {
+            switch number {
+            case .some(let n):
+                switch state {
+                case .highlighted, .selected: self.pencilSelectionView.select(number: n)
+                case .normal:                 self.pencilSelectionView.clearSelection()
+                }
+                break
+            case .none:
+                self.pencilSelectionView.clearSelection()
+                break
             }
-            break
-        case .none:
-            pencilSelectionView.clearSelection()
-            break
         }
     }
     
     func clearButton(newState state: ButtonState)
     {
-        switch state {
-        case .highlighted:  clearCellButton.highlight()
-        case .selected:     clearCellButton.select()
-        case .normal:       clearCellButton.reset()
+        DispatchQueue.main.async {
+            switch state {
+            case .highlighted:  self.clearCellButton.highlight()
+            case .selected:     self.clearCellButton.select()
+            case .normal:       self.clearCellButton.reset()
+            }
         }
     }
     
     func removeHighlights()
     {
-        for row in 0 ..< sudokuView.dimensionality {
-            for column in 0 ..< sudokuView.dimensionality {
-                let cellView = sudokuView.cellAt(row: row, column: column)!
-                cellView.deselect()
+        DispatchQueue.main.async {
+            for row in 0 ..< self.sudokuView.dimensionality {
+                for column in 0 ..< self.sudokuView.dimensionality {
+                    let cellView = self.sudokuView.cellAt(row: row, column: column)!
+                    cellView.deselect()
+                }
             }
+            self.clearCellButton.reset()
+            self.numberSelectionView.clearSelection()
+            self.pencilSelectionView.clearSelection()
         }
-        clearCellButton.reset()
-        numberSelectionView.clearSelection()
-        pencilSelectionView.clearSelection()
     }
     
     func sudokuCells(atIndexes indexes: [SudokuBoardIndex], newState state: ButtonState)
     {
-        switch state {
-        case .normal:                   for index in indexes { sudokuView.cellAt(index)!.deselect() }
-        case .selected, .highlighted:   for index in indexes { sudokuView.cellAt(index)!.select() }
+        let idxs = indexes.map { tupleRepresentation($0) }
+        DispatchQueue.main.async {
+            switch state {
+            case .normal:                   for index in idxs { self.sudokuView.cellAt(index)!.deselect() }
+            case .selected, .highlighted:   for index in idxs { self.sudokuView.cellAt(index)!.select() }
+            }
         }
     }
     
     func sudokuCells(atIndexes indexes: [SudokuBoardIndex], newState state: SudokuCellState)
     {
-        for i in indexes {
-            let cell = sudokuView.cellAt(i)!
-            switch state {
-            case .given:
-                cell.cellColour = UIColor(hexValue: 0xE0E0CC)
-                cell.textColour = UIColor.black
-                cell.highlightedCellBackgroundColour = UIColor.white
-                cell.highlightedCellTextColour = UIColor.red
-                cell.highlightedCellBorderColour = UIColor.red
-                cell.setNeedsDisplay()
-                break
-            case .editable:
-                cell.cellColour = UIColor(hexValue: 0xF0F0DC)
-                cell.textColour = UIColor.black
-                cell.highlightedCellBackgroundColour = UIColor.white
-                cell.highlightedCellTextColour = UIColor.red
-                cell.highlightedCellBorderColour = UIColor.red
-                cell.setNeedsDisplay()
-                break
+        DispatchQueue.main.async {
+            for i in indexes {
+                let cell = self.sudokuView.cellAt((i.row, i.column))!
+                switch state {
+                case .given:
+                    cell.cellColour = UIColor(hexValue: 0xE0E0CC)
+                    cell.textColour = UIColor.black
+                    cell.highlightedCellBackgroundColour = UIColor.white
+                    cell.highlightedCellTextColour = UIColor.red
+                    cell.highlightedCellBorderColour = UIColor.red
+                    cell.setNeedsDisplay()
+                    break
+                case .editable:
+                    cell.cellColour = UIColor(hexValue: 0xF0F0DC)
+                    cell.textColour = UIColor.black
+                    cell.highlightedCellBackgroundColour = UIColor.white
+                    cell.highlightedCellTextColour = UIColor.red
+                    cell.highlightedCellBorderColour = UIColor.red
+                    cell.setNeedsDisplay()
+                    break
+                }
             }
         }
     }
     
     func setNumber(_ number: String, forCellAt index: SudokuBoardIndex)
     {
-        let cellView = sudokuView.cellAt(index)!
-        cellView.setNumber(number: number)
+        DispatchQueue.main.async {
+            let cellView = self.sudokuView.cellAt(tupleRepresentation(index))!
+            cellView.setNumber(number: number)
+        }
     }
     
     func showPencilMarks(_ pencilMarks: [Int], forCellAt index: SudokuBoardIndex)
     {
-        var sortedPencilMarks = pencilMarks.sorted(by: <).makeIterator()
-        let cellView = sudokuView.cellAt(index)!
-        var pencilMark = sortedPencilMarks.next()
-        for i in 0 ..< cellView.pencilMarkCount {
-            if pencilMark == (i + 1) {
-                cellView.showPencilMark(inPosition: i)
-                pencilMark = sortedPencilMarks.next()
-            }
-            else {
-                cellView.hidePencilMark(inPosition: i)
+        DispatchQueue.main.async {
+            var sortedPencilMarks = pencilMarks.sorted(by: <).makeIterator()
+            let cellView = self.sudokuView.cellAt(tupleRepresentation(index))!
+            var pencilMark = sortedPencilMarks.next()
+            for i in 0 ..< cellView.pencilMarkCount {
+                if pencilMark == (i + 1) {
+                    cellView.showPencilMark(inPosition: i)
+                    pencilMark = sortedPencilMarks.next()
+                }
+                else {
+                    cellView.hidePencilMark(inPosition: i)
+                }
             }
         }
     }
 }
 
+private func tupleRepresentation(_ index: SudokuBoardIndex) -> (row: Int, column: Int)
+{
+    return (index.row, index.column)
+}

@@ -94,18 +94,18 @@ class NumberSelectionView: UIView
 
 fileprivate extension NumberSelectionView
 {
-    @objc func buttonTouchUpInside(_ sender: HighlightableButton)
+    dynamic func buttonTouchUpInside(_ sender: HighlightableButton)
     {
         let newNumber = buttons.index(of: sender)! + 1
         delegate?.numberSelectionView(self, didSelect: newNumber)
     }
 
-    @objc func buttonTouchDown(_ sender: HighlightableButton)
+    dynamic func buttonTouchDown(_ sender: HighlightableButton)
     {
         sender.highlight()
     }
     
-    @objc func buttonDragExit(_ sender: HighlightableButton)
+    dynamic func buttonDragExit(_ sender: HighlightableButton)
     {
         if selectedNumber != nil && sender === buttons[selectedNumber! - 1] {
             sender.select()

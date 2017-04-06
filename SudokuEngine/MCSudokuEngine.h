@@ -13,10 +13,10 @@
 
 typedef enum {
     MCPuzzleDifficultyZero = 0,
-    MCPuzzleDifficultyEasy = 50,
-    MCPuzzleDifficultyNormal = 80,
-    MCPuzzleDifficultyHard = 150,
-    MCPuzzleDifficultyInsane/*InTheMembrane*/ = 250
+    MCPuzzleDifficultyEasy = 20,
+    MCPuzzleDifficultyNormal = 30,
+    MCPuzzleDifficultyHard = 50,
+    MCPuzzleDifficultyInsane/*InTheMembrane*/ = 85
 } MCPuzzleDifficulty;
 
 typedef struct _MCSudokuSolveContext {
