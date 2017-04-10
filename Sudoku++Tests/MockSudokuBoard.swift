@@ -41,7 +41,7 @@ class MockSudokuBoard: Mock, SudokuBoardProtocol
     
     func cellAt(_ index: SudokuBoardIndex) -> Cell?
     {
-        return registerInvocation(.cellAtIndex, args: index, returning: nil)
+        return registerInvocation(.cellAtIndex, args: index, returning: { _ in nil } )
     }
     
     init() { }

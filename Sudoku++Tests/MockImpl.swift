@@ -11,14 +11,34 @@ import Dispatch
 import XCTest
 
 
+
 private let semaphore = DispatchQueue(label: "Mock Sync Queue")
-private var allStubs = [String: [String: Any]]()
+private var allStubs = [String: [String: [StubImplementation]]]()
 private var allInvocations = [String: [AnyInvocation]]()
 private var allExpectations = [String: [AnyInvocation]]()
 
 private func stubIdentifier<T: RawRepresentable>(_ method: T) -> String
 {
     return "method-\(method.rawValue)"
+}
+
+private enum StubArgument
+{
+    case any
+    case specific([AnyEquatable?])
+}
+
+
+private struct StubImplementation
+{
+    let args: StubArgument
+    let block: Any
+    init(args: StubArgument, block: Any)
+    {
+        self.args = args
+        self.block = block
+    }
+    
 }
 
 private struct AnyInvocation
@@ -105,22 +125,62 @@ extension Mock
         })
     }
     
-    func stub<T>(_ method: MockMethod, withBlock block: @escaping ([Any?]) -> T?)
+    func stub<T>(_ method: MockMethod, withBlock block: @escaping (Any?...) -> T?)
     {
         let methodId = stubIdentifier(method)
         semaphore.sync {
             var stubs = allStubs[identifier] ?? [:]
-            stubs[methodId] = block
+            stubs[methodId] = stubs[methodId] ?? [] + [StubImplementation(args: .any, block: block)]
             allStubs[identifier] = stubs
         }
     }
     
-    func stub<T>(_ method: MockMethod, withBlock block: @escaping ([Any?]) -> T)
+    func stub<T>(_ method: MockMethod, withBlock block: @escaping (Any?...) -> T)
     {
         let methodId = stubIdentifier(method)
         semaphore.sync {
             var stubs = allStubs[identifier] ?? [:]
-            stubs[methodId] = block
+            stubs[methodId] = stubs[methodId] ?? [] + [StubImplementation(args: .any, block: block)]
+            allStubs[identifier] = stubs
+        }
+    }
+    
+    func stub<T>(_ method: MockMethod, andIterateThroughReturnValues values: [T])
+    {
+        var count = 0
+        stub(method, withBlock: { _ -> T in
+            defer { count = (count + 1) % values.count }
+            return values[count]
+        })
+    }
+    
+    func stub<T>(_ method: MockMethod, andIterateThroughReturnValues values: [T?])
+    {
+        var count = 0
+        stub(method, withBlock: { _ -> T? in
+            defer { count = (count + 1) % values.count }
+            return values[count]
+        })
+    }
+    
+    func stub<T>(_ method: MockMethod, andReturn value: T, expectingArguments args: AnyEquatable?...)
+    {
+        let methodId = stubIdentifier(method)
+        let stub = StubImplementation(args: .specific(args), block: { (_: Any?...) -> T in value })
+        semaphore.sync {
+            var stubs = allStubs[identifier] ?? [:]
+            stubs[methodId] = stubs[methodId] ?? [] + [stub]
+            allStubs[identifier] = stubs
+        }
+    }
+    
+    func stub<T>(_ method: MockMethod, andReturn value: T?, expectingArguments args: AnyEquatable?...)
+    {
+        let methodId = stubIdentifier(method)
+        let stub = StubImplementation(args: .specific(args), block: { (_: Any?...) -> T? in value })
+        semaphore.sync {
+            var stubs = allStubs[identifier] ?? [:]
+            stubs[methodId] = (stubs[methodId] ?? []) + [stub]
             allStubs[identifier] = stubs
         }
     }
@@ -140,30 +200,14 @@ extension Mock
         return registerInvocation(method, args: args, returning: { _ in value })
     }
     
-    func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning: @escaping (Any?...) -> T?) -> T?
+    func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning block: @escaping (Any?...) -> T?) -> T?
     {
-        logInvocation(method, args: args)
-        let stub = semaphore.sync { allStubs[identifier]?[stubIdentifier(method)] }
-        if let stub = stub {
-            guard let typedStub = stub as? ([Any?]) -> T? else {
-                fatalError("Mismatched invocation type: Got \(type(of: stub)). Expected \((([Any?]) -> T?).self)")
-            }
-            return typedStub(args)
-        }
-        return returning(args)
+        return registerInvocation(method, args: args, returning: block)
     }
     
-    func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning: @escaping (Any?...) -> T) -> T
+    func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning block: @escaping (Any?...) -> T) -> T
     {
-        logInvocation(method, args: args)
-        let stub = allStubs[identifier]?[stubIdentifier(method)]
-        if let stub = stub {
-            guard let typedStub = stub as? ([Any?]) -> T else {
-                fatalError("Mismatched invocation type: Got \(type(of: stub)). Expected \((([Any?]) -> T).self)")
-            }
-            return typedStub(args)
-        }
-        return returning(args)
+        return registerInvocation(method, args: args, returning: block)
     }
     
     func expect(_ method: MockMethod, withArgs args: AnyEquatable?...)
@@ -201,6 +245,61 @@ extension Mock
                 XCTFail("Invocation of \(expecation.methodId) not received")
             }
         }
+    }
+    
+    private func registerInvocation<T>(_ method: MockMethod, args: [Any?],
+        returning block: @escaping (Any?...) -> T) -> T
+    {
+        logInvocation(method, args: args)
+        if let stub = findStub(for: method, args: args) {
+            guard let typedStub = stub.block as? ([Any?]) -> T else {
+                fatalError("Mismatched invocation type: Got \(type(of: stub.block)). Expected \((([Any?]) -> T).self)")
+            }
+            return typedStub(args)
+        }
+        return block(args)
+    }
+    
+    private func registerInvocation<T>(_ method: MockMethod, args: [Any?],
+        returning block: @escaping (Any?...) -> T?) -> T?
+    {
+        logInvocation(method, args: args)
+        if let stub = findStub(for: method, args: args) {
+            guard let typedStub = stub.block as? ([Any?]) -> T? else {
+                fatalError("Mismatched invocation type: Got \(type(of: stub.block)). Expected \((([Any?]) -> T?).self)")
+            }
+            return typedStub(args)
+        }
+        return block(args)
+    }
+    
+    private func findStub(for method: MockMethod, args: [Any?]) -> StubImplementation?
+    {
+        let stubsForObject = semaphore.sync { allStubs[identifier]?[stubIdentifier(method)] }
+        for stub in stubsForObject ?? [] {
+            switch stub.args {
+            case .specific(let stubArgs):
+                guard stubArgs.count == args.count else { continue }
+                var allArgsEqual = true
+                for (invArg, stubArg) in zip(args, stubArgs) {
+                    let equatableInvArg = AnyEquatable(base: invArg)
+                    if stubArg != equatableInvArg {
+                        allArgsEqual = false
+                        break
+                    }
+                }
+                if allArgsEqual { return stub }
+                break
+            case .any:
+                break
+            }
+        }
+        return (stubsForObject ?? []).first(where: {
+            switch $0.args {
+            case .any:          return true
+            case .specific(_):  return false
+            }
+        })
     }
     
     private func logInvocation(_ method: MockMethod, args: [Any?])

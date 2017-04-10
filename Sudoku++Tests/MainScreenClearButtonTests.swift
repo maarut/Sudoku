@@ -12,10 +12,7 @@ import SudokuEngine
 
 class MainScreenClearButtonTests: XCTestCase
 {
-    var emptyIntArray: AnyEquatable = AnyEquatable(base: [Int](), equatableImp: { rhs in
-        if let rhs = rhs as? [Int] { return rhs.count == 0 }
-        return false
-    })
+    var emptyIntArray: AnyEquatable = AnyEquatable(base: [Int]())
     
     fileprivate var mockViewModelDelegate: MockViewModelDelegate!
     fileprivate var sudokuBoard: MockSudokuBoard!
@@ -31,7 +28,8 @@ class MainScreenClearButtonTests: XCTestCase
         // Put setup code here. This method is called before the invocation of each test method in the class.
     }
     
-    override func tearDown() {
+    override func tearDown()
+    {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
         mockViewModelDelegate.resetMock()

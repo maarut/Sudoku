@@ -14,11 +14,15 @@ public protocol Mock
     var identifier: String { get }
     
     func stub<T>(_: MockMethod, andReturn: T?)
-    func stub<T>(_: MockMethod, withBlock: @escaping ([Any?]) -> T?)
+    func stub<T>(_: MockMethod, withBlock: @escaping (Any?...) -> T?)
     func stub<T>(_: MockMethod, andReturn: T)
-    func stub<T>(_: MockMethod, withBlock: @escaping ([Any?]) -> T)
+    func stub<T>(_: MockMethod, withBlock: @escaping (Any?...) -> T)
     func stub<T>(_: MockMethod, andReturn: T?, times: Int, thenReturn: T?)
     func stub<T>(_: MockMethod, andReturn: T, times: Int, thenReturn: T)
+    func stub<T>(_: MockMethod, andIterateThroughReturnValues: [T])
+    func stub<T>(_: MockMethod, andIterateThroughReturnValues: [T?])
+    func stub<T>(_: MockMethod, andReturn: T, expectingArguments: AnyEquatable?...)
+    func stub<T>(_: MockMethod, andReturn: T?, expectingArguments: AnyEquatable?...)
     func unstub(_: MockMethod)
     
     func registerInvocation(_: MockMethod, args: Any?...)
@@ -38,19 +42,37 @@ public struct AnyEquatable: Equatable
     public let base: Any?
     private let equatableImp: (Any?) -> Bool
     
-    public init<T: Equatable>(base: T?)
+    public init<T: Equatable>(base: [T])
     {
         self.base = base
         self.equatableImp = { rhs in
-            if let rhs = rhs as? T { return base == rhs }
+            if let rhs = rhs as? [T] { return base == rhs }
             return false
         }
     }
     
-    public init(base: Any?, equatableImp: @escaping (Any?) -> Bool = { _ in false })
+    public init<T: Equatable>(base: [T?])
     {
         self.base = base
-        self.equatableImp = equatableImp
+        self.equatableImp = { rhs in
+            if let rhs = rhs as? [T?] { return base.elementsEqual(rhs, by: ==) }
+            return false
+        }
+    }
+    
+    public init<T: Equatable>(base: T?)
+    {
+        self.base = base
+        self.equatableImp = { rhs in
+            if let rhs = rhs as? T? { return base == rhs }
+            return false
+        }
+    }
+    
+    public init(base: Any?, equatableImpl: @escaping (Any?) -> Bool = { _ in false })
+    {
+        self.base = base
+        self.equatableImp = equatableImpl
     }
     
     public static func ==(lhs: AnyEquatable, rhs: AnyEquatable) -> Bool
