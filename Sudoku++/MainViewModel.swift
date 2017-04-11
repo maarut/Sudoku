@@ -115,7 +115,10 @@ public protocol MainViewModelDelegate: class
     func sudokuCells(atIndexes: [SudokuBoardIndex], newState: ButtonState)
     func setNumber(_: String, forCellAt: SudokuBoardIndex)
     func showPencilMarks(_: [Int], forCellAt: SudokuBoardIndex)
+    
     func timerTextDidChange(_: String)
+    func undoStateChanged(_ canUndo: Bool)
+    func gameFinished()
 }
 
 // MARK: - MainViewModel Implementation
@@ -126,10 +129,17 @@ public class MainViewModel
     fileprivate var sudokuBoard: SudokuBoardProtocol
     fileprivate var timer: Timer!
     fileprivate var counter = 0
-    
+    fileprivate let undoManager = UndoManager()
+
     init(withSudokuBoard b: SudokuBoardProtocol)
     {
         sudokuBoard = b
+    }
+    
+    func undo()
+    {
+        undoManager.undo()
+        delegate?.undoStateChanged(undoManager.canUndo)
     }
     
     func startTimer()
@@ -259,6 +269,7 @@ public class MainViewModel
         }
         delegate?.sudokuCells(atIndexes: givenCells, newState: .given)
         delegate?.sudokuCells(atIndexes: editableCells, newState: .editable)
+        delegate?.undoStateChanged(undoManager.canUndo)
         switch currentState {
         case .highlightCell(let index):
             highlightCellAt(index)
@@ -337,6 +348,11 @@ fileprivate extension MainViewModel
     {
         guard let cell = sudokuBoard.cellAt(index) else { return }
         if cell.isGiven { return }
+        undoManager.registerUndo(withTarget: self) { [pencilMarks = cell.pencilMarks] undoSelf in
+            undoSelf.setNumber(number, forCellAt: index)
+            for pencilMark in pencilMarks { undoSelf.setPencilMark(pencilMark, forCellAt: index) }
+            undoSelf.updateStateDuringUndoOperation()
+        }
         if cell.number == number {
             cell.number = nil
         }
@@ -346,15 +362,26 @@ fileprivate extension MainViewModel
         }
         delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
         delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
+        delegate?.undoStateChanged(undoManager.canUndo)
+        if sudokuBoard.isSolved {
+            delegate?.gameFinished()
+            undoManager.removeAllActions()
+            delegate?.undoStateChanged(undoManager.canUndo)
+        }
     }
     
     func setPencilMark(_ number: Int, forCellAt index: SudokuBoardIndex)
     {
         guard let cell = sudokuBoard.cellAt(index) else { return }
         if cell.isGiven { return }
+        undoManager.registerUndo(withTarget: self) { undoSelf in
+            undoSelf.setPencilMark(number, forCellAt: index)
+            undoSelf.updateStateDuringUndoOperation()
+        }
         if cell.pencilMarks.contains(number)    { cell.pencilMarks.remove(number) }
         else                                    { cell.pencilMarks.insert(number) }
         delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
+        delegate?.undoStateChanged(undoManager.canUndo)
     }
     
     func highlightCellAt(_ index: SudokuBoardIndex)
@@ -392,10 +419,16 @@ fileprivate extension MainViewModel
     {
         guard let cell = sudokuBoard.cellAt(index) else { return }
         if !cell.isGiven {
+            undoManager.registerUndo(withTarget: self) { [pencilMarks = cell.pencilMarks] undoSelf in
+                if cell.number != nil { undoSelf.setNumber(cell.number!, forCellAt: index) }
+                for pencilMark in pencilMarks { undoSelf.setPencilMark(pencilMark, forCellAt: index) }
+                undoSelf.updateStateDuringUndoOperation()
+            }
             cell.number = nil
             cell.pencilMarks.removeAll()
             delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
             delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
+            delegate?.undoStateChanged(undoManager.canUndo)
         }
     }
     
@@ -410,5 +443,14 @@ fileprivate extension MainViewModel
             }
         }
         return indexes
+    }
+    
+    func updateStateDuringUndoOperation()
+    {
+        switch currentState {
+        case .highlightCell(let index):                                         highlightCellAt(index)
+        case .highlightNumber(let number), .highlightPencilMark(let number):    highlightCellsContaining(number)
+        default:                                                                delegate?.removeHighlights()
+        }
     }
 }

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		E3378B921E93982600275F4D /* MockImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3378B911E93982600275F4D /* MockImpl.swift */; };
+		E34207511E9D477B008B79A5 /* NumberUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34207501E9D477B008B79A5 /* NumberUtils.swift */; };
+		E34207531E9D5791008B79A5 /* MainScreenUndoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */; };
 		E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */; };
 		E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758D1E699F7100A2A736 /* NumberSelectionView.swift */; };
 		E35275D21E76A2E300A2A736 /* SudokuEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */; };
@@ -69,6 +71,8 @@
 
 /* Begin PBXFileReference section */
 		E3378B911E93982600275F4D /* MockImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockImpl.swift; sourceTree = "<group>"; };
+		E34207501E9D477B008B79A5 /* NumberUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NumberUtils.swift; sourceTree = "<group>"; };
+		E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenUndoTests.swift; sourceTree = "<group>"; };
 		E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivateAnimationDelegate.swift; sourceTree = "<group>"; };
 		E352758D1E699F7100A2A736 /* NumberSelectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NumberSelectionView.swift; path = "Sudoku++/NumberSelectionView.swift"; sourceTree = "<group>"; };
 		E35275CB1E76A2E300A2A736 /* SudokuEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SudokuEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -206,6 +210,7 @@
 				E359BD971E969CB3005661EE /* MainScreenNumberPickerTests.swift */,
 				E3B4AB071E97C153007E170F /* MainScreenPencilPickerTests.swift */,
 				E3B4AB091E99169D007E170F /* MainScreenSudokuBoardTests.swift */,
+				E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */,
 			);
 			name = MainViewModel;
 			sourceTree = "<group>";
@@ -216,6 +221,7 @@
 				E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */,
 				E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */,
 				E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */,
+				E34207501E9D477B008B79A5 /* NumberUtils.swift */,
 			);
 			name = util;
 			sourceTree = "<group>";
@@ -490,6 +496,7 @@
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
 				E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */,
 				E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */,
+				E34207511E9D477B008B79A5 /* NumberUtils.swift in Sources */,
 				E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -504,6 +511,7 @@
 				E36C685F1E5E42B300F0FFE9 /* Sudoku++Tests.swift in Sources */,
 				E38CB7E61E96676300F7A565 /* MockSudokuBoard.swift in Sources */,
 				E3B4AB0A1E99169D007E170F /* MainScreenSudokuBoardTests.swift in Sources */,
+				E34207531E9D5791008B79A5 /* MainScreenUndoTests.swift in Sources */,
 				E38CB7E11E9666A400F7A565 /* MockViewModelDelegate.swift in Sources */,
 				E3E8457A1E8ABA1300243A98 /* Mock.swift in Sources */,
 				E3B4AB081E97C153007E170F /* MainScreenPencilPickerTests.swift in Sources */,

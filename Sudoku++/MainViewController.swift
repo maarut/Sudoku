@@ -52,17 +52,19 @@ class MainViewController: UIViewController
         let tabBar = UIView()
         tabBar.backgroundColor = UIColor.lightGray
         let timerLabel = UILabel()
-        timerLabel.text = "00:00"
+        timerLabel.text = "00:00:00"
         timerLabel.textAlignment = .center
         timerLabel.frame.size = timerLabel.intrinsicContentSize
         timerLabel.frame.size.height *= 1.2
         timerLabel.frame.size.width *= 1.2
+        timerLabel.text = "00:00"
         let newGameButton = UIButton(type: .system)
         newGameButton.setTitle("N", for: .normal)
         newGameButton.frame.size = newGameButton.intrinsicContentSize
         let undoButton = UIButton(type: .system)
         undoButton.setTitle("U", for: .normal)
         undoButton.frame.size = undoButton.intrinsicContentSize
+        undoButton.addTarget(self, action: #selector(undoTapped(_:)), for: .touchUpInside)
         let setPuzzleButton = UIButton(type: .system)
         setPuzzleButton.setTitle("T", for: .normal)
         setPuzzleButton.frame.size = setPuzzleButton.intrinsicContentSize
@@ -152,6 +154,11 @@ class MainViewController: UIViewController
 // MARK: - Event Handlers
 extension MainViewController
 {
+    func undoTapped(_ sender: UIButton)
+    {
+        viewModel.undo()
+    }
+    
     func settingsTapped(_ sender: UIButton)
     {
         sudokuView.gameEnded()
@@ -274,6 +281,22 @@ fileprivate extension MainViewController
 // MARK: - MainViewModelDelegate Implementation
 extension MainViewController: MainViewModelDelegate
 {
+    func gameFinished()
+    {
+        viewModel.stopTimer()
+        DispatchQueue.main.asyncAfter(deadline: 0.3.seconds) {
+            self.sudokuView.isUserInteractionEnabled = false
+            self.sudokuView.gameEnded()
+        }
+    }
+    
+    func undoStateChanged(_ canUndo: Bool)
+    {
+        DispatchQueue.main.async {
+            self.undoButton.isEnabled = canUndo
+        }
+    }
+    
     func timerTextDidChange(_ text: String)
     {
         DispatchQueue.main.async {
