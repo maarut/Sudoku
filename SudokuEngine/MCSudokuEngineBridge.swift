@@ -28,7 +28,6 @@ public protocol SudokuBoardProtocol
 {
     var order: Int { get }
     var dimensionality: Int { get }
-    var board: [Cell] { get }
     var difficulty: PuzzleDifficulty { get }
     var difficultyScore: Int { get }
     
@@ -37,7 +36,7 @@ public protocol SudokuBoardProtocol
     func solve() -> Bool
     func markupBoard()
     func unmarkBoard()
-    func setPuzzle()
+    func setPuzzle() -> PuzzleDifficulty
     func cellAt(_ index: SudokuBoardIndex) -> Cell?
     
 }
@@ -90,7 +89,7 @@ public class Cell: NSCoding
     public var number: Int?
     internal (set) public var solution: Int?
     public var pencilMarks = Set<Int>()
-    internal (set) public var neighbours = [Cell]()
+    internal (set) public var neighbours = [SudokuBoardIndex]()
     internal (set) public var isGiven = false
     
     public init() { }
@@ -100,7 +99,7 @@ public class Cell: NSCoding
         number = aDecoder.decodeObject(forKey: "number") as! Int?
         solution = aDecoder.decodeObject(forKey: "solution") as! Int?
         pencilMarks = aDecoder.decodeObject(forKey: "pencilMarks") as! Set<Int>
-        neighbours = aDecoder.decodeObject(forKey: "neighbours") as! [Cell]
+        neighbours = aDecoder.decodeObject(forKey: "neighbours") as! [SudokuBoardIndex]
         isGiven = aDecoder.decodeBool(forKey: "isGiven")
     }
     
@@ -119,7 +118,7 @@ public class SudokuBoard: SudokuBoardProtocol, NSCoding
 {
     public let order: Int
     public let dimensionality: Int
-    private (set) public var board = [Cell]()
+    fileprivate let board: [Cell]
     private (set) public var difficulty = PuzzleDifficulty.blank
     private (set) public var difficultyScore = 0
  
@@ -179,7 +178,7 @@ public class SudokuBoard: SudokuBoardProtocol, NSCoding
         board.forEach { if $0.number == nil { $0.pencilMarks = allPencilMarks } }
         board.forEach { cell in
             if let number = cell.number {
-                cell.neighbours.forEach { $0.pencilMarks.remove(number) }
+                cell.neighbours.forEach { self.cellAt($0)?.pencilMarks.remove(number) }
             }
         }
     }
@@ -189,11 +188,17 @@ public class SudokuBoard: SudokuBoardProtocol, NSCoding
         board.forEach { $0.pencilMarks.removeAll() }
     }
     
-    public func setPuzzle()
+    public func setPuzzle() -> PuzzleDifficulty
     {
-        guard difficulty == .blank else { return }
+        guard difficulty == .blank else { return difficulty }
         board.forEach { $0.isGiven = $0.number != nil }
-        let _ = solve()
+        if !solve() {
+            let reason = difficulty
+            board.forEach { $0.isGiven = false }
+            difficulty = .blank
+            return reason
+        }
+        return difficulty
     }
     
     public func cellAt(_ index: SudokuBoardIndex) -> Cell?
@@ -222,6 +227,7 @@ public class SudokuBoard: SudokuBoardProtocol, NSCoding
         guard order > 1 else {
             self.order = 0
             self.dimensionality = 0
+            self.board = []
             return nil
         }
         var context = generatePuzzleWithOrder(CUnsignedInt(order), MCPuzzleDifficultyZero)!
@@ -230,12 +236,17 @@ public class SudokuBoard: SudokuBoardProtocol, NSCoding
         self.dimensionality = order * order
         difficulty = PuzzleDifficulty(difficulty: context.pointee.difficulty)
         difficultyScore = Int(context.pointee.difficultyScore)
+        var board = [Cell]()
         for _ in 0 ..< context.pointee.cellCount { board.append(Cell()) }
         for (i, cell) in board.enumerated() {
             for j in 0 ..< Int(context.pointee.neighbourCount) {
-                cell.neighbours.append(board[Int(context.pointee.neighbourMap[i]![j])])
+                let index = Int(context.pointee.neighbourMap[i]![j])
+                let row = index / dimensionality
+                let column = index % dimensionality
+                cell.neighbours.append(SudokuBoardIndex(row: row, column: column))
             }
         }
+        self.board = board
     }
     
     required public init?(coder aDecoder: NSCoder)

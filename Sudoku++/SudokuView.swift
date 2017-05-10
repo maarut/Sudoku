@@ -121,7 +121,7 @@ class SudokuView: UIView
             animation.beginTime = CACurrentMediaTime() + 1.0
             animation.duration = 1.0
             animation.delegate = PrivateAnimationDelegate(
-                startHandler: { [weak snapshot] in snapshot?.layer.opacity = 0.0 },
+                startHandler: { snapshot.layer.opacity = 0.0 },
                 completionHandler: { _ in
                     self.animator.removeBehavior(push)
                     snapshot.removeFromSuperview()

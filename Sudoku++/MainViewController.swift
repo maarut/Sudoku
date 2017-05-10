@@ -61,6 +61,7 @@ class MainViewController: UIViewController
         let newGameButton = UIButton(type: .system)
         newGameButton.setTitle("N", for: .normal)
         newGameButton.frame.size = newGameButton.intrinsicContentSize
+        newGameButton.addTarget(self, action: #selector(newGameButtonTapped(_:)), for: .touchUpInside)
         let undoButton = UIButton(type: .system)
         undoButton.setTitle("U", for: .normal)
         undoButton.frame.size = undoButton.intrinsicContentSize
@@ -68,6 +69,7 @@ class MainViewController: UIViewController
         let setPuzzleButton = UIButton(type: .system)
         setPuzzleButton.setTitle("T", for: .normal)
         setPuzzleButton.frame.size = setPuzzleButton.intrinsicContentSize
+        setPuzzleButton.addTarget(self, action: #selector(setPuzzleTapped(_:)), for: .touchUpInside)
         let settingsButton = UIButton(type: .system)
         settingsButton.setTitle("S", for: .normal)
         settingsButton.frame.size = settingsButton.intrinsicContentSize
@@ -121,11 +123,6 @@ class MainViewController: UIViewController
         pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
     }
     
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
-    {
-        super.viewWillTransition(to: size, with: coordinator)
-    }
-    
     override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
@@ -154,14 +151,34 @@ class MainViewController: UIViewController
 // MARK: - Event Handlers
 extension MainViewController
 {
+    func newGameButtonTapped(_ sender: UIButton)
+    {
+        let difficulties = viewModel.newGameDifficulties
+        let alertController = UIAlertController(title: "New Game",
+            message: "Select a difficulty for the new game", preferredStyle: .actionSheet)
+        for difficulty in difficulties {
+            let action = UIAlertAction(title: difficulty, style: .default, handler: {
+                self.viewModel.newGame(withTitle: $0.title ?? "")
+            })
+            alertController.addAction(action)
+        }
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        present(alertController, animated: true)
+    }
+    
     func undoTapped(_ sender: UIButton)
     {
         viewModel.undo()
     }
     
+    func setPuzzleTapped(_ sender: UIButton)
+    {
+        viewModel.setPuzzle()
+    }
+    
     func settingsTapped(_ sender: UIButton)
     {
-        sudokuView.gameEnded()
+        gameFinished()
     }
     
     func clearButtonDragExit(_ sender: HighlightableButton)
@@ -276,17 +293,65 @@ fileprivate extension MainViewController
         if width > height { setLayoutLandscapeLeft() }
         else { setLayoutPortrait() }
     }
+    
+    func showPuzzleSetError(_ error: String)
+    {
+        let title = "Set puzzle failed"
+        let alertController = UIAlertController(title: title, message: error, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "Dismiss", style: .cancel, handler: nil))
+        present(alertController, animated: true)
+    }
 }
 
 // MARK: - MainViewModelDelegate Implementation
 extension MainViewController: MainViewModelDelegate
 {
+    func newGameStarted(
+        newState: [(index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])])
+    {
+        for (index, state, number, pencilMarks) in newState {
+            let colour: UIColor
+            switch state {
+            case .editable: colour = UIColor(hexValue: 0xF0F0DC)
+            case .given:    colour = UIColor(hexValue: 0xE0E0CC)
+            }
+            let cell = sudokuView.cellAt(tupleRepresentation(index))!
+            
+            cell.flipTo(number: number, backgroundColour: colour,
+                showingPencilMarksAtPositions: pencilMarks.map( { $0 - 1 } ))
+        }
+        sudokuView.isUserInteractionEnabled = true
+    }
+    
+    func setPuzzleStateChanged(_ state: SetPuzzleState)
+    {
+        DispatchQueue.main.async {
+            switch state {
+            case .isSet:
+                if self.setPuzzleButton.isEnabled {
+                    self.setPuzzleButton.isEnabled = false
+                    self.viewModel.startTimer()
+                }
+                break
+            case .canSet:
+                if !self.setPuzzleButton.isEnabled {
+                    self.setPuzzleButton.isEnabled = true
+                }
+                break
+            case .failed(let error):
+                self.showPuzzleSetError(error)
+                break
+            }
+            
+        }
+    }
+    
     func gameFinished()
     {
         viewModel.stopTimer()
-        DispatchQueue.main.asyncAfter(deadline: 0.3.seconds) {
-            self.sudokuView.isUserInteractionEnabled = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             self.sudokuView.gameEnded()
+            self.sudokuView.isUserInteractionEnabled = false
         }
     }
     

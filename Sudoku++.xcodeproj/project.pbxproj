@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		E3378B921E93982600275F4D /* MockImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3378B911E93982600275F4D /* MockImpl.swift */; };
-		E34207511E9D477B008B79A5 /* NumberUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34207501E9D477B008B79A5 /* NumberUtils.swift */; };
 		E34207531E9D5791008B79A5 /* MainScreenUndoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */; };
 		E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */; };
 		E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E352758D1E699F7100A2A736 /* NumberSelectionView.swift */; };
@@ -71,7 +70,6 @@
 
 /* Begin PBXFileReference section */
 		E3378B911E93982600275F4D /* MockImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockImpl.swift; sourceTree = "<group>"; };
-		E34207501E9D477B008B79A5 /* NumberUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NumberUtils.swift; sourceTree = "<group>"; };
 		E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenUndoTests.swift; sourceTree = "<group>"; };
 		E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrivateAnimationDelegate.swift; sourceTree = "<group>"; };
 		E352758D1E699F7100A2A736 /* NumberSelectionView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = NumberSelectionView.swift; path = "Sudoku++/NumberSelectionView.swift"; sourceTree = "<group>"; };
@@ -221,7 +219,6 @@
 				E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */,
 				E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */,
 				E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */,
-				E34207501E9D477B008B79A5 /* NumberUtils.swift */,
 			);
 			name = util;
 			sourceTree = "<group>";
@@ -496,7 +493,6 @@
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
 				E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */,
 				E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */,
-				E34207511E9D477B008B79A5 /* NumberUtils.swift in Sources */,
 				E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

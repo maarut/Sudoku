@@ -103,6 +103,13 @@ public enum SudokuCellState
     case editable
 }
 
+public enum SetPuzzleState
+{
+    case canSet
+    case isSet
+    case failed(String)
+}
+
 // MARK: - MainViewModelDelegate Definition
 public protocol MainViewModelDelegate: class
 {
@@ -118,7 +125,11 @@ public protocol MainViewModelDelegate: class
     
     func timerTextDidChange(_: String)
     func undoStateChanged(_ canUndo: Bool)
+    func setPuzzleStateChanged(_: SetPuzzleState)
     func gameFinished()
+    func newGameStarted(newState: [
+        (index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])
+        ])
 }
 
 // MARK: - MainViewModel Implementation
@@ -130,6 +141,22 @@ public class MainViewModel
     fileprivate var timer: Timer!
     fileprivate var counter = 0
     fileprivate let undoManager = UndoManager()
+    
+    var newGameDifficulties: [String] = {
+        var difficulties = [String]()
+        for count in PuzzleDifficulty.blank.rawValue ..< Int.max {
+            guard let difficulty = PuzzleDifficulty(rawValue: count) else { break }
+            switch difficulty {
+            case .blank:    difficulties.append("Blank")
+            case .easy:     difficulties.append("Easy")
+            case .normal:   difficulties.append("Normal")
+            case .hard:     difficulties.append("Hard")
+            case .insane:   difficulties.append("Insane")
+            default:        break
+            }
+        }
+        return difficulties
+    }()
 
     init(withSudokuBoard b: SudokuBoardProtocol)
     {
@@ -144,13 +171,66 @@ public class MainViewModel
     
     func startTimer()
     {
-        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(timerFired(_:)),
-            userInfo: nil, repeats: true)
+        if timer == nil && sudokuBoard.difficulty != .blank {
+            timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(timerFired(_:)),
+                userInfo: nil, repeats: true)
+        }
     }
     
     func stopTimer()
     {
-        timer.invalidate()
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    func newGame(withTitle title: String)
+    {
+        stopTimer()
+        counter = 0
+        sendNewTimerText()
+        if let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: titleToDifficulty(title)) {
+            self.sudokuBoard = board
+        }
+        else if let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank) {
+            self.sudokuBoard = board
+        }
+        else {
+            fatalError("Couldn't create a new game. NewGameViewModel.newGame(_:)")
+        }
+        var newState = [(index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])]()
+        for row in 0 ..< sudokuBoard.dimensionality {
+            for column in 0 ..< sudokuBoard.dimensionality {
+                let index = SudokuBoardIndex(row: row, column: column)
+                let cell = sudokuBoard.cellAt(index)!
+                let state = cell.isGiven ? SudokuCellState.given : .editable
+                let number = convertNumberToString(cell.number)
+                let pencilMarks = Array(cell.pencilMarks)
+                newState.append((index, state, number, pencilMarks))
+            }
+        }
+        delegate?.newGameStarted(newState: newState)
+        sendCurrentState()
+        startTimer()
+    }
+    
+    func setPuzzle()
+    {
+        guard sudokuBoard.difficulty == .blank else { return }
+        let difficulty = sudokuBoard.setPuzzle()
+        if difficulty.isSolvable() {
+            sendState()
+            delegate?.setPuzzleStateChanged(.isSet)
+        }
+        else {
+            let reason: String
+            switch difficulty {
+            case .noSolution:           reason = "No solution available for puzzle."
+            case .multipleSolutions:    reason = "Multiple solutions available for puzzle."
+            default:                    reason = "An unknown error occured"
+            }
+            delegate?.setPuzzleStateChanged(.canSet)
+            delegate?.setPuzzleStateChanged(.failed(reason))
+        }
     }
     
     func selectCell(atIndex index: SudokuBoardIndex)
@@ -270,24 +350,8 @@ public class MainViewModel
         delegate?.sudokuCells(atIndexes: givenCells, newState: .given)
         delegate?.sudokuCells(atIndexes: editableCells, newState: .editable)
         delegate?.undoStateChanged(undoManager.canUndo)
-        switch currentState {
-        case .highlightCell(let index):
-            highlightCellAt(index)
-            break
-        case .highlightClear:
-            delegate?.clearButton(newState: .selected)
-            break
-        case .highlightNumber(let number):
-            delegate?.numberSelection(newState: .selected, forNumber: number)
-            highlightCellsContaining(number)
-            break
-        case .highlightPencilMark(let pencilMark):
-            delegate?.pencilMarkSelection(newState: .selected, forNumber: pencilMark)
-            highlightCellsContaining(pencilMark)
-            break
-        default:
-            break
-        }
+        delegate?.setPuzzleStateChanged(sudokuBoard.difficulty.isSolvable() ? .isSet : .canSet)
+        sendCurrentState()
     }
 }
 
@@ -329,13 +393,17 @@ fileprivate extension MainViewModel
     }
 }
 
-// MARK: - MainViewModel Private Functions
+// MARK: - Timer Functions (Private)
 fileprivate extension MainViewModel
 {
-    dynamic func timerFired(_ timer: Timer)
+    dynamic func timerFired(_: Timer)
     {
         counter += 1
-        
+        sendNewTimerText()
+    }
+    
+    func sendNewTimerText()
+    {
         let seconds = counter % 60
         let minutes = (counter / 60) % 60
         let hours = counter / 3600
@@ -343,14 +411,58 @@ fileprivate extension MainViewModel
         let hoursString = hours == 0 ? "" : String(format: "%.2i:", hours)
         delegate?.timerTextDidChange(hoursString + elapsedMinutesAndSeconds)
     }
+}
+
+// MARK: - New Game Functions
+fileprivate extension MainViewModel
+{
+    func titleToDifficulty(_ title: String) -> PuzzleDifficulty
+    {
+        switch title {
+        case newGameDifficulties[1]:    return .easy
+        case newGameDifficulties[2]:    return .normal
+        case newGameDifficulties[3]:    return .hard
+        case newGameDifficulties[4]:    return .insane
+        default:                        return .blank
+        }
+    }
+}
+
+// MARK: - SudokuBoard Modification Private Functions
+fileprivate extension MainViewModel
+{
+    func sendCurrentState()
+    {
+        switch currentState {
+        case .highlightCell(let index):
+            highlightCellAt(index)
+            break
+        case .highlightClear:
+            delegate?.clearButton(newState: .selected)
+            break
+        case .highlightNumber(let number):
+            delegate?.numberSelection(newState: .selected, forNumber: number)
+            highlightCellsContaining(number)
+            break
+        case .highlightPencilMark(let pencilMark):
+            delegate?.pencilMarkSelection(newState: .selected, forNumber: pencilMark)
+            highlightCellsContaining(pencilMark)
+            break
+        default:
+            break
+        }
+    }
     
     func setNumber(_ number: Int, forCellAt index: SudokuBoardIndex)
     {
         guard let cell = sudokuBoard.cellAt(index) else { return }
         if cell.isGiven { return }
-        undoManager.registerUndo(withTarget: self) { [pencilMarks = cell.pencilMarks] undoSelf in
-            undoSelf.setNumber(number, forCellAt: index)
-            for pencilMark in pencilMarks { undoSelf.setPencilMark(pencilMark, forCellAt: index) }
+        let neighbours = cell.number != nil ? [] : cell.neighbours.filter( {
+            self.sudokuBoard.cellAt($0)?.pencilMarks.contains(number) ?? false
+        } )
+        undoManager.registerUndo(withTarget: self) { [pms = cell.pencilMarks, n = cell.number] undoSelf in
+            undoSelf.setNumber(n ?? number, forCellAt: index)
+            for pencilMark in pms { undoSelf.setPencilMark(pencilMark, forCellAt: index) }
             undoSelf.updateStateDuringUndoOperation()
         }
         if cell.number == number {
@@ -359,6 +471,7 @@ fileprivate extension MainViewModel
         else {
             cell.pencilMarks.removeAll()
             cell.number = number
+            for neighbour in neighbours { setPencilMark(number, forCellAt: neighbour) }
         }
         delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
         delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)

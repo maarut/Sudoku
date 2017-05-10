@@ -37,7 +37,7 @@ class MockSudokuBoard: Mock, SudokuBoardProtocol
     func solve() -> Bool { return registerInvocation(.solve, returning: true) }
     func markupBoard() { registerInvocation(.markupBoard) }
     func unmarkBoard() { registerInvocation(.unmarkBoard) }
-    func setPuzzle() { registerInvocation(.setPuzzle) }
+    func setPuzzle() -> PuzzleDifficulty { return registerInvocation(.setPuzzle, returning: PuzzleDifficulty.blank) }
     
     func cellAt(_ index: SudokuBoardIndex) -> Cell?
     {

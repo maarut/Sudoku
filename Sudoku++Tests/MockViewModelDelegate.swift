@@ -24,6 +24,7 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
         case timerTextDidChange
         case undoStateChanged
         case gameFinished
+        case setPuzzleStateChanged
     }
     
     func numberSelection(newState: ButtonState, forNumber: Int?)
@@ -79,6 +80,11 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
     func gameFinished()
     {
         registerInvocation(.gameFinished)
+    }
+    
+    func setPuzzleStateChanged(_ state: SetPuzzleState)
+    {
+        registerInvocation(.setPuzzleStateChanged, args: state)
     }
     
     init() { }

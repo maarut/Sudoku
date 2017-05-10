@@ -25,8 +25,13 @@ class CellView: UIView
     
     private (set) var isHighlighted = false
     private let order: Int
-    private let pencilMarks: [UILabel]
-    private weak var number: UILabel!
+    fileprivate let pencilMarks: [UILabel]
+    fileprivate weak var number: UILabel!
+    fileprivate var perspective: CATransform3D = {
+        var p = CATransform3DIdentity
+        p.m34 = -1.0 / 100.0
+        return p
+    }()
 
     // MARK: - Lifecycle
     init(frame: CGRect, order: Int, pencilMarkTitles: [String])
@@ -177,7 +182,157 @@ class CellView: UIView
         }
     }
     
-    private func resetColours()
+    func flipTo(number: String, backgroundColour: UIColor, showingPencilMarksAtPositions pencilMarks: [Int])
+    {
+        if number == self.number.text && backgroundColour == cellColour {
+            let newMarks = Set(pencilMarks)
+            let visibleMarks = Set(self.pencilMarks.enumerated().flatMap( { !$0.element.isHidden ? $0.offset : nil } ))
+            if newMarks == visibleMarks { return }
+        }
+        
+        guard let currentSnapshots = getSnapshotOf(view: self) else { return }
+        
+        self.number.text = number
+        self.number.isHidden = number.isEmpty
+        self.cellColour = backgroundColour
+        displayPencilMarksInPositions(pencilMarks)
+
+        guard let newSnapshots = getSnapshotOf(view: self) else { return }
+        let oldLayers = createLayersFromCurrentSnapshot(currentSnapshots)
+        let newLayers = createLayersFromDestinationSnapshot(newSnapshots)
+        let superLayer = superview!.layer
+        superLayer.insertSublayer(oldLayers.bottom, above: layer)
+        superLayer.insertSublayer(oldLayers.top, above: oldLayers.bottom)
+        superLayer.insertSublayer(newLayers.top, below: oldLayers.top)
+        superLayer.insertSublayer(newLayers.bottom, above: newLayers.top)
+        
+        let animationBeginTime = CACurrentMediaTime() + CFTimeInterval(arc4random() % 256) / 1000.0
+        let animationDuration = 0.4
+        
+        let animation = CABasicAnimation(keyPath: "transform.rotation.x")
+        animation.beginTime = animationBeginTime
+        animation.timingFunction = CAMediaTimingFunction(controlPoints: 0.5, 0, 0.75, 0.5)
+        animation.fillMode = kCAFillModeBoth
+        animation.fromValue = 0.0
+        animation.toValue = -CGFloat.pi
+        animation.duration = animationDuration
+        
+        oldLayers.top.add(animation, forKey: "transform")
+        oldLayers.top.setValue(-CGFloat.pi, forKey: "transform.rotation.x")
+        
+        animation.fromValue = CGFloat.pi
+        animation.toValue = 0
+        animation.byValue = -CGFloat.pi
+        animation.delegate = PrivateAnimationDelegate(completionHandler: { _ in
+            oldLayers.bottom.removeFromSuperlayer()
+            oldLayers.top.removeFromSuperlayer()            
+            newLayers.bottom.removeFromSuperlayer()
+            newLayers.top.removeFromSuperlayer()
+        })
+        newLayers.bottom.add(animation, forKey: "transform")
+        newLayers.bottom.setValue(0.0, forKey: "transform.rotation.x")
+        
+        let opacityAnimation = CABasicAnimation(keyPath: "opacity")
+        opacityAnimation.fromValue = 1.0
+        opacityAnimation.toValue = 0.0
+        opacityAnimation.beginTime = animationBeginTime
+        opacityAnimation.duration = animationDuration
+        opacityAnimation.timingFunction = CAMediaTimingFunction(controlPoints: 1.0, 0.0, 1.0, 0.0)
+        opacityAnimation.fillMode = kCAFillModeBackwards
+        oldLayers.bottom.add(opacityAnimation, forKey: "opacity")
+        oldLayers.top.add(opacityAnimation, forKey: "opacity")
+        oldLayers.bottom.opacity = 0.0
+        oldLayers.top.opacity = 0.0
+        
+    }
+}
+
+// MARK: - Private Drawing Functions
+fileprivate extension CellView
+{
+    func createLayersFromDestinationSnapshot(
+        _ snapshot: (top: CGImage, bottom: CGImage)) -> (top: CALayer, bottom: CALayer)
+    {
+        let topLayer = CALayer()
+        topLayer.contents = snapshot.top
+        topLayer.frame = self.frame
+        topLayer.frame.size.height = topLayer.frame.height / 2
+        topLayer.masksToBounds = false
+        topLayer.isOpaque = true
+        
+        let bottomLayer = CALayer()
+        bottomLayer.contents = snapshot.bottom
+        bottomLayer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+        bottomLayer.frame = topLayer.frame
+        bottomLayer.frame.origin.y += topLayer.frame.height
+        bottomLayer.setValue(perspective, forKey: "transform")
+        bottomLayer.setValue(CGFloat.pi, forKey: "transform.rotation.x")
+        bottomLayer.isDoubleSided = false
+        bottomLayer.masksToBounds = false
+        bottomLayer.isOpaque = true
+        
+        return (topLayer, bottomLayer)
+    }
+    
+    func createLayersFromCurrentSnapshot(
+        _ snapshot: (top: CGImage, bottom: CGImage)) -> (top: CALayer, bottom: CALayer)
+    {
+        
+        let topLayer = CALayer()
+        topLayer.contents = snapshot.top
+        topLayer.frame = self.frame
+        topLayer.frame.size.height = topLayer.frame.height / 2
+        topLayer.frame.origin.y += topLayer.frame.height / 2
+        topLayer.anchorPoint = CGPoint(x: 0.5, y: 1.0)
+        topLayer.setValue(perspective, forKey: "transform")
+        topLayer.isDoubleSided = false
+        topLayer.masksToBounds = false
+        topLayer.isOpaque = true
+        
+        let bottomLayer = CALayer()
+        bottomLayer.contents = snapshot.bottom
+        bottomLayer.frame = topLayer.frame
+        bottomLayer.frame.origin.y += topLayer.frame.height
+        bottomLayer.masksToBounds = false
+        bottomLayer.isOpaque = true
+        return (topLayer, bottomLayer)
+    }
+    
+    func displayPencilMarksInPositions(_ positions: [Int])
+    {
+        var sortedPencilMarks = positions.sorted(by: <).makeIterator()
+        var mark = sortedPencilMarks.next()
+        for i in 0 ..< self.pencilMarks.count {
+            if mark == i {
+                self.pencilMarks[i].isHidden = false
+                mark = sortedPencilMarks.next()
+            }
+            else {
+                self.pencilMarks[i].isHidden = true
+            }
+        }
+    }
+    
+    func getSnapshotOf(view: UIView) -> (top: CGImage, bottom: CGImage)?
+    {
+        UIGraphicsBeginImageContextWithOptions(view.frame.size, false, 0.0)
+        defer { UIGraphicsEndImageContext() }
+        view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        let image = UIGraphicsGetImageFromCurrentImageContext()!
+        let rect = UIGraphicsGetCurrentContext()!.convertToDeviceSpace(view.bounds)
+        let size = CGSize(width: rect.width, height: rect.height / 2.0)
+        let bottomOrigin = CGPoint(x: 0, y: size.height)
+        let topImage = image.cgImage?.cropping(to: CGRect(origin: CGPoint.zero, size: size))
+        let bottomImage = image.cgImage?.cropping(to: CGRect(origin: bottomOrigin, size: size))
+        if let topImage = topImage, let bottomImage = bottomImage { return (topImage, bottomImage) }
+        return nil
+    }
+}
+
+// MARK: - Private Functions
+fileprivate extension CellView
+{
+    func resetColours()
     {
         if isHighlighted {
             backgroundColor = highlightedCellBackgroundColour
@@ -191,11 +346,6 @@ class CellView: UIView
             for pm in pencilMarks { pm.textColor = textColour }
         }
     }
-}
-
-// MARK: - Private Functions
-fileprivate extension CellView
-{
     
     func show(view: UIView)
     {

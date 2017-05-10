@@ -85,6 +85,7 @@ void MCLogContext(MCSudokuSolveContext *context, MCSudokuSolveContextAspect aspe
         }
     }
     printf("%s\n", linebreak);
+    free(linebreak);
 }
 
 #endif // DEBUG

@@ -47,9 +47,17 @@ class SudokuEngineTests: XCTestCase
     
     func testSolveInvalidPuzzle()
     {
-        let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)
-        for (i, number) in puzzle.enumerated() { board?.board[i].number = number == 0 ? nil : number }
-        XCTAssertTrue(board?.solve() ?? false)
+        if let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank) {
+            for (i, number) in puzzle.enumerated() {
+                let row = i / board.dimensionality
+                let column = i % board.dimensionality
+                board.cellAt(SudokuBoardIndex(row: row, column: column))?.number = number == 0 ? nil : number
+            }
+            XCTAssertTrue(board.solve())
+        }
+        else {
+            XCTFail("Board not created")
+        }
     }
     
     func testSolve()
@@ -57,9 +65,12 @@ class SudokuEngineTests: XCTestCase
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .insane)!
         self.measure {
             let b = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
-            for i in 0 ..< Int(b.board.count) {
-                b.board[i].number = board.board[i].number
-                b.board[i].isGiven = board.board[i].isGiven
+            for row in 0 ..< b.dimensionality {
+                for column in 0 ..< b.dimensionality {
+                    let index = SudokuBoardIndex(row: row, column: column)
+                    b.cellAt(index)!.number = board.cellAt(index)!.number
+                    b.cellAt(index)!.isGiven = board.cellAt(index)!.isGiven
+                }
             }
             XCTAssertTrue(b.solve())
             XCTAssertEqual(b.difficulty, board.difficulty)
@@ -69,7 +80,12 @@ class SudokuEngineTests: XCTestCase
     func testSudokuBoardIsSolved()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .easy)!
-        board.board.forEach { $0.number = $0.solution }
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                cell.number = cell.solution
+            }
+        }
         XCTAssertTrue(board.isSolved)
     }
     
@@ -94,18 +110,27 @@ class SudokuEngineTests: XCTestCase
     func testFilledSetBlankSudokuBoardHasSolution()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
-        for (i, cell) in board.board.enumerated() {
-            cell.number = puzzle[i]
+        for (i, number) in puzzle.enumerated() {
+            if number == 0 { continue }
+            let row = i / board.dimensionality
+            let column = i % board.dimensionality
+            let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+            cell.number = number
         }
-        board.setPuzzle()
+        let difficulty = board.setPuzzle()
+        XCTAssertTrue(difficulty.isSolvable())
         XCTAssertTrue(board.difficulty.isSolvable())
     }
     
     func testFilledUnsetBlankSudokuBoardHasSolution()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
-        for (i, cell) in board.board.enumerated() {
-            cell.number = puzzle[i]
+        for (i, number) in puzzle.enumerated() {
+            if number == 0 { continue }
+            let row = i / board.dimensionality
+            let column = i % board.dimensionality
+            let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+            cell.number = number
         }
         XCTAssertFalse(board.difficulty.isSolvable())
     }
@@ -115,8 +140,11 @@ class SudokuEngineTests: XCTestCase
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
         board.markupBoard()
         let pencilMarks = Set(1 ... board.dimensionality)
-        for cell in board.board {
-            XCTAssertEqual(pencilMarks, cell.pencilMarks)
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                XCTAssertEqual(pencilMarks, cell.pencilMarks)
+            }
         }
     }
     
@@ -124,33 +152,58 @@ class SudokuEngineTests: XCTestCase
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
         board.markupBoard()
-        for cell in board.board {
-            XCTAssertFalse(cell.pencilMarks.isEmpty)
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                XCTAssertFalse(cell.pencilMarks.isEmpty)
+            }
         }
         board.unmarkBoard()
-        for cell in board.board {
-            XCTAssertTrue(cell.pencilMarks.isEmpty)
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                XCTAssertTrue(cell.pencilMarks.isEmpty)
+            }
         }
     }
     
     func testSetPuzzle()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
-        for (i, cell) in board.board.enumerated() { if puzzle[i] > 0 { cell.number = puzzle[i] } }
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                let index = row * board.dimensionality + column
+                if puzzle[index] > 0 { cell.number = puzzle[index] }
+            }
+        }
         
-        board.setPuzzle()
-        
-        for (i, cell) in board.board.enumerated() { XCTAssertEqual(puzzle[i] != 0, cell.isGiven) }
+        let difficulty = board.setPuzzle()
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                let index = row * board.dimensionality + column
+                XCTAssertEqual(puzzle[index] != 0, cell.isGiven)
+            }
+        }
         XCTAssertEqual(.insane, board.difficulty)
+        XCTAssertEqual(.insane, difficulty)
     }
     
     func testSetPuzzleWithInvalidPuzzle()
     {
         let board = SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!
-        for (i, cell) in board.board.enumerated() { if puzzle[i] > 0 { cell.number = puzzle[i] } }
-        board.board.last?.number = 0
+        for row in 0 ..< board.dimensionality {
+            for column in 0 ..< board.dimensionality {
+                let cell = board.cellAt(SudokuBoardIndex(row: row, column: column))!
+                let index = row * board.dimensionality + column
+                if puzzle[index] > 0 { cell.number = puzzle[index] }
+            }
+        }
+        board.cellAt(SudokuBoardIndex(row: 8, column: 8))?.number = nil
         
-        board.setPuzzle()
-        XCTAssertEqual(.multipleSolutions, board.difficulty)
+        let difficulty = board.setPuzzle()
+        XCTAssertEqual(.multipleSolutions, difficulty)
+        XCTAssertEqual(.blank, board.difficulty)
     }
 }
