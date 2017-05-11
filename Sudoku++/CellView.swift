@@ -206,7 +206,8 @@ class CellView: UIView
         superLayer.insertSublayer(newLayers.top, below: oldLayers.top)
         superLayer.insertSublayer(newLayers.bottom, above: newLayers.top)
         
-        let animationBeginTime = CACurrentMediaTime() + CFTimeInterval(arc4random() % 256) / 1000.0
+        let animationBeginTime = superLayer.convertTime(CACurrentMediaTime(), from: nil) +
+            (CFTimeInterval(arc4random() % 256) / 1000.0)
         let animationDuration = 0.4
         
         let animation = CABasicAnimation(keyPath: "transform.rotation.x")

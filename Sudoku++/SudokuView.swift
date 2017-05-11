@@ -118,7 +118,7 @@ class SudokuView: UIView
             let animation = CABasicAnimation(keyPath: "opacity")
             animation.fromValue = 1.0
             animation.toValue = 0.0
-            animation.beginTime = CACurrentMediaTime() + 1.0
+            animation.beginTime = snapshot.layer.convertTime(CACurrentMediaTime(), from: nil) + 0.5
             animation.duration = 1.0
             animation.delegate = PrivateAnimationDelegate(
                 startHandler: { snapshot.layer.opacity = 0.0 },
@@ -128,7 +128,7 @@ class SudokuView: UIView
                     let animation = CABasicAnimation(keyPath: "opacity")
                     animation.fromValue = 0.0
                     animation.toValue = 1.0
-                    animation.beginTime = CACurrentMediaTime() + 0.5
+                    animation.beginTime = cell.layer.convertTime(CACurrentMediaTime(), from: nil) + 0.5
                     animation.delegate = PrivateAnimationDelegate(
                         startHandler: { [weak cell] in cell?.layer.opacity = 1.0 })
                     cell.layer.add(animation, forKey: "opacity")
