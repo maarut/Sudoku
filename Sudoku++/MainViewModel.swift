@@ -9,6 +9,30 @@
 import Foundation
 import SudokuEngine
 
+private class MainViewModelArchive: NSObject, NSCoding
+{
+    var sudokuBoard: SudokuBoardProtocol
+    var counter: Int
+    
+    init(sudokuBoard: SudokuBoardProtocol, counter: Int)
+    {
+        self.sudokuBoard = sudokuBoard
+        self.counter = counter
+    }
+    
+    public required init?(coder aDecoder: NSCoder)
+    {
+        sudokuBoard = aDecoder.decodeObject(forKey: "sudokuBoard") as! SudokuBoardProtocol
+        counter = aDecoder.decodeInteger(forKey: "counter")
+    }
+    
+    public func encode(with aCoder: NSCoder)
+    {
+        aCoder.encode(counter, forKey: "counter")
+        aCoder.encode(sudokuBoard, forKey: "sudokuBoard")
+    }
+}
+
 // MARK: - Private Functions
 fileprivate func convertNumberToString(_ number: Int?) -> String
 {
@@ -124,6 +148,7 @@ public protocol MainViewModelDelegate: class
     func showPencilMarks(_: [Int], forCellAt: SudokuBoardIndex)
     
     func timerTextDidChange(_: String)
+    func difficultyTextDidChange(_: String)
     func undoStateChanged(_ canUndo: Bool)
     func setPuzzleStateChanged(_: SetPuzzleState)
     func gameFinished()
@@ -147,12 +172,8 @@ public class MainViewModel
         for count in PuzzleDifficulty.blank.rawValue ..< Int.max {
             guard let difficulty = PuzzleDifficulty(rawValue: count) else { break }
             switch difficulty {
-            case .blank:    difficulties.append("Blank")
-            case .easy:     difficulties.append("Easy")
-            case .normal:   difficulties.append("Normal")
-            case .hard:     difficulties.append("Hard")
-            case .insane:   difficulties.append("Insane")
-            default:        break
+            case .blank, .easy, .normal, .hard, .insane:    difficulties.append(difficulty.description())
+            default:                                        break
             }
         }
         return difficulties
@@ -161,6 +182,22 @@ public class MainViewModel
     init(withSudokuBoard b: SudokuBoardProtocol)
     {
         sudokuBoard = b
+    }
+    
+    public init?(fromArchive archive: NSCoding)
+    {
+        if let archive = archive as? MainViewModelArchive {
+            sudokuBoard = archive.sudokuBoard
+            counter = archive.counter
+        }
+        else {
+            return nil
+        }
+    }
+    
+    func archivableFormat() -> NSCoding
+    {
+        return MainViewModelArchive(sudokuBoard: sudokuBoard, counter: counter)
     }
     
     func undo()
@@ -197,6 +234,7 @@ public class MainViewModel
         else {
             fatalError("Couldn't create a new game. NewGameViewModel.newGame(_:)")
         }
+        delegate?.setPuzzleStateChanged(sudokuBoard.difficulty == .blank ? .canSet : .isSet)
         var newState = [(index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
@@ -209,6 +247,7 @@ public class MainViewModel
             }
         }
         delegate?.newGameStarted(newState: newState)
+        delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription())
         sendCurrentState()
         startTimer()
     }
@@ -351,6 +390,7 @@ public class MainViewModel
         delegate?.sudokuCells(atIndexes: editableCells, newState: .editable)
         delegate?.undoStateChanged(undoManager.canUndo)
         delegate?.setPuzzleStateChanged(sudokuBoard.difficulty.isSolvable() ? .isSet : .canSet)
+        delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription())
         sendCurrentState()
     }
 }
@@ -564,6 +604,35 @@ fileprivate extension MainViewModel
         case .highlightCell(let index):                                         highlightCellAt(index)
         case .highlightNumber(let number), .highlightPencilMark(let number):    highlightCellsContaining(number)
         default:                                                                delegate?.removeHighlights()
+        }
+    }
+}
+
+private extension PuzzleDifficulty
+{
+    func emojiDescription() -> String
+    {
+        switch self {
+        case .blank:                return "🤷‍♀️"
+        case .noSolution:           return "😕"
+        case .multipleSolutions:    return "🤔"
+        case .easy:                 return "😃"
+        case .normal:               return "🙂"
+        case .hard:                 return "😖"
+        case .insane:               return "😭"
+        }
+    }
+    
+    func description() -> String
+    {
+        switch self {
+        case .blank:                return "Blank (\(emojiDescription()))"
+        case .noSolution:           return "No Solution (\(emojiDescription()))"
+        case .multipleSolutions:    return "Multiple Solutions (\(emojiDescription()))"
+        case .easy:                 return "Easy (\(emojiDescription()))"
+        case .normal:               return "Normal (\(emojiDescription()))"
+        case .hard:                 return "Hard (\(emojiDescription()))"
+        case .insane:               return "Insane (\(emojiDescription()))"
         }
     }
 }

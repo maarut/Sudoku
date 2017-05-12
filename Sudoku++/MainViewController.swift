@@ -31,6 +31,7 @@ class MainViewController: UIViewController
     weak var settingsButton: UIButton!
     weak var clearCellButton: HighlightableButton!
     weak var timerLabel: UILabel!
+    weak var difficultyLabel: UILabel!
     
     convenience init(withViewModel viewModel: MainViewModel)
     {
@@ -51,6 +52,13 @@ class MainViewController: UIViewController
             displayLargeNumbers: false)
         let tabBar = UIView()
         tabBar.backgroundColor = UIColor.lightGray
+        let difficultyLabel = UILabel()
+        difficultyLabel.text = "Multiple Solutions"
+        difficultyLabel.textAlignment = .center
+        difficultyLabel.frame.size = difficultyLabel.intrinsicContentSize
+        difficultyLabel.frame.size.height *= 1.2
+        difficultyLabel.frame.size.width *= 1.2
+        difficultyLabel.text = ""
         let timerLabel = UILabel()
         timerLabel.text = "00:00:00"
         timerLabel.textAlignment = .center
@@ -94,6 +102,7 @@ class MainViewController: UIViewController
         view.addSubview(tabBar)
         view.addSubview(clearCellButton)
         view.addSubview(timerLabel)
+        view.addSubview(difficultyLabel)
         self.sudokuView = sudokuView
         self.numberSelectionView = numberSelectionView
         self.pencilSelectionView = pencilSelectionView
@@ -104,6 +113,7 @@ class MainViewController: UIViewController
         self.settingsButton = settingsButton
         self.clearCellButton = clearCellButton
         self.timerLabel = timerLabel
+        self.difficultyLabel = difficultyLabel
     }
     
     override func viewDidLoad()
@@ -139,11 +149,10 @@ class MainViewController: UIViewController
     {
         super.viewWillLayoutSubviews()
         switch UIApplication.shared.statusBarOrientation {
-        case .portrait:         setLayoutPortrait()
-        case .landscapeLeft:    setLayoutLandscapeLeft()
-        case .landscapeRight:   setLayoutLandscapeRight()
-        case .unknown:          setLayoutUnknown()
-        default:                break
+        case .portrait, .portraitUpsideDown:    setLayoutPortrait()
+        case .landscapeLeft:                    setLayoutLandscapeLeft()
+        case .landscapeRight:                   setLayoutLandscapeRight()
+        case .unknown:                          setLayoutUnknown()
         }
     }
 }
@@ -240,8 +249,9 @@ fileprivate extension MainViewController
         pencilSelectionView.center = CGPoint(x: view.frame.width - MARGIN - width / 2, y: midY)
         clearCellButton.center = CGPoint(x: view.frame.width / 2, y: midY)
         let endOfNumberSelectionFrame = numberSelectionView.frame.origin.y + numberSelectionView.frame.height
-        let timerLabelCenterY = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
-        timerLabel.center = CGPoint(x: view.frame.width / 2, y: timerLabelCenterY)
+        let labelCenterY = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
+        difficultyLabel.center = CGPoint(x: view.frame.width / 2, y: labelCenterY - difficultyLabel.frame.height / 2)
+        timerLabel.center = CGPoint(x: view.frame.width / 2, y: labelCenterY + timerLabel.frame.height / 2)
     }
     
     func setLayoutLandscapeLeft()
@@ -261,8 +271,10 @@ fileprivate extension MainViewController
         numberSelectionView.center = CGPoint(x: midX, y: MARGIN + height / 2)
         pencilSelectionView.center = CGPoint(x: midX, y: view.frame.height - MARGIN - height / 2)
         clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
-        timerLabel.center.y = view.frame.height / 2
+        timerLabel.center.y = (view.frame.height + timerLabel.frame.height) / 2
         timerLabel.frame.origin.x = beginningOfToolbar - timerLabel.frame.width - MARGIN
+        difficultyLabel.center.y = (view.frame.height - difficultyLabel.frame.height) / 2
+        difficultyLabel.center.x = timerLabel.center.x
     }
     
     func setLayoutLandscapeRight()
@@ -282,8 +294,10 @@ fileprivate extension MainViewController
         numberSelectionView.center = CGPoint(x: midX, y: MARGIN + height / 2)
         pencilSelectionView.center = CGPoint(x: midX, y: view.frame.height - MARGIN - height / 2)
         clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
-        timerLabel.center.y = view.frame.height / 2
+        timerLabel.center.y = (view.frame.height + timerLabel.frame.height) / 2
         timerLabel.frame.origin.x = endOfToolbar + MARGIN
+        difficultyLabel.center.y = (view.frame.height - difficultyLabel.frame.height) / 2
+        difficultyLabel.center.x = timerLabel.center.x
     }
     
     func setLayoutUnknown()
@@ -321,6 +335,13 @@ extension MainViewController: MainViewModelDelegate
                 showingPencilMarksAtPositions: pencilMarks.map( { $0 - 1 } ))
         }
         sudokuView.isUserInteractionEnabled = true
+    }
+    
+    func difficultyTextDidChange(_ newText: String)
+    {
+        DispatchQueue.main.async {
+            self.difficultyLabel.text = newText
+        }
     }
     
     func setPuzzleStateChanged(_ state: SetPuzzleState)

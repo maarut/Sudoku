@@ -24,7 +24,7 @@ public struct SudokuBoardIndex: Equatable
 }
 
 // MARK: - SudokuBoardProtocol Definition
-public protocol SudokuBoardProtocol
+public protocol SudokuBoardProtocol: NSCoding
 {
     var order: Int { get }
     var dimensionality: Int { get }
@@ -84,7 +84,7 @@ public enum PuzzleDifficulty: Int
 }
 
 // MARK: - Cell Implementation
-public class Cell: NSCoding
+public class Cell: NSObject, NSCoding
 {
     public var number: Int?
     internal (set) public var solution: Int?
@@ -92,14 +92,16 @@ public class Cell: NSCoding
     internal (set) public var neighbours = [SudokuBoardIndex]()
     internal (set) public var isGiven = false
     
-    public init() { }
+    public override init() { }
     
     public required init?(coder aDecoder: NSCoder)
     {
         number = aDecoder.decodeObject(forKey: "number") as! Int?
         solution = aDecoder.decodeObject(forKey: "solution") as! Int?
         pencilMarks = aDecoder.decodeObject(forKey: "pencilMarks") as! Set<Int>
-        neighbours = aDecoder.decodeObject(forKey: "neighbours") as! [SudokuBoardIndex]
+        let rows = aDecoder.decodeObject(forKey: "rows") as! [Int]
+        let columns = aDecoder.decodeObject(forKey: "columns") as! [Int]
+        neighbours = zip(rows, columns).map( { SudokuBoardIndex(row: $0.0, column: $0.1) } )
         isGiven = aDecoder.decodeBool(forKey: "isGiven")
     }
     
@@ -108,13 +110,14 @@ public class Cell: NSCoding
         aCoder.encode(number, forKey: "number")
         aCoder.encode(solution, forKey: "solution")
         aCoder.encode(pencilMarks, forKey: "pencilMarks")
-        aCoder.encode(neighbours, forKey: "neighbours")
+        aCoder.encode(neighbours.map( { $0.row } ), forKey: "rows")
+        aCoder.encode(neighbours.map( { $0.column } ), forKey: "columns")
         aCoder.encode(isGiven, forKey: "isGiven")
     }
 }
 
 // MARK: - SudokuBoard Implementation
-public class SudokuBoard: SudokuBoardProtocol, NSCoding
+public class SudokuBoard: NSObject, SudokuBoardProtocol
 {
     public let order: Int
     public let dimensionality: Int
@@ -309,10 +312,10 @@ fileprivate extension SudokuBoard
     }
 }
 
-// MARK: - CustomStringConvertible
-extension SudokuBoard: CustomStringConvertible
+// MARK: - CustomStringConvertible Implementation
+extension SudokuBoard
 {
-    public var description: String {
+    public override var description: String {
         get {
             return description {
                 let number = board[$0].number
