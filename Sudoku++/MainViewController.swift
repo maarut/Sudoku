@@ -11,6 +11,7 @@ import UIKit
 private let order = 3
 
 private let MARGIN: CGFloat = 10
+private let MAX_SUDOKU_VIEW_SIZE: CGFloat = 512
 
 fileprivate func convertNumberToString(_ number: Int) -> String
 {
@@ -27,11 +28,12 @@ class MainViewController: UIViewController
     weak var tabBar: UIView!
     weak var newGameButton: UIButton!
     weak var undoButton: UIButton!
-    weak var setPuzzleButton: UIButton!
+    weak var markupButton: UIButton!
     weak var settingsButton: UIButton!
     weak var clearCellButton: HighlightableButton!
     weak var timerLabel: UILabel!
     weak var difficultyLabel: UILabel!
+    weak var startButton: UIButton!
     
     convenience init(withViewModel viewModel: MainViewModel)
     {
@@ -51,7 +53,6 @@ class MainViewController: UIViewController
         let pencilSelectionView = NumberSelectionView(frame: CGRect.zero, order: order, buttonTitles: titles,
             displayLargeNumbers: false)
         let tabBar = UIView()
-        tabBar.backgroundColor = UIColor.lightGray
         let difficultyLabel = UILabel()
         difficultyLabel.text = "Multiple Solutions"
         difficultyLabel.textAlignment = .center
@@ -67,23 +68,28 @@ class MainViewController: UIViewController
         timerLabel.frame.size.width *= 1.2
         timerLabel.text = "00:00"
         let newGameButton = UIButton(type: .system)
-        newGameButton.setTitle("N", for: .normal)
+        newGameButton.setTitle("🌟", for: .normal)
         newGameButton.frame.size = newGameButton.intrinsicContentSize
         newGameButton.addTarget(self, action: #selector(newGameButtonTapped(_:)), for: .touchUpInside)
         let undoButton = UIButton(type: .system)
-        undoButton.setTitle("U", for: .normal)
+        undoButton.setTitle("⏮", for: .normal)
+        undoButton.titleLabel?.textAlignment = .center
         undoButton.frame.size = undoButton.intrinsicContentSize
         undoButton.addTarget(self, action: #selector(undoTapped(_:)), for: .touchUpInside)
-        let setPuzzleButton = UIButton(type: .system)
-        setPuzzleButton.setTitle("T", for: .normal)
-        setPuzzleButton.frame.size = setPuzzleButton.intrinsicContentSize
-        setPuzzleButton.addTarget(self, action: #selector(setPuzzleTapped(_:)), for: .touchUpInside)
+        let markupButton = UIButton(type: .system)
+        markupButton.setTitle("✏️", for: .normal)
+        markupButton.titleLabel?.textAlignment = .center
+        markupButton.frame.size = markupButton.intrinsicContentSize
+        markupButton.addTarget(self, action: #selector(markupButtonTapped(_:)), for: .touchUpInside)
+        markupButton.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat.pi, 0.0, 1.0, 0.0)
         let settingsButton = UIButton(type: .system)
-        settingsButton.setTitle("S", for: .normal)
+        settingsButton.setTitle("⚙", for: .normal)
+        settingsButton.titleLabel?.textAlignment = .center
         settingsButton.frame.size = settingsButton.intrinsicContentSize
         settingsButton.addTarget(self, action: #selector(settingsTapped(_:)), for: .touchUpInside)
         let clearCellButton = HighlightableButton()
-        clearCellButton.setTitle("C", for: .normal)
+        clearCellButton.setTitle("✕", for: .normal)
+        clearCellButton.titleLabel?.textAlignment = .center
         clearCellButton.frame.size = clearCellButton.intrinsicContentSize
         clearCellButton.frame.size.width = clearCellButton.frame.height
         clearCellButton.addTarget(self, action: #selector(clearButtonTouchUpInside(_:)), for: .touchUpInside)
@@ -91,29 +97,37 @@ class MainViewController: UIViewController
             for: [.touchDragExit, .touchUpOutside])
         clearCellButton.addTarget(self, action: #selector(clearButtonTouchDown(_:)), for: .touchDown)
         
+        let startButton = UIButton(type: .system)
+        startButton.setTitle("Start", for: .normal)
+        startButton.frame.size = startButton.intrinsicContentSize
+        startButton.addTarget(self, action: #selector(startButtonTapped(_:)), for: .touchUpInside)
+        startButton.isHidden = true
+        
         tabBar.addSubview(newGameButton)
         tabBar.addSubview(undoButton)
-        tabBar.addSubview(setPuzzleButton)
+        tabBar.addSubview(markupButton)
         tabBar.addSubview(settingsButton)
         tabBar.layoutIfNeeded()
-        view.addSubview(sudokuView)
         view.addSubview(numberSelectionView)
         view.addSubview(pencilSelectionView)
+        view.addSubview(sudokuView)
         view.addSubview(tabBar)
         view.addSubview(clearCellButton)
         view.addSubview(timerLabel)
         view.addSubview(difficultyLabel)
+        view.addSubview(startButton)
         self.sudokuView = sudokuView
         self.numberSelectionView = numberSelectionView
         self.pencilSelectionView = pencilSelectionView
         self.tabBar = tabBar
         self.newGameButton = newGameButton
         self.undoButton = undoButton
-        self.setPuzzleButton = setPuzzleButton
+        self.markupButton = markupButton
         self.settingsButton = settingsButton
         self.clearCellButton = clearCellButton
         self.timerLabel = timerLabel
         self.difficultyLabel = difficultyLabel
+        self.startButton = startButton
     }
     
     override func viewDidLoad()
@@ -127,8 +141,9 @@ class MainViewController: UIViewController
         var bounds = UIScreen.main.nativeBounds
         bounds.size.width /= UIScreen.main.nativeScale
         bounds.size.height /= UIScreen.main.nativeScale
-        let selectionWidth = bounds.width / 2.75
-        sudokuView.frame = CGRect(x: 0, y: 0, width: bounds.width - (2 * MARGIN), height: 0)
+        let sudokuViewWidth = min(MAX_SUDOKU_VIEW_SIZE, bounds.width - (2 * MARGIN))
+        let selectionWidth = sudokuViewWidth / 2.75
+        sudokuView.frame = CGRect(x: 0, y: 0, width: sudokuViewWidth, height: 0)
         numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
         pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
     }
@@ -137,6 +152,7 @@ class MainViewController: UIViewController
     {
         super.viewWillAppear(animated)
         viewModel.startTimer()
+        
     }
     
     override func viewWillDisappear(_ animated: Bool)
@@ -148,12 +164,7 @@ class MainViewController: UIViewController
     override func viewWillLayoutSubviews()
     {
         super.viewWillLayoutSubviews()
-        switch UIApplication.shared.statusBarOrientation {
-        case .portrait, .portraitUpsideDown:    setLayoutPortrait()
-        case .landscapeLeft:                    setLayoutLandscapeLeft()
-        case .landscapeRight:                   setLayoutLandscapeRight()
-        case .unknown:                          setLayoutUnknown()
-        }
+        layoutSubviews()
     }
 }
 
@@ -172,6 +183,8 @@ extension MainViewController
             alertController.addAction(action)
         }
         alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alertController.popoverPresentationController?.sourceView = sender
+        alertController.popoverPresentationController?.sourceRect = sender.bounds
         present(alertController, animated: true)
     }
     
@@ -180,14 +193,19 @@ extension MainViewController
         viewModel.undo()
     }
     
-    func setPuzzleTapped(_ sender: UIButton)
+    func startButtonTapped(_ sender: UIButton)
     {
         viewModel.setPuzzle()
     }
     
+    func markupButtonTapped(_ sender: UIButton)
+    {
+        viewModel.fillInPencilMarks()
+    }
+    
     func settingsTapped(_ sender: UIButton)
     {
-        gameFinished()
+        gameStateChanged(.successfullySolved)
     }
     
     func clearButtonDragExit(_ sender: HighlightableButton)
@@ -231,73 +249,93 @@ extension MainViewController: NumberSelectionViewDelegate
 // MARK: - Layout Functions
 fileprivate extension MainViewController
 {
+    func layoutSubviews()
+    {
+        UIView.animate(withDuration: 0.25) {
+            switch UIApplication.shared.statusBarOrientation {
+            case .portrait, .portraitUpsideDown:    self.setLayoutPortrait()
+            case .landscapeLeft:                    self.setLayoutLandscapeLeft()
+            case .landscapeRight:                   self.setLayoutLandscapeRight()
+            case .unknown:                          self.setLayoutUnknown()
+            }
+        }
+    }
+    
     func setLayoutPortrait()
     {
         let buttonCount = CGFloat(tabBar.subviews.count)
-        sudokuView.frame.origin.y = UIApplication.shared.statusBarFrame.height + MARGIN
-        sudokuView.frame.origin.x = MARGIN
+        let sudokuViewYOrigin = statusBarHeight() + MARGIN - view.frame.origin.y
+        sudokuView.center = CGPoint(x: view.frame.width / 2, y: sudokuViewYOrigin + (sudokuView.frame.height / 2))
         tabBar.frame = CGRect(x: 0, y: view.frame.height - 44, width: view.frame.width, height: 44)
         let buttonSpacing = tabBar.frame.width / (buttonCount * 2)
-        for (i, button) in [newGameButton, undoButton, setPuzzleButton, settingsButton].enumerated() {
+        for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: CGFloat(i * 2 + 1) * buttonSpacing, y: 22)
         }
         let endOfSudokuFrame = sudokuView.frame.origin.y + sudokuView.frame.width
         let beginningOfToolbar = tabBar.frame.origin.y
         let width = numberSelectionView.frame.width
         let midY = endOfSudokuFrame + (beginningOfToolbar - endOfSudokuFrame) / 2
-        numberSelectionView.center = CGPoint(x: MARGIN + width / 2, y: midY)
-        pencilSelectionView.center = CGPoint(x: view.frame.width - MARGIN - width / 2, y: midY)
+        numberSelectionView.center = CGPoint(x: sudokuView.frame.origin.x + width / 2, y: midY)
+        pencilSelectionView.center = CGPoint(x: sudokuView.frame.origin.x + sudokuView.frame.width - width / 2, y: midY)
         clearCellButton.center = CGPoint(x: view.frame.width / 2, y: midY)
         let endOfNumberSelectionFrame = numberSelectionView.frame.origin.y + numberSelectionView.frame.height
         let labelCenterY = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
         difficultyLabel.center = CGPoint(x: view.frame.width / 2, y: labelCenterY - difficultyLabel.frame.height / 2)
         timerLabel.center = CGPoint(x: view.frame.width / 2, y: labelCenterY + timerLabel.frame.height / 2)
+        startButton.center = timerLabel.center
     }
     
     func setLayoutLandscapeLeft()
     {
         let buttonCount = CGFloat(tabBar.subviews.count)
-        sudokuView.frame.origin.y = UIApplication.shared.statusBarFrame.height + MARGIN
-        sudokuView.frame.origin.x = MARGIN
+        let yOrigin = statusBarHeight() - view.frame.origin.y
+        let sudokuViewYCenter = yOrigin + (view.frame.height - yOrigin) / 2
+        sudokuView.center = CGPoint(x: MARGIN + sudokuView.frame.width / 2, y: sudokuViewYCenter)
         tabBar.frame = CGRect(x: view.frame.width - 44, y: 0, width: 44, height: view.frame.height)
         let buttonSpacing = tabBar.frame.height / (buttonCount * 2)
-        for (i, button) in [newGameButton, undoButton, setPuzzleButton, settingsButton].enumerated() {
+        for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: 22, y: CGFloat(i * 2 + 1) * buttonSpacing)
         }
         let height = numberSelectionView.frame.height
         let endOfSudokuFrame = sudokuView.frame.origin.x + sudokuView.frame.width
         let beginningOfToolbar = tabBar.frame.origin.x
         let midX = endOfSudokuFrame + ((beginningOfToolbar - endOfSudokuFrame) / 2)
-        numberSelectionView.center = CGPoint(x: midX, y: MARGIN + height / 2)
-        pencilSelectionView.center = CGPoint(x: midX, y: view.frame.height - MARGIN - height / 2)
+        numberSelectionView.center = CGPoint(x: midX, y: sudokuView.frame.origin.y + height / 2)
+        pencilSelectionView.center = CGPoint(x: midX,
+            y: sudokuView.frame.origin.y + sudokuView.frame.height - height / 2)
         clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
         timerLabel.center.y = (view.frame.height + timerLabel.frame.height) / 2
         timerLabel.frame.origin.x = beginningOfToolbar - timerLabel.frame.width - MARGIN
         difficultyLabel.center.y = (view.frame.height - difficultyLabel.frame.height) / 2
         difficultyLabel.center.x = timerLabel.center.x
+        startButton.center = timerLabel.center
     }
     
     func setLayoutLandscapeRight()
     {
         let buttonCount = CGFloat(tabBar.subviews.count)
-        sudokuView.frame.origin.y = UIApplication.shared.statusBarFrame.height + MARGIN
-        sudokuView.frame.origin.x = view.frame.width - MARGIN - sudokuView.frame.width
+        let sudokuViewXCenter = view.frame.width - MARGIN - sudokuView.frame.width / 2
+        let yOrigin = statusBarHeight() - view.frame.origin.y
+        let sudokuViewYCenter = yOrigin + (view.frame.height - yOrigin) / 2
+        sudokuView.center = CGPoint(x: sudokuViewXCenter, y: sudokuViewYCenter)
         tabBar.frame = CGRect(x: 0, y: 0, width: 44, height: view.frame.height)
         let buttonSpacing = tabBar.frame.height / (buttonCount * 2)
-        for (i, button) in [newGameButton, undoButton, setPuzzleButton, settingsButton].enumerated() {
+        for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: 22, y: CGFloat(i * 2 + 1) * buttonSpacing)
         }
         let height = numberSelectionView.frame.height
         let beginningOfSudokuFrame = sudokuView.frame.origin.x
         let endOfToolbar = tabBar.frame.width
         let midX = endOfToolbar + ((beginningOfSudokuFrame - endOfToolbar) / 2)
-        numberSelectionView.center = CGPoint(x: midX, y: MARGIN + height / 2)
-        pencilSelectionView.center = CGPoint(x: midX, y: view.frame.height - MARGIN - height / 2)
+        numberSelectionView.center = CGPoint(x: midX, y: sudokuView.frame.origin.y + height / 2)
+        pencilSelectionView.center = CGPoint(x: midX,// y: view.frame.height - MARGIN - height / 2)
+            y: sudokuView.frame.origin.y + sudokuView.frame.height - height / 2)
         clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
         timerLabel.center.y = (view.frame.height + timerLabel.frame.height) / 2
         timerLabel.frame.origin.x = endOfToolbar + MARGIN
         difficultyLabel.center.y = (view.frame.height - difficultyLabel.frame.height) / 2
         difficultyLabel.center.x = timerLabel.center.x
+        startButton.center = timerLabel.center
     }
     
     func setLayoutUnknown()
@@ -334,7 +372,6 @@ extension MainViewController: MainViewModelDelegate
             cell.flipTo(number: number, backgroundColour: colour,
                 showingPencilMarksAtPositions: pencilMarks.map( { $0 - 1 } ))
         }
-        sudokuView.isUserInteractionEnabled = true
     }
     
     func difficultyTextDidChange(_ newText: String)
@@ -349,14 +386,16 @@ extension MainViewController: MainViewModelDelegate
         DispatchQueue.main.async {
             switch state {
             case .isSet:
-                if self.setPuzzleButton.isEnabled {
-                    self.setPuzzleButton.isEnabled = false
+                if !self.startButton.isHidden {
+                    self.startButton.isHidden = true
+                    self.timerLabel.isHidden = false
                     self.viewModel.startTimer()
                 }
                 break
             case .canSet:
-                if !self.setPuzzleButton.isEnabled {
-                    self.setPuzzleButton.isEnabled = true
+                if self.startButton.isHidden {
+                    self.startButton.isHidden = false
+                    self.timerLabel.isHidden = true
                 }
                 break
             case .failed(let error):
@@ -367,12 +406,21 @@ extension MainViewController: MainViewModelDelegate
         }
     }
     
-    func gameFinished()
+    func gameStateChanged(_ newState: GameState)
     {
-        viewModel.stopTimer()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.sudokuView.gameEnded()
-            self.sudokuView.isUserInteractionEnabled = false
+        switch newState {
+        case .playing:
+            sudokuView.isUserInteractionEnabled = true
+            break
+        case .finished:
+            sudokuView.isUserInteractionEnabled = false
+            break
+        case .successfullySolved:
+            viewModel.stopTimer()
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+                self.sudokuView.gameEnded()
+            }
+            break
         }
     }
     
@@ -380,6 +428,7 @@ extension MainViewController: MainViewModelDelegate
     {
         DispatchQueue.main.async {
             self.undoButton.isEnabled = canUndo
+            self.undoButton.setTitle(canUndo ? "⏮" : "", for: .normal)
         }
     }
     

@@ -9,7 +9,7 @@
 import Foundation
 import SudokuEngine
 
-class MockSudokuBoard: Mock, SudokuBoardProtocol
+class MockSudokuBoard: NSObject, Mock, SudokuBoardProtocol
 {
     enum MockMethod: Int
     {
@@ -44,5 +44,7 @@ class MockSudokuBoard: Mock, SudokuBoardProtocol
         return registerInvocation(.cellAtIndex, args: index, returning: { _ in nil } )
     }
     
-    init() { }
+    override init() { }
+    required init?(coder aDecoder: NSCoder) { return nil }
+    func encode(with aCoder: NSCoder) { }
 }

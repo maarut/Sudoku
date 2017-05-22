@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E307D5191ECF03D9001748CA /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = E307D5181ECF03D9001748CA /* Utils.swift */; };
 		E33304931EC5C7E800C20E6C /* GameSerialiser.swift in Sources */ = {isa = PBXBuildFile; fileRef = E33304921EC5C7E800C20E6C /* GameSerialiser.swift */; };
 		E3378B921E93982600275F4D /* MockImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3378B911E93982600275F4D /* MockImpl.swift */; };
 		E34207531E9D5791008B79A5 /* MainScreenUndoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */; };
@@ -70,6 +71,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E307D5181ECF03D9001748CA /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		E33304921EC5C7E800C20E6C /* GameSerialiser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameSerialiser.swift; sourceTree = "<group>"; };
 		E3378B911E93982600275F4D /* MockImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockImpl.swift; sourceTree = "<group>"; };
 		E34207521E9D5791008B79A5 /* MainScreenUndoTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenUndoTests.swift; sourceTree = "<group>"; };
@@ -222,6 +224,7 @@
 				E36C68C61E649B3000F0FFE9 /* UIColor+Convenience.swift */,
 				E352758B1E687BE100A2A736 /* PrivateAnimationDelegate.swift */,
 				E33304921EC5C7E800C20E6C /* GameSerialiser.swift */,
+				E307D5181ECF03D9001748CA /* Utils.swift */,
 			);
 			name = util;
 			sourceTree = "<group>";
@@ -401,7 +404,7 @@
 					E3FD86531E452AA500C8B780 = {
 						CreatedOnToolsVersion = 8.2.1;
 						DevelopmentTeam = F53K8XZ6AA;
-						LastSwiftMigration = 0820;
+						LastSwiftMigration = 0830;
 						ProvisioningStyle = Automatic;
 					};
 					E3FD86671E452AA500C8B780 = {
@@ -498,6 +501,7 @@
 				E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */,
 				E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */,
 				E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */,
+				E307D5191ECF03D9001748CA /* Utils.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,34 +15,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate
     var mainViewModel: MainViewModel!
     var gameSerialiser = GameSerialiser(withFileName: "net.maarut.Sudoku++.savedState")
     var window: UIWindow?
-    
-    override convenience init()
-    {
-        self.init(withWindow: UIWindow.buildWindow())
-    }
-    
-    init(withWindow window: UIWindow)
-    {
-        super.init()
-        self.window = window
-    }
+    var timer: Timer!
     
     func application(_ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool
     {
+        window = UIWindow.buildWindow()
         let rootVC = MainViewController(nibName: nil, bundle: nil)
-        let viewModel: MainViewModel
-        if let previousGame = gameSerialiser.loadGame(), let vm = MainViewModel(fromArchive: previousGame) {
-            viewModel = vm
-        }
-        else {
-            viewModel = MainViewModel(withSudokuBoard: SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!)
-        }
+        let viewModel = loadViewModel()
         rootVC.viewModel = viewModel
         self.mainViewModel = viewModel
         window!.rootViewController = rootVC
         window!.makeKeyAndVisible()
-        
+        timer = Timer.scheduledTimer(
+            timeInterval: 30, target: self, selector: #selector(save), userInfo: nil, repeats: true)
         return true
     }
 
@@ -52,6 +38,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
         
         mainViewModel.stopTimer()
+        try! gameSerialiser.save(mainViewModel)
+        timer.invalidate()
+        timer = nil
     }
 
     func applicationDidEnterBackground(_ application: UIApplication)
@@ -64,19 +53,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate
     {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
         mainViewModel.startTimer()
+        timer = Timer.scheduledTimer(
+            timeInterval: 30, target: self, selector: #selector(save), userInfo: nil, repeats: true)
     }
 
-    func applicationDidBecomeActive(_ application: UIApplication)
+    func loadViewModel() -> MainViewModel
     {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        if let previousGame: MainViewModel = gameSerialiser.load() {
+            return previousGame
+        }
+        return MainViewModel(withSudokuBoard: SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!)
     }
-
-    func applicationWillTerminate(_ application: UIApplication)
+    
+    func save()
     {
-        // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
-        try! gameSerialiser.saveGame(mainViewModel.archivableFormat())
+        do {
+            try gameSerialiser.save(mainViewModel)
+        }
+        catch let error as NSError {
+            NSLog("\(error.localizedDescription)\n\(error.description)")
+        }
     }
-
-
 }
 

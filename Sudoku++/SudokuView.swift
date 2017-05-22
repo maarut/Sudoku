@@ -119,7 +119,7 @@ class SudokuView: UIView
             animation.fromValue = 1.0
             animation.toValue = 0.0
             animation.beginTime = snapshot.layer.convertTime(CACurrentMediaTime(), from: nil) + 0.5
-            animation.duration = 1.0
+            animation.duration = 1.25
             animation.delegate = PrivateAnimationDelegate(
                 startHandler: { snapshot.layer.opacity = 0.0 },
                 completionHandler: { _ in

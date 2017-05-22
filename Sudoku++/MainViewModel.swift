@@ -9,30 +9,6 @@
 import Foundation
 import SudokuEngine
 
-private class MainViewModelArchive: NSObject, NSCoding
-{
-    var sudokuBoard: SudokuBoardProtocol
-    var counter: Int
-    
-    init(sudokuBoard: SudokuBoardProtocol, counter: Int)
-    {
-        self.sudokuBoard = sudokuBoard
-        self.counter = counter
-    }
-    
-    public required init?(coder aDecoder: NSCoder)
-    {
-        sudokuBoard = aDecoder.decodeObject(forKey: "sudokuBoard") as! SudokuBoardProtocol
-        counter = aDecoder.decodeInteger(forKey: "counter")
-    }
-    
-    public func encode(with aCoder: NSCoder)
-    {
-        aCoder.encode(counter, forKey: "counter")
-        aCoder.encode(sudokuBoard, forKey: "sudokuBoard")
-    }
-}
-
 // MARK: - Private Functions
 fileprivate func convertNumberToString(_ number: Int?) -> String
 {
@@ -134,6 +110,13 @@ public enum SetPuzzleState
     case failed(String)
 }
 
+public enum GameState
+{
+    case playing
+    case successfullySolved
+    case finished
+}
+
 // MARK: - MainViewModelDelegate Definition
 public protocol MainViewModelDelegate: class
 {
@@ -151,14 +134,14 @@ public protocol MainViewModelDelegate: class
     func difficultyTextDidChange(_: String)
     func undoStateChanged(_ canUndo: Bool)
     func setPuzzleStateChanged(_: SetPuzzleState)
-    func gameFinished()
+    func gameStateChanged(_: GameState)
     func newGameStarted(newState: [
         (index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])
         ])
 }
 
 // MARK: - MainViewModel Implementation
-public class MainViewModel
+public class MainViewModel: Archivable
 {
     weak var delegate: MainViewModelDelegate?
     fileprivate var currentState = MainScreenState.begin
@@ -184,20 +167,21 @@ public class MainViewModel
         sudokuBoard = b
     }
     
-    public init?(fromArchive archive: NSCoding)
+    public required init?(fromArchive archive: NSDictionary)
     {
-        if let archive = archive as? MainViewModelArchive {
-            sudokuBoard = archive.sudokuBoard
-            counter = archive.counter
+        if let sudokuBoard = archive["sudokuBoard"] as? SudokuBoard, let counter = archive["counter"] as? Int {
+            self.sudokuBoard = sudokuBoard
+            self.counter = counter
         }
         else {
             return nil
         }
     }
     
-    func archivableFormat() -> NSCoding
+    func archivableFormat() -> NSDictionary
     {
-        return MainViewModelArchive(sudokuBoard: sudokuBoard, counter: counter)
+        let representation: [String: AnyObject] = ["sudokuBoard": sudokuBoard, "counter": counter as NSNumber]
+        return representation as NSDictionary
     }
     
     func undo()
@@ -208,10 +192,11 @@ public class MainViewModel
     
     func startTimer()
     {
-        if timer == nil && sudokuBoard.difficulty != .blank {
+        if timer == nil && sudokuBoard.difficulty != .blank && !sudokuBoard.isSolved {
             timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(timerFired(_:)),
                 userInfo: nil, repeats: true)
         }
+        sendNewTimerText()
     }
     
     func stopTimer()
@@ -247,6 +232,7 @@ public class MainViewModel
             }
         }
         delegate?.newGameStarted(newState: newState)
+        delegate?.gameStateChanged(.playing)
         delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription())
         sendCurrentState()
         startTimer()
@@ -373,17 +359,12 @@ public class MainViewModel
         var editableCells = [SudokuBoardIndex]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
-                let cell = sudokuBoard.cellAt(SudokuBoardIndex(row: row, column: column))!
-                if let number = cell.number {
-                    delegate?.setNumber(convertNumberToString(number),
-                        forCellAt: SudokuBoardIndex(row: row, column: column))
-                }
-                else {
-                    delegate?.showPencilMarks(Array(cell.pencilMarks),
-                        forCellAt: SudokuBoardIndex(row: row, column: column))
-                }
-                if cell.isGiven { givenCells.append(SudokuBoardIndex(row: row, column: column)) }
-                else            { editableCells.append(SudokuBoardIndex(row: row, column: column)) }
+                let index = SudokuBoardIndex(row: row, column: column)
+                let cell = sudokuBoard.cellAt(index)!
+                if let number = cell.number { delegate?.setNumber(convertNumberToString(number), forCellAt: index) }
+                else { delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index) }
+                if cell.isGiven { givenCells.append(index) }
+                else            { editableCells.append(index) }
             }
         }
         delegate?.sudokuCells(atIndexes: givenCells, newState: .given)
@@ -391,7 +372,22 @@ public class MainViewModel
         delegate?.undoStateChanged(undoManager.canUndo)
         delegate?.setPuzzleStateChanged(sudokuBoard.difficulty.isSolvable() ? .isSet : .canSet)
         delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription())
+        delegate?.gameStateChanged(sudokuBoard.isSolved ? .finished : .playing)
         sendCurrentState()
+    }
+    
+    func fillInPencilMarks()
+    {
+        sudokuBoard.markupBoard()
+        for row in 0 ..< sudokuBoard.dimensionality {
+            for column in 0 ..< sudokuBoard.dimensionality {
+                let index = SudokuBoardIndex(row: row, column: column)
+                let cell = sudokuBoard.cellAt(index)!
+                if cell.number == nil {
+                    delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
+                }
+            }
+        }
     }
 }
 
@@ -517,7 +513,8 @@ fileprivate extension MainViewModel
         delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
         delegate?.undoStateChanged(undoManager.canUndo)
         if sudokuBoard.isSolved {
-            delegate?.gameFinished()
+            delegate?.gameStateChanged(.successfullySolved)
+            delegate?.gameStateChanged(.finished)
             undoManager.removeAllActions()
             delegate?.undoStateChanged(undoManager.canUndo)
         }
@@ -572,8 +569,9 @@ fileprivate extension MainViewModel
     {
         guard let cell = sudokuBoard.cellAt(index) else { return }
         if !cell.isGiven {
-            undoManager.registerUndo(withTarget: self) { [pencilMarks = cell.pencilMarks] undoSelf in
-                if cell.number != nil { undoSelf.setNumber(cell.number!, forCellAt: index) }
+            undoManager.registerUndo(withTarget: self) {
+                [pencilMarks = cell.pencilMarks, number = cell.number] undoSelf in
+                if number != nil { undoSelf.setNumber(number!, forCellAt: index) }
                 for pencilMark in pencilMarks { undoSelf.setPencilMark(pencilMark, forCellAt: index) }
                 undoSelf.updateStateDuringUndoOperation()
             }
@@ -626,13 +624,13 @@ private extension PuzzleDifficulty
     func description() -> String
     {
         switch self {
-        case .blank:                return "Blank (\(emojiDescription()))"
-        case .noSolution:           return "No Solution (\(emojiDescription()))"
-        case .multipleSolutions:    return "Multiple Solutions (\(emojiDescription()))"
-        case .easy:                 return "Easy (\(emojiDescription()))"
-        case .normal:               return "Normal (\(emojiDescription()))"
-        case .hard:                 return "Hard (\(emojiDescription()))"
-        case .insane:               return "Insane (\(emojiDescription()))"
+        case .blank:                return "Blank \(emojiDescription())"
+        case .noSolution:           return "No Solution \(emojiDescription())"
+        case .multipleSolutions:    return "Multiple Solutions \(emojiDescription())"
+        case .easy:                 return "Easy \(emojiDescription())"
+        case .normal:               return "Normal \(emojiDescription())"
+        case .hard:                 return "Hard \(emojiDescription())"
+        case .insane:               return "Insane \(emojiDescription())"
         }
     }
 }

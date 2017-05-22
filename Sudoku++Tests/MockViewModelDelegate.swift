@@ -23,7 +23,7 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
         case showPencilMarks
         case timerTextDidChange
         case undoStateChanged
-        case gameFinished
+        case gameStateChanged
         case setPuzzleStateChanged
         case newGameStarted
         case difficultyTextDidChange
@@ -79,9 +79,9 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
         registerInvocation(.undoStateChanged, args: canUndo)
     }
     
-    func gameFinished()
+    func gameStateChanged(_ newState: GameState)
     {
-        registerInvocation(.gameFinished)
+        registerInvocation(.gameStateChanged, args: newState)
     }
     
     func setPuzzleStateChanged(_ state: SetPuzzleState)
@@ -100,4 +100,6 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
     }
     
     init() { }
+    required init?(coder aDecoder: NSCoder) { return nil }
+    func encode(with aCoder: NSCoder) { }
 }

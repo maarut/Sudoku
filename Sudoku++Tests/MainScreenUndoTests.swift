@@ -53,6 +53,18 @@ class MainScreenUndoTests: XCTestCase {
         XCTAssertNil(cell.number)
     }
     
+    func testUndoOfNumberClear()
+    {
+        let cell = Cell()
+        cell.number = 3
+        sudokuBoard.stub(.cellAtIndex, andReturn: cell as Cell?)
+        viewModel.selectClear(event: .releaseActivate)
+        viewModel.selectCell(atIndex: SudokuBoardIndex(row: 0, column: 0))
+        
+        viewModel.undo()
+        XCTAssertEqual(3, cell.number)
+    }
+    
     func testUndoOfNumberWithPencilMarksVisible()
     {
         let cell = Cell()

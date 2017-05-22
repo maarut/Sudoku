@@ -24,7 +24,7 @@ public struct SudokuBoardIndex: Equatable
 }
 
 // MARK: - SudokuBoardProtocol Definition
-public protocol SudokuBoardProtocol: NSCoding
+public protocol SudokuBoardProtocol: NSObjectProtocol, NSCoding
 {
     var order: Int { get }
     var dimensionality: Int { get }

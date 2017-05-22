@@ -8,6 +8,12 @@
 
 import Foundation
 
+protocol Archivable
+{
+    init?(fromArchive: NSDictionary)
+    func archivableFormat() -> NSDictionary
+}
+
 class GameSerialiser
 {
     private let path: URL
@@ -22,19 +28,17 @@ class GameSerialiser
     private func removeOldSavedState()
     {
         let fileManager = FileManager.default
-        if fileManager.fileExists(atPath: path.path) {
-            do { try fileManager.removeItem(at: path) }
-            catch { NSLog("Unable to delete saved state file") }
-        }
+        do { try fileManager.removeItem(at: path.deletingLastPathComponent()) }
+        catch { NSLog("Unable to delete saved state file") }
     }
     
-    func saveGame(_ model: NSCoding) throws
+    func save(_ model: Archivable) throws
     {
+        self.removeOldSavedState()
         let fileManager = FileManager.default
         try fileManager.createDirectory(
             at: path.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
-        let codedData = NSKeyedArchiver.archivedData(withRootObject: model)
-        self.removeOldSavedState()
+        let codedData = NSKeyedArchiver.archivedData(withRootObject: model.archivableFormat())
         do {
             try codedData.write(to: path, options: .atomic)
         }
@@ -45,12 +49,14 @@ class GameSerialiser
         
     }
     
-    func loadGame() -> NSCoding?
+    func load<T: Archivable>() -> T?
     {
-        var game: NSCoding?
+        var game: T?
         do {
-            let loadedData = try Data.init(contentsOf: path)
-            game = NSKeyedUnarchiver.unarchiveObject(with: loadedData) as? NSCoding
+            let loadedData = try Data(contentsOf: path)
+            if let dict = NSKeyedUnarchiver.unarchiveObject(with: loadedData) as? NSDictionary {
+                game = T(fromArchive: dict)
+            }
         }
         catch let error as NSError {
             NSLog("\(error.localizedDescription)\n\(error)")
