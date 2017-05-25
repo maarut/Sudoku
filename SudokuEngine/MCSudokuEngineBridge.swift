@@ -10,10 +10,14 @@ import Foundation
 import SudokuEngineC
 
 // MARK: - Type Aliases
-public struct SudokuBoardIndex: Equatable
+public struct SudokuBoardIndex: Hashable
 {
     public let row: Int
     public let column: Int
+    
+    public var hashValue: Int {
+        return row.hashValue ^ column.hashValue
+    }
     
     public init(row: Int, column: Int) { self.row = row; self.column = column }
     
@@ -32,12 +36,14 @@ public protocol SudokuBoardProtocol: NSObjectProtocol, NSCoding
     var difficultyScore: Int { get }
     
     var isSolved: Bool { get }
+    var isValid: Bool { get }
     
     func solve() -> Bool
     func markupBoard()
     func unmarkBoard()
     func setPuzzle() -> PuzzleDifficulty
     func cellAt(_ index: SudokuBoardIndex) -> Cell?
+    func isCellAtIndexValid(_ index: SudokuBoardIndex) -> Bool
     
 }
 
@@ -129,6 +135,15 @@ public class SudokuBoard: NSObject, SudokuBoardProtocol
         return difficulty.isSolvable() && !board.contains(where: { $0.number != $0.solution } )
     }
     
+    public var isValid: Bool {
+        for cell in board {
+            if !isCellValid(cell) {
+                return false
+            }
+        }
+        return true
+    }
+    
     public var solutionDescription: String {
         return description {
             let number = board[$0].solution
@@ -210,6 +225,12 @@ public class SudokuBoard: NSObject, SudokuBoardProtocol
         return board[index.row * dimensionality + index.column]
     }
     
+    public func isCellAtIndexValid(_ index: SudokuBoardIndex) -> Bool
+    {
+        guard let cell = cellAt(index) else { return false }
+        return isCellValid(cell)
+    }
+    
     // MARK: - Lifecycle
     fileprivate convenience init?(withPuzzle puzzle : MCSudokuSolveContext)
     {
@@ -279,6 +300,16 @@ public class SudokuBoard: NSObject, SudokuBoardProtocol
 // MARK: - SudokuBoard Private Functions
 fileprivate extension SudokuBoard
 {
+    func isCellValid(_ cell: Cell) -> Bool
+    {
+        for neighbour in cell.neighbours.flatMap( { cellAt($0) } ) {
+            if let n = neighbour.number, n == cell.number {
+                return false
+            }
+        }
+        return true
+    }
+    
     func description(using function: (Int) -> String?) -> String
     {
         var lineBreak = ""

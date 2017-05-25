@@ -23,8 +23,10 @@ class CellView: UIView
     var highlightedCellBorderColour = UIColor.red { didSet { resetColours() } }
     var highlightedCellTextColour = UIColor.red { didSet { resetColours() } }
     
-    private (set) var isHighlighted = false
+    
     private let order: Int
+    fileprivate var isHighlighted = false
+    fileprivate var isFlashing = false
     fileprivate let pencilMarks: [UILabel]
     fileprivate weak var number: UILabel!
     fileprivate var perspective: CATransform3D = {
@@ -112,10 +114,37 @@ class CellView: UIView
     }
     
     // MARK: - Internal Functions
+    func reset()
+    {
+        guard isFlashing else { return }
+        isFlashing = false
+        layer.removeAllAnimations()
+        layer.backgroundColor = cellColour.cgColor
+        layer.borderWidth = 0.0
+        number.textColor = textColour
+    }
+    
+    func flash()
+    {
+        guard !isFlashing else { return }
+        select()
+        isFlashing = true
+        layer.removeAllAnimations()
+        let backgroundColourAnimation = CABasicAnimation(keyPath: "backgroundColor")
+        backgroundColourAnimation.fromValue = highlightedCellBackgroundColour.cgColor
+        backgroundColourAnimation.toValue = highlightedCellBorderColour.cgColor
+        backgroundColourAnimation.repeatCount = Float.greatestFiniteMagnitude
+        backgroundColourAnimation.autoreverses = true
+        backgroundColourAnimation.duration = 0.5
+        layer.add(backgroundColourAnimation, forKey: "flashing")
+        layer.backgroundColor = highlightedCellBorderColour.cgColor
+    }
+    
     func deselect()
     {
-        guard isHighlighted else { return }
+        guard isHighlighted && !isFlashing else { return }
         isHighlighted = false
+        layer.removeAllAnimations()
         let newBackgroundColour = cellColour.cgColor
         let width: CGFloat = 0.0
         let animationDelegate = PrivateAnimationDelegate(startHandler: nil) { _ in
@@ -132,12 +161,12 @@ class CellView: UIView
         layer.add(backgroundColour, forKey: "backgroundColour")
         layer.borderWidth = width
         layer.backgroundColor = newBackgroundColour
-        number.textColor =  UIColor.black
+        number.textColor = textColour
     }
     
     func select()
     {
-        guard !isHighlighted else { return }
+        guard !isHighlighted && !isFlashing else { return }
         isHighlighted = true
         let newBackgroundColour = highlightedCellBackgroundColour.cgColor
         let width: CGFloat = frame.width * 0.05
@@ -345,6 +374,12 @@ fileprivate extension CellView
             backgroundColor = cellColour
             number.textColor = textColour
             for pm in pencilMarks { pm.textColor = textColour }
+        }
+        if isFlashing {
+            flash()
+        }
+        else {
+            
         }
     }
     

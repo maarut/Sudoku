@@ -195,7 +195,7 @@ extension Mock
         return registerInvocation(method, args: args, returning: { _ in value })
     }
     
-    func registerInvocation<T>(_ method: MockMethod, args: Any?..., returns value: T?) -> T?
+    func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning value: T?) -> T?
     {
         return registerInvocation(method, args: args, returning: { _ in value })
     }

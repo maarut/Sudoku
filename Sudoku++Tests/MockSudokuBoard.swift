@@ -11,6 +11,7 @@ import SudokuEngine
 
 class MockSudokuBoard: NSObject, Mock, SudokuBoardProtocol
 {
+
     enum MockMethod: Int
     {
         case order
@@ -19,12 +20,14 @@ class MockSudokuBoard: NSObject, Mock, SudokuBoardProtocol
         case difficulty
         case difficultyScore
         case isSolved
+        case isValid
         case solutionDescription
         case solve
         case markupBoard
         case unmarkBoard
         case setPuzzle
         case cellAtIndex
+        case isCellAtIndexValid
     }
     
     var order: Int { return registerInvocation(.order, returning: 0) }
@@ -32,6 +35,7 @@ class MockSudokuBoard: NSObject, Mock, SudokuBoardProtocol
     var board: [Cell] { return registerInvocation(.board, returning: []) }
     var difficulty: PuzzleDifficulty { return registerInvocation(.difficulty, returning: .blank) }
     var difficultyScore: Int { return registerInvocation(.difficultyScore, returning: 0) }
+    var isValid: Bool { return registerInvocation(.isValid, returning: true) }
     var isSolved: Bool { return registerInvocation(.isSolved, returning: false) }
     
     func solve() -> Bool { return registerInvocation(.solve, returning: true) }
@@ -42,6 +46,11 @@ class MockSudokuBoard: NSObject, Mock, SudokuBoardProtocol
     func cellAt(_ index: SudokuBoardIndex) -> Cell?
     {
         return registerInvocation(.cellAtIndex, args: index, returning: { _ in nil } )
+    }
+    
+    func isCellAtIndexValid(_ index: SudokuBoardIndex) -> Bool
+    {
+        return registerInvocation(.isCellAtIndexValid, args: index, returning: false)
     }
     
     override init() { }

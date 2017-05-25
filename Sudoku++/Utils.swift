@@ -19,3 +19,27 @@ public func statusBarHeight() -> CGFloat
     }
     return 20
 }
+
+extension Array where Element: Equatable
+{
+    @discardableResult
+    mutating func removeFirst(element: Element) -> Element?
+    {
+        return removeFirst(where: { $0 == element })
+    }
+}
+
+extension Array
+{
+    @discardableResult
+    mutating func removeFirst(where test: (Element) -> Bool) -> Element?
+    {
+        for i in self.indices {
+            if test(self[i]) {
+                let e = remove(at: i)
+                return e
+            }
+        }
+        return nil
+    }
+}

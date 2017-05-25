@@ -1,5 +1,5 @@
 //
-//  MainScreenUIStateMachine.swift
+//  MainViewModel.swift
 //  Sudoku++
 //
 //  Created by Maarut Chandegra on 15/03/2017.
@@ -103,6 +103,7 @@ public enum SudokuCellState
     case editable
 }
 
+// MARK: - SetPuzzleState Definition
 public enum SetPuzzleState
 {
     case canSet
@@ -110,6 +111,7 @@ public enum SetPuzzleState
     case failed(String)
 }
 
+// MARK: - GameState Definition
 public enum GameState
 {
     case playing
@@ -127,6 +129,7 @@ public protocol MainViewModelDelegate: class
     
     func sudokuCells(atIndexes: [SudokuBoardIndex], newState: SudokuCellState)
     func sudokuCells(atIndexes: [SudokuBoardIndex], newState: ButtonState)
+    func cell(atIndex: SudokuBoardIndex, didChangeValidityTo: Bool)
     func setNumber(_: String, forCellAt: SudokuBoardIndex)
     func showPencilMarks(_: [Int], forCellAt: SudokuBoardIndex)
     
@@ -149,6 +152,7 @@ public class MainViewModel: Archivable
     fileprivate var timer: Timer!
     fileprivate var counter = 0
     fileprivate let undoManager = UndoManager()
+    fileprivate var invalidCells: [SudokuBoardIndex]
     
     var newGameDifficulties: [String] = {
         var difficulties = [String]()
@@ -165,13 +169,18 @@ public class MainViewModel: Archivable
     init(withSudokuBoard b: SudokuBoardProtocol)
     {
         sudokuBoard = b
+        invalidCells = []
     }
     
     public required init?(fromArchive archive: NSDictionary)
     {
-        if let sudokuBoard = archive["sudokuBoard"] as? SudokuBoard, let counter = archive["counter"] as? Int {
+        if let sudokuBoard = archive["sudokuBoard"] as? SudokuBoard,
+            let counter = archive["counter"] as? Int,
+            let rows = archive["invalidRows"] as? [Int],
+            let columns = archive["invalidColumns"] as? [Int] {
             self.sudokuBoard = sudokuBoard
             self.counter = counter
+            self.invalidCells = zip(rows, columns).map( { SudokuBoardIndex(row: $0.0, column: $0.1) } )
         }
         else {
             return nil
@@ -180,7 +189,12 @@ public class MainViewModel: Archivable
     
     func archivableFormat() -> NSDictionary
     {
-        let representation: [String: AnyObject] = ["sudokuBoard": sudokuBoard, "counter": counter as NSNumber]
+        let representation: [String: AnyObject] = [
+            "sudokuBoard": sudokuBoard,
+            "counter": counter as NSNumber,
+            "invalidRows": invalidCells.map( { $0.row } ) as NSArray,
+            "invalidColumns": invalidCells.map( { $0.column } ) as NSArray,
+        ]
         return representation as NSDictionary
     }
     
@@ -219,6 +233,8 @@ public class MainViewModel: Archivable
         else {
             fatalError("Couldn't create a new game. NewGameViewModel.newGame(_:)")
         }
+        for invalidCell in invalidCells { delegate?.cell(atIndex: invalidCell, didChangeValidityTo: true) }
+        invalidCells = []
         delegate?.setPuzzleStateChanged(sudokuBoard.difficulty == .blank ? .canSet : .isSet)
         var newState = [(index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])]()
         for row in 0 ..< sudokuBoard.dimensionality {
@@ -367,6 +383,8 @@ public class MainViewModel: Archivable
                 else            { editableCells.append(index) }
             }
         }
+        for index in invalidCells { delegate?.cell(atIndex: index, didChangeValidityTo: false) }
+        for index in allCellsExcluding(invalidCells) { delegate?.cell(atIndex: index, didChangeValidityTo: true) }
         delegate?.sudokuCells(atIndexes: givenCells, newState: .given)
         delegate?.sudokuCells(atIndexes: editableCells, newState: .editable)
         delegate?.undoStateChanged(undoManager.canUndo)
@@ -512,6 +530,14 @@ fileprivate extension MainViewModel
         delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
         delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
         delegate?.undoStateChanged(undoManager.canUndo)
+        if !sudokuBoard.isCellAtIndexValid(index) && !invalidCells.contains(index) {
+            invalidCells.append(index)
+            delegate?.cell(atIndex: index, didChangeValidityTo: false)
+        }
+        else if sudokuBoard.isCellAtIndexValid(index) && invalidCells.contains(index) {
+            invalidCells.removeFirst(element: index)
+            delegate?.cell(atIndex: index, didChangeValidityTo: true)
+        }
         if sudokuBoard.isSolved {
             delegate?.gameStateChanged(.successfullySolved)
             delegate?.gameStateChanged(.finished)
@@ -580,20 +606,35 @@ fileprivate extension MainViewModel
             delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
             delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
             delegate?.undoStateChanged(undoManager.canUndo)
+            if let i = invalidCells.removeFirst(element: index) {
+                delegate?.cell(atIndex: i, didChangeValidityTo: true)
+            }
         }
     }
     
-    func allCellsExcluding(_ index: SudokuBoardIndex) -> [SudokuBoardIndex]
+    func allCells() -> [SudokuBoardIndex]
     {
         var indexes = [SudokuBoardIndex]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
-                if SudokuBoardIndex(row: row, column: column) != index {
-                    indexes.append(SudokuBoardIndex(row: row, column: column))
-                }
+                indexes.append(SudokuBoardIndex(row: row, column: column))
             }
         }
         return indexes
+    }
+    
+    func allCellsExcluding(_ indexes: [SudokuBoardIndex]) -> [SudokuBoardIndex]
+    {
+        var cells = allCells()
+        for index in indexes {
+            cells.removeFirst(element: index)
+        }
+        return cells
+    }
+    
+    func allCellsExcluding(_ index: SudokuBoardIndex) -> [SudokuBoardIndex]
+    {
+        return allCellsExcluding([index])
     }
     
     func updateStateDuringUndoOperation()

@@ -27,6 +27,7 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
         case setPuzzleStateChanged
         case newGameStarted
         case difficultyTextDidChange
+        case cellAtIndexValidityChanged
     }
     
     func numberSelection(newState: ButtonState, forNumber: Int?)
@@ -97,6 +98,11 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
     func difficultyTextDidChange(_ text: String)
     {
         registerInvocation(.difficultyTextDidChange, args: text)
+    }
+    
+    func cell(atIndex: SudokuBoardIndex, didChangeValidityTo isValid: Bool)
+    {
+        registerInvocation(.cellAtIndexValidityChanged, args: atIndex, isValid)
     }
     
     init() { }
