@@ -397,15 +397,25 @@ public class MainViewModel: Archivable
     func fillInPencilMarks()
     {
         sudokuBoard.markupBoard()
+        var indexesToShowPencilMarksAt = [SudokuBoardIndex]()
         for row in 0 ..< sudokuBoard.dimensionality {
             for column in 0 ..< sudokuBoard.dimensionality {
                 let index = SudokuBoardIndex(row: row, column: column)
                 let cell = sudokuBoard.cellAt(index)!
-                if cell.number == nil {
-                    delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
-                }
+                if cell.number == nil { indexesToShowPencilMarksAt.append(index) }
             }
         }
+        undoManager.registerUndo(withTarget: self, handler: { undoSelf in
+            for index in indexesToShowPencilMarksAt {
+                undoSelf.delegate?.showPencilMarks([], forCellAt: index)
+            }
+            undoSelf.updateStateDuringUndoOperation()
+        })
+        for index in indexesToShowPencilMarksAt {
+            delegate?.showPencilMarks(Array(sudokuBoard.cellAt(index)!.pencilMarks), forCellAt: index)
+        }
+        delegate?.undoStateChanged(undoManager.canUndo)
+        
     }
 }
 
