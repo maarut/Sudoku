@@ -111,7 +111,7 @@ class SudokuView: UIView
             addSubview(snapshot)
             let push = UIPushBehavior(items: [snapshot], mode: .instantaneous)
             let angle = Degree(arc4random() % 90).radianValue + 1.25 * π
-            push.setAngle(angle, magnitude: 0.5)
+            push.setAngle(angle, magnitude: pushMagnitude)
             push.setTargetOffsetFromCenter(generateOffset(for: snapshot), for: snapshot)
             animator.addBehavior(push)
             gravity.addItem(snapshot)
@@ -193,4 +193,17 @@ fileprivate extension SudokuView
 fileprivate extension Degree
 {
     var radianValue: CGFloat { return π * CGFloat(self) / 180.0 }
+}
+
+fileprivate extension SudokuView
+{
+    var pushMagnitude: CGFloat {
+        if let width = self.superview?.frame.width, let height = self.superview?.frame.height {
+            let divisor = CGFloat(768)
+            let dim = min(width, height)
+            return dim / divisor
+        }
+        return 0.5
+        
+    }
 }
