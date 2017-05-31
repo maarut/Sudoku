@@ -396,24 +396,13 @@ public class MainViewModel: Archivable
     
     func fillInPencilMarks()
     {
-        sudokuBoard.markupBoard()
-        var indexesToShowPencilMarksAt = [SudokuBoardIndex]()
-        for row in 0 ..< sudokuBoard.dimensionality {
-            for column in 0 ..< sudokuBoard.dimensionality {
-                let index = SudokuBoardIndex(row: row, column: column)
-                let cell = sudokuBoard.cellAt(index)!
-                if cell.number == nil { indexesToShowPencilMarksAt.append(index) }
-            }
-        }
         undoManager.registerUndo(withTarget: self, handler: { undoSelf in
-            for index in indexesToShowPencilMarksAt {
-                undoSelf.delegate?.showPencilMarks([], forCellAt: index)
-            }
+            undoSelf.sudokuBoard.unmarkBoard()
+            undoSelf.sendPencilMarks()
             undoSelf.updateStateDuringUndoOperation()
         })
-        for index in indexesToShowPencilMarksAt {
-            delegate?.showPencilMarks(Array(sudokuBoard.cellAt(index)!.pencilMarks), forCellAt: index)
-        }
+        sudokuBoard.markupBoard()
+        sendPencilMarks()
         delegate?.undoStateChanged(undoManager.canUndo)
         
     }
@@ -653,6 +642,15 @@ fileprivate extension MainViewModel
         case .highlightCell(let index):                                         highlightCellAt(index)
         case .highlightNumber(let number), .highlightPencilMark(let number):    highlightCellsContaining(number)
         default:                                                                delegate?.removeHighlights()
+        }
+    }
+    
+    func sendPencilMarks()
+    {
+        for (index, cell) in allCells().map( { ($0, sudokuBoard.cellAt($0)!) } ) {
+            if cell.number == nil {
+                delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
+            }
         }
     }
 }
