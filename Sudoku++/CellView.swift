@@ -40,16 +40,16 @@ class CellView: UIView
     {
         self.order = order
         pencilMarks = pencilMarkTitles.map {
-            let pencilMarkFrame = CGRect.zero
-            let l = UILabel(frame: pencilMarkFrame)
+            let l = UILabel(frame: CGRect.zero)
             l.text = $0
             l.textAlignment = .center
             l.isHidden = true
+            l.font = UIFont(name: "Futura-Medium", size: l.font.pointSize)
             return l
         }
         let v = UIView(frame: CGRect(origin: CGPoint.zero, size: frame.size))
         let number = UILabel()
-        number.font = UIFont.systemFont(ofSize: frame.width * FONT_SCALE_FACTOR)
+        number.font = UIFont(name: "Futura-Medium", size: number.font.pointSize)
         number.textAlignment = .center
         number.adjustsFontSizeToFitWidth = true
         number.minimumScaleFactor = 0.5
@@ -105,7 +105,6 @@ class CellView: UIView
             v.frame.size = CGSize(width: pencilMarkDims, height: pencilMarkDims)
             v.font = v.font.withSize(pencilMarkDims * FONT_SCALE_FACTOR)
         }
-        
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView?

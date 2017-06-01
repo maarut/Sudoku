@@ -28,6 +28,7 @@ class NumberSelectionView: UIView
         self.order = order
         buttons = buttonTitles.map {
             let button = HighlightableButton()
+            button.titleLabel?.font = UIFont(name: "Futura-Medium", size: button.titleLabel?.font.pointSize ?? 0)
             button.setTitle($0, for: .normal)
             return button
         }

@@ -11,10 +11,10 @@ import UIKit
 class HighlightableButton: UIButton
 {
     fileprivate weak var borderShape: CAShapeLayer!
-    var buttonColour:                   UIColor = UIColor(hexValue: 0xF0F0DC)
+    var buttonColour:                   UIColor = UIColor(hexValue: 0xD8EBFF)
     var buttonHighlightedColour:        UIColor = UIColor(hexValue: 0xFF0000)
     var buttonSelectedColour:           UIColor = UIColor(hexValue: 0xFFFFFF)
-    var buttonBorderColour:             UIColor = UIColor(hexValue: 0xA0AAA0)
+    var buttonBorderColour:             UIColor = UIColor(hexValue: 0xC1C8CC)
     var buttonHighlightedBorderColour:  UIColor = UIColor(hexValue: 0xFF0000)
     var buttonSelectedBorderColour:     UIColor = UIColor(hexValue: 0xFF0000)
     var buttonTextColour:               UIColor = UIColor(hexValue: 0x000000)

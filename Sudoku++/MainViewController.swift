@@ -12,6 +12,8 @@ private let order = 3
 
 private let MARGIN: CGFloat = 10
 private let MAX_SUDOKU_VIEW_SIZE: CGFloat = 512
+private let EDITABLE_CELL_COLOUR = UIColor(hexValue: 0xF2F8FF)
+private let GIVEN_CELL_COLOUR = UIColor(hexValue: 0xD8EBFF)
 
 fileprivate func convertNumberToString(_ number: Int) -> String
 {
@@ -364,8 +366,8 @@ extension MainViewController: MainViewModelDelegate
         for (index, state, number, pencilMarks) in newState {
             let colour: UIColor
             switch state {
-            case .editable: colour = UIColor(hexValue: 0xF0F0DC)
-            case .given:    colour = UIColor(hexValue: 0xE0E0CC)
+            case .editable: colour = EDITABLE_CELL_COLOUR
+            case .given:    colour = GIVEN_CELL_COLOUR
             }
             let cell = sudokuView.cellAt(tupleRepresentation(index))!
             
@@ -517,7 +519,7 @@ extension MainViewController: MainViewModelDelegate
                 let cell = self.sudokuView.cellAt((i.row, i.column))!
                 switch state {
                 case .given:
-                    cell.cellColour = UIColor(hexValue: 0xE0E0CC)
+                    cell.cellColour = GIVEN_CELL_COLOUR
                     cell.textColour = UIColor.black
                     cell.highlightedCellBackgroundColour = UIColor.white
                     cell.highlightedCellTextColour = UIColor.red
@@ -525,7 +527,7 @@ extension MainViewController: MainViewModelDelegate
                     cell.setNeedsDisplay()
                     break
                 case .editable:
-                    cell.cellColour = UIColor(hexValue: 0xF0F0DC)
+                    cell.cellColour = EDITABLE_CELL_COLOUR
                     cell.textColour = UIColor.black
                     cell.highlightedCellBackgroundColour = UIColor.white
                     cell.highlightedCellTextColour = UIColor.red
