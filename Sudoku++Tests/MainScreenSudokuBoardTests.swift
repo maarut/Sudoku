@@ -160,4 +160,11 @@ class MainScreenSudokuBoardTests: XCTestCase
         mockViewModelDelegate.verify()
     }
     
+    func testAddPencilMarksWhenGameIsSolved()
+    {
+        sudokuBoard.stub(.isSolved, andReturn: true)
+        viewModel.fillInPencilMarks()
+        sudokuBoard.verify()
+        mockViewModelDelegate.verify()
+    }
 }
