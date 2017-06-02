@@ -16,7 +16,7 @@ class CellView: UIView
 {
     var cellColour = UIColor(hexValue: 0xF0F0DC) { didSet { resetColours() } }
     var textColour = UIColor.black  { didSet { resetColours() } }
-    
+    var borderColour = UIColor(hexValue: 0xC1C8CC) { didSet { resetColours() } }
     var pencilMarkCount: Int { return pencilMarks.count }
     
     var highlightedCellBackgroundColour = UIColor.white { didSet { resetColours() } }
@@ -65,7 +65,8 @@ class CellView: UIView
             addSubview(view)
         }
         backgroundColor = cellColour
-        layer.borderColor = highlightedCellBorderColour.cgColor
+        layer.borderWidth = frame.width * 0.02
+        layer.borderColor = borderColour.cgColor
     }
     
     convenience override init(frame: CGRect)
@@ -105,6 +106,7 @@ class CellView: UIView
             v.frame.size = CGSize(width: pencilMarkDims, height: pencilMarkDims)
             v.font = v.font.withSize(pencilMarkDims * FONT_SCALE_FACTOR)
         }
+        layer.borderWidth = frame.width * (isHighlighted ? 0.05 : 0.02)
     }
     
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView?
@@ -145,7 +147,8 @@ class CellView: UIView
         isHighlighted = false
         layer.removeAllAnimations()
         let newBackgroundColour = cellColour.cgColor
-        let width: CGFloat = 0.0
+        let newBorderColour = self.borderColour.cgColor
+        let width: CGFloat = frame.width * 0.02
         let animationDelegate = PrivateAnimationDelegate(startHandler: nil) { _ in
             for pm in self.pencilMarks { pm.textColor = self.textColour }
         }
@@ -156,10 +159,15 @@ class CellView: UIView
         let borderWidth = CABasicAnimation(keyPath: "borderWidth")
         borderWidth.fromValue = layer.borderWidth
         borderWidth.toValue = width
+        let borderColour = CABasicAnimation(keyPath: "borderColor")
+        borderColour.fromValue = layer.borderColor
+        borderColour.toValue = newBorderColour
         layer.add(borderWidth, forKey:  "borderWidth")
         layer.add(backgroundColour, forKey: "backgroundColour")
+        layer.add(borderColour, forKey: "borderColour")
         layer.borderWidth = width
         layer.backgroundColor = newBackgroundColour
+        layer.borderColor = newBorderColour
         number.textColor = textColour
     }
     
@@ -168,6 +176,7 @@ class CellView: UIView
         guard !isHighlighted && !isFlashing else { return }
         isHighlighted = true
         let newBackgroundColour = highlightedCellBackgroundColour.cgColor
+        let newBorderColour = highlightedCellBorderColour.cgColor
         let width: CGFloat = frame.width * 0.05
         let backgroundColour = CABasicAnimation(keyPath: "backgroundColor")
         backgroundColour.fromValue = layer.backgroundColor
@@ -175,9 +184,13 @@ class CellView: UIView
         let borderWidth = CABasicAnimation(keyPath: "borderWidth")
         borderWidth.fromValue = layer.borderWidth
         borderWidth.toValue = width
+        let borderColour = CABasicAnimation(keyPath: "borderColor")
+        borderColour.fromValue = layer.borderColor
+        borderColour.toValue = newBorderColour
         layer.add(borderWidth, forKey:  "borderWidth")
         layer.add(backgroundColour, forKey: "backgroundColour")
-        layer.borderColor = highlightedCellBorderColour.cgColor
+        layer.add(borderColour, forKey: "borderColour")
+        layer.borderColor = newBorderColour
         layer.borderWidth = width
         layer.backgroundColor = newBackgroundColour
         number.textColor = highlightedCellTextColour
@@ -372,6 +385,7 @@ fileprivate extension CellView
         else {
             backgroundColor = cellColour
             number.textColor = textColour
+            layer.borderColor = borderColour.cgColor
             for pm in pencilMarks { pm.textColor = textColour }
         }
         if isFlashing {

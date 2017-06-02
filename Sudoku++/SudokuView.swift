@@ -9,7 +9,7 @@
 import UIKit
 
 private let π: CGFloat = CGFloat.pi
-private let BOX_SPACING: CGFloat = 0.015
+private let BOX_SPACING: CGFloat = 0.025
 private let CELL_SPACING: CGFloat = 0.0075
 
 private typealias Degree = UInt32
