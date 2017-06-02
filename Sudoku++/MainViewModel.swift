@@ -396,6 +396,7 @@ public class MainViewModel: Archivable
     
     func fillInPencilMarks()
     {
+        guard !sudokuBoard.isSolved else { return }
         undoManager.registerUndo(withTarget: self, handler: { undoSelf in
             undoSelf.sudokuBoard.unmarkBoard()
             undoSelf.sendPencilMarks()
