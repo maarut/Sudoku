@@ -14,7 +14,7 @@ private let MARGIN: CGFloat = 10
 private let MAX_SUDOKU_VIEW_SIZE: CGFloat = 512
 private let EDITABLE_CELL_COLOUR = UIColor(hexValue: 0xF2F8FF)
 private let GIVEN_CELL_COLOUR = UIColor(hexValue: 0xD8EBFF)
-
+private let TABBAR_HEIGHT: CGFloat = 44
 fileprivate func convertNumberToString(_ number: Int) -> String
 {
     return number < 10 ? "\(number)" : "\(Character(UnicodeScalar(55 + number)!))"
@@ -143,11 +143,7 @@ class MainViewController: UIViewController
         var bounds = UIScreen.main.nativeBounds
         bounds.size.width /= UIScreen.main.nativeScale
         bounds.size.height /= UIScreen.main.nativeScale
-        let sudokuViewWidth = min(MAX_SUDOKU_VIEW_SIZE, bounds.width - (2 * MARGIN))
-        let selectionWidth = sudokuViewWidth / 2.75
-        sudokuView.frame = CGRect(x: 0, y: 0, width: sudokuViewWidth, height: 0)
-        numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
-        pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
+        resizeViews(toSize: bounds.size)
     }
     
     override func viewWillAppear(_ animated: Bool)
@@ -167,6 +163,12 @@ class MainViewController: UIViewController
     {
         super.viewWillLayoutSubviews()
         layoutSubviews()
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+    {
+        super.viewWillTransition(to: size, with: coordinator)
+        resizeViews(toSize: size)
     }
 }
 
@@ -251,9 +253,44 @@ extension MainViewController: NumberSelectionViewDelegate
 // MARK: - Layout Functions
 fileprivate extension MainViewController
 {
+    func confirmSizes()
+    {
+        
+        var newHeight = sudokuView.frame.height
+        var selectionWidth = newHeight / 2.75
+
+        var overallHeight = statusBarHeight() + newHeight + selectionWidth + timerLabel.frame.height +
+            difficultyLabel.frame.height + TABBAR_HEIGHT
+        
+        while overallHeight > view.frame.height {
+            newHeight *= 0.9
+            selectionWidth = newHeight / 2.75
+            overallHeight = statusBarHeight() + newHeight + selectionWidth + timerLabel.frame.height +
+                difficultyLabel.frame.height + TABBAR_HEIGHT
+            
+        }
+        sudokuView.frame.size = CGSize(width: newHeight, height: newHeight)
+        numberSelectionView.frame.size = CGSize(width: selectionWidth, height: selectionWidth)
+        pencilSelectionView.frame.size = CGSize(width: selectionWidth, height: selectionWidth)
+    }
+    
+    func resizeViews(toSize size: CGSize)
+    {
+        let minWidthOrHeight = min(size.width, size.height)
+        let sudokuViewWidth = min(MAX_SUDOKU_VIEW_SIZE, minWidthOrHeight - (2 * MARGIN))
+        let selectionWidth = sudokuViewWidth / 2.75
+        
+        if sudokuView.frame.width == sudokuViewWidth { return }
+        
+        sudokuView.frame = CGRect(x: 0, y: 0, width: sudokuViewWidth, height: sudokuViewWidth)
+        numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
+        pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
+    }
+    
     func layoutSubviews()
     {
         UIView.animate(withDuration: 0.25) {
+            if self.view.frame.height > self.view.frame.width { self.setLayoutPortrait(); return }
             switch UIApplication.shared.statusBarOrientation {
             case .portrait, .portraitUpsideDown:    self.setLayoutPortrait()
             case .landscapeLeft:                    self.setLayoutLandscapeLeft()
@@ -265,10 +302,12 @@ fileprivate extension MainViewController
     
     func setLayoutPortrait()
     {
+        confirmSizes()
         let buttonCount = CGFloat(tabBar.subviews.count)
         let sudokuViewYOrigin = statusBarHeight() + MARGIN - view.frame.origin.y
         sudokuView.center = CGPoint(x: view.frame.width / 2, y: sudokuViewYOrigin + (sudokuView.frame.height / 2))
-        tabBar.frame = CGRect(x: 0, y: view.frame.height - 44, width: view.frame.width, height: 44)
+        tabBar.frame = CGRect(x: 0, y: view.frame.height - TABBAR_HEIGHT,
+            width: view.frame.width, height: TABBAR_HEIGHT)
         let buttonSpacing = tabBar.frame.width / (buttonCount * 2)
         for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: CGFloat(i * 2 + 1) * buttonSpacing, y: 22)
@@ -291,9 +330,10 @@ fileprivate extension MainViewController
     {
         let buttonCount = CGFloat(tabBar.subviews.count)
         let yOrigin = statusBarHeight() - view.frame.origin.y
-        let sudokuViewYCenter = yOrigin + (view.frame.height - yOrigin) / 2
-        sudokuView.center = CGPoint(x: MARGIN + sudokuView.frame.width / 2, y: sudokuViewYCenter)
-        tabBar.frame = CGRect(x: view.frame.width - 44, y: 0, width: 44, height: view.frame.height)
+        let yCenter = yOrigin + (view.frame.height - yOrigin) / 2
+        sudokuView.center = CGPoint(x: MARGIN + sudokuView.frame.width / 2, y: yCenter)
+        tabBar.frame = CGRect(x: view.frame.width - TABBAR_HEIGHT, y: 0,
+            width: TABBAR_HEIGHT, height: view.frame.height)
         let buttonSpacing = tabBar.frame.height / (buttonCount * 2)
         for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: 22, y: CGFloat(i * 2 + 1) * buttonSpacing)
@@ -305,10 +345,10 @@ fileprivate extension MainViewController
         numberSelectionView.center = CGPoint(x: midX, y: sudokuView.frame.origin.y + height / 2)
         pencilSelectionView.center = CGPoint(x: midX,
             y: sudokuView.frame.origin.y + sudokuView.frame.height - height / 2)
-        clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
-        timerLabel.center.y = (view.frame.height + timerLabel.frame.height) / 2
+        clearCellButton.center = CGPoint(x: midX, y: yCenter)
+        timerLabel.center.y = yCenter + (timerLabel.frame.height / 2)
         timerLabel.frame.origin.x = beginningOfToolbar - timerLabel.frame.width - MARGIN
-        difficultyLabel.center.y = (view.frame.height - difficultyLabel.frame.height) / 2
+        difficultyLabel.center.y = yCenter - (difficultyLabel.frame.height / 2)
         difficultyLabel.center.x = timerLabel.center.x
         startButton.center = timerLabel.center
     }
@@ -318,8 +358,8 @@ fileprivate extension MainViewController
         let buttonCount = CGFloat(tabBar.subviews.count)
         let sudokuViewXCenter = view.frame.width - MARGIN - sudokuView.frame.width / 2
         let yOrigin = statusBarHeight() - view.frame.origin.y
-        let sudokuViewYCenter = yOrigin + (view.frame.height - yOrigin) / 2
-        sudokuView.center = CGPoint(x: sudokuViewXCenter, y: sudokuViewYCenter)
+        let yCenter = yOrigin + (view.frame.height - yOrigin) / 2
+        sudokuView.center = CGPoint(x: sudokuViewXCenter, y: yCenter)
         tabBar.frame = CGRect(x: 0, y: 0, width: 44, height: view.frame.height)
         let buttonSpacing = tabBar.frame.height / (buttonCount * 2)
         for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
@@ -330,12 +370,12 @@ fileprivate extension MainViewController
         let endOfToolbar = tabBar.frame.width
         let midX = endOfToolbar + ((beginningOfSudokuFrame - endOfToolbar) / 2)
         numberSelectionView.center = CGPoint(x: midX, y: sudokuView.frame.origin.y + height / 2)
-        pencilSelectionView.center = CGPoint(x: midX,// y: view.frame.height - MARGIN - height / 2)
+        pencilSelectionView.center = CGPoint(x: midX,
             y: sudokuView.frame.origin.y + sudokuView.frame.height - height / 2)
-        clearCellButton.center = CGPoint(x: midX, y: view.frame.height / 2)
-        timerLabel.center.y = (view.frame.height + timerLabel.frame.height) / 2
+        clearCellButton.center = CGPoint(x: midX, y: yCenter)
+        timerLabel.center.y = yCenter + (timerLabel.frame.height / 2)
         timerLabel.frame.origin.x = endOfToolbar + MARGIN
-        difficultyLabel.center.y = (view.frame.height - difficultyLabel.frame.height) / 2
+        difficultyLabel.center.y = yCenter - (difficultyLabel.frame.height / 2)
         difficultyLabel.center.x = timerLabel.center.x
         startButton.center = timerLabel.center
     }

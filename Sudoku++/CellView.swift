@@ -99,11 +99,13 @@ class CellView: UIView
         number.frame = frame
         number.font = number.font.withSize(self.frame.width * FONT_SCALE_FACTOR)
         let pencilMarkDims = frame.width / CGFloat(order)
+        let size = CGSize(width: pencilMarkDims, height: pencilMarkDims)
         for (i, v) in pencilMarks.enumerated() {
             let xOffset = CGFloat(i % order) * pencilMarkDims
             let yOffset = CGFloat(i / order) * pencilMarkDims
-            v.superview?.frame = CGRect(x: xOffset, y: yOffset, width: pencilMarkDims, height: pencilMarkDims)
-            v.frame.size = CGSize(width: pencilMarkDims, height: pencilMarkDims)
+            let point = CGPoint(x: xOffset, y: yOffset)
+            v.superview?.frame = CGRect(origin: point, size: size)
+            v.frame = CGRect(origin: CGPoint.zero, size: size)
             v.font = v.font.withSize(pencilMarkDims * FONT_SCALE_FACTOR)
         }
         layer.borderWidth = frame.width * (isHighlighted ? 0.05 : 0.02)
@@ -249,7 +251,7 @@ class CellView: UIView
         
         let animationBeginTime = superLayer.convertTime(CACurrentMediaTime(), from: nil) +
             (CFTimeInterval(arc4random() % 256) / 1000.0)
-        let animationDuration = 0.4
+        let animationDuration = 0.5
         
         let animation = CABasicAnimation(keyPath: "transform.rotation.x")
         animation.beginTime = animationBeginTime
