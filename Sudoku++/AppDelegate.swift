@@ -8,6 +8,7 @@
 
 import UIKit
 import SudokuEngine
+import GoogleMobileAds
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate
@@ -29,6 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate
         window!.makeKeyAndVisible()
         timer = Timer.scheduledTimer(
             timeInterval: 30, target: self, selector: #selector(save), userInfo: nil, repeats: true)
+        GADMobileAds.configure(withApplicationID: kAdMobAppId)
         return true
     }
 

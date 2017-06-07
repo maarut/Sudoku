@@ -66,8 +66,8 @@ class NumberSelectionView: UIView
         frame.size.height = frame.width
         let totalSpacing = frame.width * 0.1
         let spacing = totalSpacing / CGFloat(order - 1)
-        let buttonSize = CGSize(width: (frame.width - totalSpacing) / CGFloat(order),
-            height: (frame.width - totalSpacing) / CGFloat(order))
+        let buttonHeight = (frame.width - totalSpacing) / CGFloat(order)
+        let buttonSize = CGSize(width: buttonHeight, height: buttonHeight)
         let fontSize = displayLargeNumbers ? buttonSize.width * 0.4 : buttonSize.width * 0.25
         for (i, button) in buttons.enumerated() {
             let xOffset = CGFloat(i % order) * (buttonSize.width + spacing)

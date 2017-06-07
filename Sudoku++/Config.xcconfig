@@ -1,0 +1,11 @@
+//
+//  Config.xcconfig
+//  Sudoku++
+//
+//  Created by Maarut Chandegra on 05/06/2017.
+//  Copyright © 2017 Maarut Chandegra. All rights reserved.
+//
+
+#include "Sudoku++/Keys.xcconfig"
+
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) ADMOB_APP_ID=@\"$(ADMOB_APP_ID)\" ADMOB_ADUNIT_ID=@\"$(ADMOB_ADUNIT_ID)\" ADMOB_TEST_DEVICES=@\"$(ADMOB_TEST_DEVICES)\"

@@ -21,6 +21,8 @@
 		E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35275DB1E799DE800A2A736 /* MainViewModel.swift */; };
 		E35275DE1E81642000A2A736 /* HighlightableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35275DD1E81642000A2A736 /* HighlightableButton.swift */; };
 		E359BD981E969CB3005661EE /* MainScreenNumberPickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E359BD971E969CB3005661EE /* MainScreenNumberPickerTests.swift */; };
+		E369FE251EE5A8230074765A /* MCConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = E369FE241EE5A8230074765A /* MCConstants.m */; };
+		E369FE281EE5AD470074765A /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E369FE271EE5AD470074765A /* GoogleMobileAds.framework */; };
 		E36C685F1E5E42B300F0FFE9 /* Sudoku++Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68561E5E427B00F0FFE9 /* Sudoku++Tests.swift */; };
 		E36C68601E5E42B800F0FFE9 /* SudokuEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD866C1E452AA500C8B780 /* SudokuEngineTests.swift */; };
 		E36C68811E609F6600F0FFE9 /* CellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36C68801E609F6600F0FFE9 /* CellView.swift */; };
@@ -81,6 +83,11 @@
 		E35275DB1E799DE800A2A736 /* MainViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
 		E35275DD1E81642000A2A736 /* HighlightableButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = HighlightableButton.swift; path = "Sudoku++/HighlightableButton.swift"; sourceTree = "<group>"; };
 		E359BD971E969CB3005661EE /* MainScreenNumberPickerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenNumberPickerTests.swift; sourceTree = "<group>"; };
+		E369FE211EE5A7E10074765A /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		E369FE221EE5A8220074765A /* Sudoku++-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Sudoku++-Bridging-Header.h"; sourceTree = "<group>"; };
+		E369FE231EE5A8230074765A /* MCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MCConstants.h; sourceTree = "<group>"; };
+		E369FE241EE5A8230074765A /* MCConstants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MCConstants.m; sourceTree = "<group>"; };
+		E369FE271EE5AD470074765A /* GoogleMobileAds.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GoogleMobileAds.framework; path = Frameworks/GoogleMobileAds.framework; sourceTree = "<group>"; };
 		E36C67FE1E5E111900F0FFE9 /* MCSudokuEngine.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = MCSudokuEngine.c; path = SudokuEngine/MCSudokuEngine.c; sourceTree = "<group>"; };
 		E36C67FF1E5E111900F0FFE9 /* MCSudokuEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MCSudokuEngine.h; path = SudokuEngine/MCSudokuEngine.h; sourceTree = "<group>"; };
 		E36C68001E5E111900F0FFE9 /* MCSudokuEngineBridge.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MCSudokuEngineBridge.swift; path = SudokuEngine/MCSudokuEngineBridge.swift; sourceTree = "<group>"; };
@@ -130,6 +137,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E369FE281EE5AD470074765A /* GoogleMobileAds.framework in Frameworks */,
 				E35275D21E76A2E300A2A736 /* SudokuEngine.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -150,6 +158,25 @@
 				E35275DB1E799DE800A2A736 /* MainViewModel.swift */,
 			);
 			name = "View Model";
+			sourceTree = "<group>";
+		};
+		E369FE201EE5A7B50074765A /* Environments */ = {
+			isa = PBXGroup;
+			children = (
+				E369FE211EE5A7E10074765A /* Config.xcconfig */,
+				E369FE231EE5A8230074765A /* MCConstants.h */,
+				E369FE241EE5A8230074765A /* MCConstants.m */,
+				E369FE221EE5A8220074765A /* Sudoku++-Bridging-Header.h */,
+			);
+			name = Environments;
+			sourceTree = "<group>";
+		};
+		E369FE261EE5A8D40074765A /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E369FE271EE5AD470074765A /* GoogleMobileAds.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		E36C67FD1E5E109A00F0FFE9 /* SudokuEngine */ = {
@@ -240,6 +267,7 @@
 		E3FD864B1E452AA500C8B780 = {
 			isa = PBXGroup;
 			children = (
+				E369FE261EE5A8D40074765A /* Frameworks */,
 				E36C67FD1E5E109A00F0FFE9 /* SudokuEngine */,
 				E3FD86561E452AA500C8B780 /* Sudoku++ */,
 				E3FD866B1E452AA500C8B780 /* Sudoku++ Tests */,
@@ -262,6 +290,7 @@
 		E3FD86561E452AA500C8B780 /* Sudoku++ */ = {
 			isa = PBXGroup;
 			children = (
+				E369FE201EE5A7B50074765A /* Environments */,
 				E3FD867B1E70134300C8B780 /* Appearance */,
 				E36C687F1E609F3E00F0FFE9 /* Views */,
 				E32B307B1E82869500E424B8 /* View Model */,
@@ -496,6 +525,7 @@
 				E39FC0B01E58BED200C7AC10 /* UIWindow+Builder.swift in Sources */,
 				E36C68CB1E66F27200F0FFE9 /* SudokuView.swift in Sources */,
 				E33304931EC5C7E800C20E6C /* GameSerialiser.swift in Sources */,
+				E369FE251EE5A8230074765A /* MCConstants.m in Sources */,
 				E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */,
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
 				E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */,
@@ -664,6 +694,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ObjC";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -707,6 +738,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_LDFLAGS = "-ObjC";
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -716,15 +748,21 @@
 		};
 		E3FD86721E452AA500C8B780 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E369FE211EE5A7E10074765A /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = F53K8XZ6AA;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				INFOPLIST_FILE = "Sudoku++/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.maarut.Sudoku--";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Sudoku++/Sudoku++-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
@@ -732,15 +770,21 @@
 		};
 		E3FD86731E452AA500C8B780 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = E369FE211EE5A7E10074765A /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = F53K8XZ6AA;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				INFOPLIST_FILE = "Sudoku++/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "net.maarut.Sudoku--";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Sudoku++/Sudoku++-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;

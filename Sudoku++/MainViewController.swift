@@ -7,10 +7,11 @@
 //
 
 import UIKit
+import GoogleMobileAds
 
 private let order = 3
 
-private let MARGIN: CGFloat = 10
+private let MARGIN: CGFloat = 16
 private let MAX_SUDOKU_VIEW_SIZE: CGFloat = 512
 private let EDITABLE_CELL_COLOUR = UIColor(hexValue: 0xF2F8FF)
 private let GIVEN_CELL_COLOUR = UIColor(hexValue: 0xD8EBFF)
@@ -36,6 +37,7 @@ class MainViewController: UIViewController
     weak var timerLabel: UILabel!
     weak var difficultyLabel: UILabel!
     weak var startButton: UIButton!
+    weak var adBanner: GADBannerView!
     
     convenience init(withViewModel viewModel: MainViewModel)
     {
@@ -105,6 +107,8 @@ class MainViewController: UIViewController
         startButton.addTarget(self, action: #selector(startButtonTapped(_:)), for: .touchUpInside)
         startButton.isHidden = true
         
+        let adBanner = GADBannerView(adSize: kGADAdSizeBanner)
+        
         tabBar.addSubview(newGameButton)
         tabBar.addSubview(undoButton)
         tabBar.addSubview(markupButton)
@@ -118,6 +122,7 @@ class MainViewController: UIViewController
         view.addSubview(timerLabel)
         view.addSubview(difficultyLabel)
         view.addSubview(startButton)
+        view.addSubview(adBanner)
         self.sudokuView = sudokuView
         self.numberSelectionView = numberSelectionView
         self.pencilSelectionView = pencilSelectionView
@@ -130,6 +135,7 @@ class MainViewController: UIViewController
         self.timerLabel = timerLabel
         self.difficultyLabel = difficultyLabel
         self.startButton = startButton
+        self.adBanner = adBanner
     }
     
     override func viewDidLoad()
@@ -140,16 +146,16 @@ class MainViewController: UIViewController
         numberSelectionView.delegate = self
         pencilSelectionView.delegate = self
         sudokuView.delegate = self
-        var bounds = UIScreen.main.nativeBounds
-        bounds.size.width /= UIScreen.main.nativeScale
-        bounds.size.height /= UIScreen.main.nativeScale
-        resizeViews(toSize: bounds.size)
+        adBanner.adUnitID = kAdMobAdUnitId
+        adBanner.delegate = self
+        adBanner.rootViewController = self
     }
     
     override func viewWillAppear(_ animated: Bool)
     {
         super.viewWillAppear(animated)
         viewModel.startTimer()
+        requestAds()
         
     }
     
@@ -164,11 +170,16 @@ class MainViewController: UIViewController
         super.viewWillLayoutSubviews()
         layoutSubviews()
     }
-    
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+}
+
+// MARK: - Private Functions
+fileprivate extension MainViewController
+{
+    func requestAds()
     {
-        super.viewWillTransition(to: size, with: coordinator)
-        resizeViews(toSize: size)
+        let request = GADRequest()
+        request.testDevices = MCConstants.adMobTestDevices()
+        adBanner.load(request)
     }
 }
 
@@ -253,38 +264,55 @@ extension MainViewController: NumberSelectionViewDelegate
 // MARK: - Layout Functions
 fileprivate extension MainViewController
 {
-    func confirmSizes()
+    enum ViewOrientation
     {
-        
-        var newHeight = sudokuView.frame.height
-        var selectionWidth = newHeight / 2.75
-
-        var overallHeight = statusBarHeight() + newHeight + selectionWidth + timerLabel.frame.height +
-            difficultyLabel.frame.height + TABBAR_HEIGHT
-        
-        while overallHeight > view.frame.height {
-            newHeight *= 0.9
-            selectionWidth = newHeight / 2.75
-            overallHeight = statusBarHeight() + newHeight + selectionWidth + timerLabel.frame.height +
-                difficultyLabel.frame.height + TABBAR_HEIGHT
-            
-        }
-        sudokuView.frame.size = CGSize(width: newHeight, height: newHeight)
-        numberSelectionView.frame.size = CGSize(width: selectionWidth, height: selectionWidth)
-        pencilSelectionView.frame.size = CGSize(width: selectionWidth, height: selectionWidth)
+        case portrait
+        case landscape
     }
     
-    func resizeViews(toSize size: CGSize)
+    func isViewFullScreen(_ size: CGSize) -> Bool
     {
-        let minWidthOrHeight = min(size.width, size.height)
-        let sudokuViewWidth = min(MAX_SUDOKU_VIEW_SIZE, minWidthOrHeight - (2 * MARGIN))
-        let selectionWidth = sudokuViewWidth / 2.75
+        let screenWidth = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+        let screenHeight = max(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+        let viewWidth = min(size.width, size.height)
+        let viewHeight = max(size.width, size.height)
+        return screenWidth == viewWidth && screenHeight == viewHeight
+    }
+    
+    func orientation(ofSize size: CGSize) -> ViewOrientation
+    {
+        if isViewFullScreen(size) && size.width > size.height { return .landscape }
+        return .portrait
+    }
+    
+    func resizeUsing(sudokuHeight: CGFloat)
+    {
+        if sudokuHeight == sudokuView.frame.height { return }
+        let selectionHeight = sudokuHeight / 2.75
+        let clearButtonHeight = selectionHeight * 0.3
+        sudokuView.frame = CGRect(x: 0, y: 0, width: sudokuHeight, height: sudokuHeight)
+        numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionHeight, height: selectionHeight)
+        pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionHeight, height: selectionHeight)
+        clearCellButton.frame = CGRect(x: 0, y: 0, width: clearButtonHeight, height: clearButtonHeight)
+        clearCellButton.titleLabel?.font = clearCellButton.titleLabel?.font.withSize(clearButtonHeight * 0.65)
+    }
+    
+    func resizeForPortrait()
+    {
+        let availableHeight = view.frame.height - statusBarHeight() - TABBAR_HEIGHT - adBanner.frame.height -
+            difficultyLabel.frame.height - timerLabel.frame.height - MARGIN * 2
+        let availableWidth = view.frame.width - MARGIN * 2
+        var sudokuHeight = min(MAX_SUDOKU_VIEW_SIZE, (availableHeight * 11 / 15))
+        if sudokuHeight > availableWidth { sudokuHeight = availableWidth }
+        resizeUsing(sudokuHeight: sudokuHeight)
         
-        if sudokuView.frame.width == sudokuViewWidth { return }
-        
-        sudokuView.frame = CGRect(x: 0, y: 0, width: sudokuViewWidth, height: sudokuViewWidth)
-        numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
-        pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionWidth, height: selectionWidth)
+    }
+    
+    func resizeForLandscape()
+    {
+        let availableHeight = view.frame.height - statusBarHeight() - adBanner.frame.height - MARGIN * 2
+        let sudokuHeight = min(MAX_SUDOKU_VIEW_SIZE, availableHeight)
+        resizeUsing(sudokuHeight: sudokuHeight)
     }
     
     func layoutSubviews()
@@ -302,35 +330,43 @@ fileprivate extension MainViewController
     
     func setLayoutPortrait()
     {
-        confirmSizes()
+        resizeForPortrait()
         let buttonCount = CGFloat(tabBar.subviews.count)
-        let sudokuViewYOrigin = statusBarHeight() + MARGIN - view.frame.origin.y
-        sudokuView.center = CGPoint(x: view.frame.width / 2, y: sudokuViewYOrigin + (sudokuView.frame.height / 2))
+        let midX = view.frame.width / 2
+        adBanner.center.x = midX
+        adBanner.frame.origin.y = statusBarHeight()
         tabBar.frame = CGRect(x: 0, y: view.frame.height - TABBAR_HEIGHT,
             width: view.frame.width, height: TABBAR_HEIGHT)
         let buttonSpacing = tabBar.frame.width / (buttonCount * 2)
         for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
             button?.center = CGPoint(x: CGFloat(i * 2 + 1) * buttonSpacing, y: 22)
         }
-        let endOfSudokuFrame = sudokuView.frame.origin.y + sudokuView.frame.width
-        let beginningOfToolbar = tabBar.frame.origin.y
-        let width = numberSelectionView.frame.width
-        let midY = endOfSudokuFrame + (beginningOfToolbar - endOfSudokuFrame) / 2
-        numberSelectionView.center = CGPoint(x: sudokuView.frame.origin.x + width / 2, y: midY)
-        pencilSelectionView.center = CGPoint(x: sudokuView.frame.origin.x + sudokuView.frame.width - width / 2, y: midY)
-        clearCellButton.center = CGPoint(x: view.frame.width / 2, y: midY)
-        let endOfNumberSelectionFrame = numberSelectionView.frame.origin.y + numberSelectionView.frame.height
-        let labelCenterY = endOfNumberSelectionFrame + (beginningOfToolbar - endOfNumberSelectionFrame) / 2
-        difficultyLabel.center = CGPoint(x: view.frame.width / 2, y: labelCenterY - difficultyLabel.frame.height / 2)
-        timerLabel.center = CGPoint(x: view.frame.width / 2, y: labelCenterY + timerLabel.frame.height / 2)
+        
+        timerLabel.center = CGPoint(x: midX, y: tabBar.frame.origin.y - timerLabel.frame.height / 2)
         startButton.center = timerLabel.center
+        difficultyLabel.center = CGPoint(x: midX,
+            y: timerLabel.frame.origin.y - difficultyLabel.frame.height / 2)
+        
+        let selectionYCenter = difficultyLabel.frame.origin.y - numberSelectionView.frame.height / 2
+        numberSelectionView.center.y = selectionYCenter
+        pencilSelectionView.center.y = selectionYCenter
+        clearCellButton.center = CGPoint(x: midX, y: selectionYCenter)
+        
+        sudokuView.center = CGPoint(x: midX,
+            y: numberSelectionView.frame.origin.y - MARGIN - sudokuView.frame.height / 2)
+        numberSelectionView.frame.origin.x = sudokuView.frame.origin.x
+        pencilSelectionView.frame.origin.x =
+            sudokuView.frame.origin.x + sudokuView.frame.width - pencilSelectionView.frame.width
     }
     
     func setLayoutLandscapeLeft()
     {
+        resizeForLandscape()
         let buttonCount = CGFloat(tabBar.subviews.count)
         let yOrigin = statusBarHeight() - view.frame.origin.y
-        let yCenter = yOrigin + (view.frame.height - yOrigin) / 2
+        let yCenter = yOrigin + TABBAR_HEIGHT + (view.frame.height - yOrigin - TABBAR_HEIGHT) / 2
+        adBanner.frame.origin.y = statusBarHeight()
+        adBanner.center.x = view.frame.width / 2
         sudokuView.center = CGPoint(x: MARGIN + sudokuView.frame.width / 2, y: yCenter)
         tabBar.frame = CGRect(x: view.frame.width - TABBAR_HEIGHT, y: 0,
             width: TABBAR_HEIGHT, height: view.frame.height)
@@ -355,10 +391,13 @@ fileprivate extension MainViewController
     
     func setLayoutLandscapeRight()
     {
+        resizeForLandscape()
         let buttonCount = CGFloat(tabBar.subviews.count)
         let sudokuViewXCenter = view.frame.width - MARGIN - sudokuView.frame.width / 2
         let yOrigin = statusBarHeight() - view.frame.origin.y
-        let yCenter = yOrigin + (view.frame.height - yOrigin) / 2
+        let yCenter = yOrigin + TABBAR_HEIGHT + (view.frame.height - yOrigin - TABBAR_HEIGHT) / 2
+        adBanner.frame.origin.y = statusBarHeight()
+        adBanner.center.x = view.frame.width / 2
         sudokuView.center = CGPoint(x: sudokuViewXCenter, y: yCenter)
         tabBar.frame = CGRect(x: 0, y: 0, width: 44, height: view.frame.height)
         let buttonSpacing = tabBar.frame.height / (buttonCount * 2)
@@ -613,6 +652,21 @@ extension MainViewController: MainViewModelDelegate
             else { cellView.flash() }
             
         }
+    }
+}
+
+// MARK: - GADBannerViewDelegate Implementation
+extension MainViewController: GADBannerViewDelegate
+{
+    func adViewDidReceiveAd(_ bannerView: GADBannerView)
+    {
+        NSLog("Ad Received")
+    }
+    
+    
+    func adView(_ bannerView: GADBannerView, didFailToReceiveAdWithError error: GADRequestError)
+    {
+        NSLog("Ad Retrieval Failed")
     }
 }
 
