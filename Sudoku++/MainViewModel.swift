@@ -119,6 +119,13 @@ public enum GameState
     case finished
 }
 
+// MARK: - DisplayableDifficulty Implementation
+public struct DisplayablePuzzleDifficulty
+{
+    let displayableText: String
+    let accessibleText: String
+}
+
 // MARK: - MainViewModelDelegate Definition
 public protocol MainViewModelDelegate: class
 {
@@ -134,7 +141,7 @@ public protocol MainViewModelDelegate: class
     func showPencilMarks(_: [Int], forCellAt: SudokuBoardIndex)
     
     func timerTextDidChange(_: String)
-    func difficultyTextDidChange(_: String)
+    func difficultyTextDidChange(_: String, accessibleText: String)
     func undoStateChanged(_ canUndo: Bool)
     func setPuzzleStateChanged(_: SetPuzzleState)
     func gameStateChanged(_: GameState)
@@ -154,13 +161,18 @@ public class MainViewModel: Archivable
     fileprivate let undoManager = UndoManager()
     fileprivate var invalidCells: [SudokuBoardIndex]
     
-    var newGameDifficulties: [String] = {
-        var difficulties = [String]()
+    var newGameDifficulties: [DisplayablePuzzleDifficulty] = {
+        var difficulties = [DisplayablePuzzleDifficulty]()
         for count in PuzzleDifficulty.blank.rawValue ..< Int.max {
             guard let difficulty = PuzzleDifficulty(rawValue: count) else { break }
             switch difficulty {
-            case .blank, .easy, .normal, .hard, .insane:    difficulties.append(difficulty.description())
-            default:                                        break
+            case .blank, .easy, .normal, .hard, .insane:
+                difficulties.append(DisplayablePuzzleDifficulty(
+                    displayableText: difficulty.description(),
+                    accessibleText: difficulty.accessibleDescription()))
+                break
+            default:
+                break
             }
         }
         return difficulties
@@ -249,7 +261,8 @@ public class MainViewModel: Archivable
         }
         delegate?.newGameStarted(newState: newState)
         delegate?.gameStateChanged(.playing)
-        delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription())
+        delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription(),
+            accessibleText: sudokuBoard.difficulty.accessibleDescription())
         sendCurrentState()
         startTimer()
     }
@@ -389,7 +402,8 @@ public class MainViewModel: Archivable
         delegate?.sudokuCells(atIndexes: editableCells, newState: .editable)
         delegate?.undoStateChanged(undoManager.canUndo)
         delegate?.setPuzzleStateChanged(sudokuBoard.difficulty.isSolvable() ? .isSet : .canSet)
-        delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription())
+        delegate?.difficultyTextDidChange(sudokuBoard.difficulty.emojiDescription(),
+            accessibleText: sudokuBoard.difficulty.accessibleDescription())
         delegate?.gameStateChanged(sudokuBoard.isSolved ? .finished : .playing)
         sendCurrentState()
     }
@@ -473,10 +487,10 @@ fileprivate extension MainViewModel
     func titleToDifficulty(_ title: String) -> PuzzleDifficulty
     {
         switch title {
-        case newGameDifficulties[1]:    return .easy
-        case newGameDifficulties[2]:    return .normal
-        case newGameDifficulties[3]:    return .hard
-        case newGameDifficulties[4]:    return .insane
+        case newGameDifficulties[1].displayableText:    return .easy
+        case newGameDifficulties[2].displayableText:    return .normal
+        case newGameDifficulties[3].displayableText:    return .hard
+        case newGameDifficulties[4].displayableText:    return .insane
         default:                        return .blank
         }
     }
@@ -681,6 +695,19 @@ private extension PuzzleDifficulty
         case .normal:               return "Normal \(emojiDescription())"
         case .hard:                 return "Hard \(emojiDescription())"
         case .insane:               return "Insane \(emojiDescription())"
+        }
+    }
+    
+    func accessibleDescription() -> String
+    {
+        switch self {
+        case .blank:                return "Blank"
+        case .noSolution:           return "No Solution"
+        case .multipleSolutions:    return "Multiple Solutions"
+        case .easy:                 return "Easy"
+        case .normal:               return "Normal"
+        case .hard:                 return "Hard"
+        case .insane:               return "Insane"
         }
     }
 }

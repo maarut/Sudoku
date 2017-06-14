@@ -11,13 +11,45 @@ import QuartzCore
 
 private let FONT_SCALE_FACTOR: CGFloat = 0.65
 
+// MARK: - CellViewState Definition
+enum CellViewState: Int
+{
+    case given
+    case editable
+}
+
+// MARK: - CellViewState CustomStringConvertible Implementation
+extension CellViewState: CustomStringConvertible
+{
+    public var description: String {
+        switch self {
+        case .editable: return "Editable"
+        case .given:    return "Given"
+        }
+    }
+}
+
+// MARK: - CellViewState Private Functions
+private extension CellViewState
+{
+    func colourRepresentation() -> UIColor
+    {
+        switch self {
+        case .editable: return CellView.editableCellColour
+        case .given:    return CellView.givenCellColour
+        }
+    }
+}
+
 // MARK: - CellView Implementation
 class CellView: UIView
 {
-    var cellColour = UIColor(hexValue: 0xF0F0DC) { didSet { resetColours() } }
+    static var editableCellColour = UIColor(hexValue: 0xF2F8FF)
+    static var givenCellColour = UIColor(hexValue: 0xD8EBFF)
+    
+    var state: CellViewState = .editable { didSet { resetColours() } }
     var textColour = UIColor.black  { didSet { resetColours() } }
     var borderColour = UIColor(hexValue: 0xC1C8CC) { didSet { resetColours() } }
-    var pencilMarkCount: Int { return pencilMarks.count }
     
     var highlightedCellBackgroundColour = UIColor.white { didSet { resetColours() } }
     var highlightedCellBorderColour = UIColor.red { didSet { resetColours() } }
@@ -25,6 +57,7 @@ class CellView: UIView
     
     
     private let order: Int
+    fileprivate var index: SudokuBoardViewIndex
     fileprivate var isHighlighted = false
     fileprivate var isFlashing = false
     fileprivate let pencilMarks: [UILabel]
@@ -36,7 +69,7 @@ class CellView: UIView
     }()
 
     // MARK: - Lifecycle
-    init(frame: CGRect, order: Int, pencilMarkTitles: [String])
+    init(frame: CGRect, order: Int, pencilMarkTitles: [String], index: SudokuBoardViewIndex)
     {
         self.order = order
         pencilMarks = pencilMarkTitles.map {
@@ -56,29 +89,34 @@ class CellView: UIView
         number.text = ""
         number.isHidden = true
         self.number = number
+        self.index = index
         v.addSubview(number)
         super.init(frame: frame)
+        isAccessibilityElement = true
         addSubview(v)
         for pm in pencilMarks {
             let view = UIView()
             view.addSubview(pm)
             addSubview(view)
         }
-        backgroundColor = cellColour
+        backgroundColor = state.colourRepresentation()
         layer.borderWidth = frame.width * 0.02
         layer.borderColor = borderColour.cgColor
     }
     
     convenience override init(frame: CGRect)
     {
-        self.init(frame: frame, order: 0, pencilMarkTitles: [])
+        self.init(frame: frame, order: 0, pencilMarkTitles: [], index: SudokuBoardViewIndex(row: 0, column: 0))
     }
     
     required init?(coder aDecoder: NSCoder)
     {
         order = aDecoder.decodeInteger(forKey: "order")
         pencilMarks = aDecoder.decodeObject(forKey: "pencilMarks") as! [UILabel]
-        cellColour = aDecoder.decodeObject(forKey: "cellColour") as! UIColor
+        state = CellViewState(rawValue: aDecoder.decodeObject(forKey: "state") as! Int)!
+        let row = aDecoder.decodeInteger(forKey: "index.row")
+        let column = aDecoder.decodeInteger(forKey: "index.column")
+        index = SudokuBoardViewIndex(row: row, column: column)
         super.init(coder: aDecoder)
     }
     
@@ -88,7 +126,9 @@ class CellView: UIView
         super.encode(with: aCoder)
         aCoder.encode(pencilMarks, forKey: "pencilMarks")
         aCoder.encode(order, forKey: "order")
-        aCoder.encode(cellColour, forKey: "cellColour")
+        aCoder.encode(state.rawValue, forKey: "state")
+        aCoder.encode(index.row, forKey: "index.row")
+        aCoder.encode(index.column, forKey: "index.column")
     }
     
     override func layoutSubviews()
@@ -122,7 +162,7 @@ class CellView: UIView
         guard isFlashing else { return }
         isFlashing = false
         layer.removeAllAnimations()
-        layer.backgroundColor = cellColour.cgColor
+        layer.backgroundColor = state.colourRepresentation().cgColor
         layer.borderWidth = 0.0
         number.textColor = textColour
     }
@@ -148,7 +188,7 @@ class CellView: UIView
         guard isHighlighted && !isFlashing else { return }
         isHighlighted = false
         layer.removeAllAnimations()
-        let newBackgroundColour = cellColour.cgColor
+        let newBackgroundColour = state.colourRepresentation().cgColor
         let newBorderColour = self.borderColour.cgColor
         let width: CGFloat = frame.width * 0.02
         let animationDelegate = PrivateAnimationDelegate(startHandler: nil) { _ in
@@ -199,18 +239,21 @@ class CellView: UIView
         for pm in pencilMarks { pm.textColor = highlightedCellTextColour }
     }
     
-    func showPencilMark(inPosition position: Int)
+    func showPencilMarks(inPositions positions: [Int])
     {
-        guard position < pencilMarks.count else { return }
-        let mark = pencilMarks[position]
-        if mark.isHidden { show(view: mark) }
-    }
-    
-    func hidePencilMark(inPosition position: Int)
-    {
-        guard position < pencilMarks.count else { return }
-        let mark = pencilMarks[position]
-        if !mark.isHidden { hide(view: mark, completionHandler: { _ in mark.isHidden = true } ) }
+        var sortedPositions = positions.sorted().makeIterator()
+        var pos = sortedPositions.next()
+        for i in 0 ..< pencilMarks.count {
+            let view = pencilMarks[i]
+            if i == pos {
+                show(view: view)
+                pos = sortedPositions.next()
+            }
+            else if i != pos {
+                hide(view: view, completionHandler: { _ in view.isHidden = true } )
+            }
+        }
+        updateAccessibilityInformation()
     }
     
     func setNumber(number: String)
@@ -219,15 +262,16 @@ class CellView: UIView
             hide(view: self.number) { _ in self.number.text = number }
         }
         else {
-            for i in 0 ..< pencilMarks.count { hidePencilMark(inPosition: i) }
+            showPencilMarks(inPositions: [])
             self.number.text = number
             show(view: self.number)
         }
+        updateAccessibilityInformation()
     }
     
-    func flipTo(number: String, backgroundColour: UIColor, showingPencilMarksAtPositions pencilMarks: [Int])
+    func flipTo(number: String, newState: CellViewState, showingPencilMarksAtPositions pencilMarks: [Int])
     {
-        if number == self.number.text && backgroundColour == cellColour {
+        if number == self.number.text && newState == state {
             let newMarks = Set(pencilMarks)
             let visibleMarks = Set(self.pencilMarks.enumerated().flatMap( { !$0.element.isHidden ? $0.offset : nil } ))
             if newMarks == visibleMarks { return }
@@ -237,9 +281,12 @@ class CellView: UIView
         
         self.number.text = number
         self.number.isHidden = number.isEmpty
-        self.cellColour = backgroundColour
+        self.backgroundColor = newState.colourRepresentation()
+        defer { self.state = newState; updateAccessibilityInformation() }
         displayPencilMarksInPositions(pencilMarks)
-
+        
+        guard !UIAccessibilityIsReduceMotionEnabled() else { return }
+        
         guard let newSnapshots = getSnapshotOf(view: self) else { return }
         let oldLayers = createLayersFromCurrentSnapshot(currentSnapshots)
         let newLayers = createLayersFromDestinationSnapshot(newSnapshots)
@@ -344,7 +391,7 @@ fileprivate extension CellView
     
     func displayPencilMarksInPositions(_ positions: [Int])
     {
-        var sortedPencilMarks = positions.sorted(by: <).makeIterator()
+        var sortedPencilMarks = positions.sorted().makeIterator()
         var mark = sortedPencilMarks.next()
         for i in 0 ..< self.pencilMarks.count {
             if mark == i {
@@ -376,6 +423,28 @@ fileprivate extension CellView
 // MARK: - Private Functions
 fileprivate extension CellView
 {
+    func updateAccessibilityInformation()
+    {
+        accessibilityLabel = "sudoku cell at row: \(index.row + 1), column: \(index.column + 1). \(state.description)"
+        if number.text?.isEmpty ?? true {
+            let visiblePencilMarks = pencilMarks.flatMap( { $0.isHidden ? nil : $0.text } )
+            if visiblePencilMarks.isEmpty {
+                accessibilityValue = "Blank"
+            }
+            else if visiblePencilMarks.count == 1 {
+                accessibilityValue = "Pencil mark \(visiblePencilMarks[0]) visible"
+            }
+            else {
+                let pencilMarkString = visiblePencilMarks.reversed().dropFirst().reduce("", { "\($1), \($0)" }) +
+                    " and \(visiblePencilMarks.last!)"
+                accessibilityValue = "Pencil marks \(pencilMarkString) visible"
+            }
+        }
+        else {
+            accessibilityValue = "Number \(number.text!) set"
+        }
+    }
+    
     func resetColours()
     {
         if isHighlighted {
@@ -385,7 +454,7 @@ fileprivate extension CellView
             for pm in pencilMarks { pm.textColor = highlightedCellTextColour }
         }
         else {
-            backgroundColor = cellColour
+            backgroundColor = state.colourRepresentation()
             number.textColor = textColour
             layer.borderColor = borderColour.cgColor
             for pm in pencilMarks { pm.textColor = textColour }
@@ -400,6 +469,11 @@ fileprivate extension CellView
     
     func show(view: UIView)
     {
+        guard !UIAccessibilityIsReduceMotionEnabled() else {
+            view.isHidden = false
+            return
+        }
+        guard view.isHidden else { return }
         view.isHidden = false
         view.layer.opacity = 0.0
         view.layer.transform = CATransform3DMakeScale(0.5, 0.5, 1.0)
@@ -422,6 +496,12 @@ fileprivate extension CellView
     
     func hide(view: UIView, completionHandler f: ((Bool) -> Void)? = nil)
     {
+        guard !UIAccessibilityIsReduceMotionEnabled() else {
+            view.isHidden = true
+            f?(false)
+            return
+        }
+        guard !view.isHidden else { return }
         view.layer.transform = CATransform3DIdentity
         view.layer.removeAllAnimations()
         let animation = CASpringAnimation(keyPath: "transform.scale")

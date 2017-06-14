@@ -23,13 +23,18 @@ class NumberSelectionView: UIView
     
     weak var delegate: NumberSelectionViewDelegate?
     
-    init(frame: CGRect, order: Int, buttonTitles: [String], displayLargeNumbers: Bool)
+    init(frame: CGRect, order: Int, buttonTitles: [String], displayLargeNumbers: Bool,
+         accessibilityLabel: String? = nil)
     {
         self.order = order
         buttons = buttonTitles.map {
             let button = HighlightableButton()
             button.titleLabel?.font = UIFont(name: "Futura-Medium", size: button.titleLabel?.font.pointSize ?? 0)
             button.setTitle($0, for: .normal)
+            if let accessibilityLabel = accessibilityLabel {
+                button.accessibilityLabel = "\(accessibilityLabel) for number \($0)"
+                button.accessibilityHint = "Toggles number \($0) on board"
+            }
             return button
         }
         self.displayLargeNumbers = displayLargeNumbers

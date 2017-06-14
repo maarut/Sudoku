@@ -13,8 +13,6 @@ private let order = 3
 
 private let MARGIN: CGFloat = 16
 private let MAX_SUDOKU_VIEW_SIZE: CGFloat = 512
-private let EDITABLE_CELL_COLOUR = UIColor(hexValue: 0xF2F8FF)
-private let GIVEN_CELL_COLOUR = UIColor(hexValue: 0xD8EBFF)
 private let TABBAR_HEIGHT: CGFloat = 44
 fileprivate func convertNumberToString(_ number: Int) -> String
 {
@@ -53,9 +51,9 @@ class MainViewController: UIViewController
         let titles = (1 ... order * order).map( { convertNumberToString($0) } )
         let sudokuView = SudokuView(frame: CGRect.zero, order: order, pencilMarkTitles: titles)
         let numberSelectionView = NumberSelectionView(frame: CGRect.zero, order: order, buttonTitles: titles,
-            displayLargeNumbers: true)
+            displayLargeNumbers: true, accessibilityLabel: "Number toggle")
         let pencilSelectionView = NumberSelectionView(frame: CGRect.zero, order: order, buttonTitles: titles,
-            displayLargeNumbers: false)
+            displayLargeNumbers: false, accessibilityLabel: "Pencil mark toggle")
         let tabBar = UIView()
         let difficultyLabel = UILabel()
         difficultyLabel.text = "Multiple Solutions"
@@ -64,6 +62,9 @@ class MainViewController: UIViewController
         difficultyLabel.frame.size.height *= 1.2
         difficultyLabel.frame.size.width *= 1.2
         difficultyLabel.text = ""
+        difficultyLabel.accessibilityLabel = "Puzzle Difficulty"
+        difficultyLabel.accessibilityHint = "The difficulty of the current puzzle"
+        difficultyLabel.accessibilityValue = "Blank"
         let timerLabel = UILabel()
         timerLabel.text = "00:00:00"
         timerLabel.textAlignment = .center
@@ -71,26 +72,36 @@ class MainViewController: UIViewController
         timerLabel.frame.size.height *= 1.2
         timerLabel.frame.size.width *= 1.2
         timerLabel.text = "00:00"
+        timerLabel.accessibilityLabel = "Elapsed time"
         let newGameButton = UIButton(type: .system)
         newGameButton.setTitle("🌟", for: .normal)
         newGameButton.frame.size = newGameButton.intrinsicContentSize
         newGameButton.addTarget(self, action: #selector(newGameButtonTapped(_:)), for: .touchUpInside)
+        newGameButton.accessibilityLabel = "New game button"
+        newGameButton.accessibilityHint = "Starts a new game"
         let undoButton = UIButton(type: .system)
         undoButton.setTitle("⏮", for: .normal)
         undoButton.titleLabel?.textAlignment = .center
         undoButton.frame.size = undoButton.intrinsicContentSize
         undoButton.addTarget(self, action: #selector(undoTapped(_:)), for: .touchUpInside)
+        undoButton.accessibilityLabel = "Undo button"
+        undoButton.accessibilityHint = "Undoes the previous action"
+        undoButton.accessibilityTraits = UIAccessibilityTraitNotEnabled
         let markupButton = UIButton(type: .system)
         markupButton.setTitle("✏️", for: .normal)
         markupButton.titleLabel?.textAlignment = .center
         markupButton.frame.size = markupButton.intrinsicContentSize
         markupButton.addTarget(self, action: #selector(markupButtonTapped(_:)), for: .touchUpInside)
         markupButton.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat.pi, 0.0, 1.0, 0.0)
+        markupButton.accessibilityLabel = "Fill pencilmarks button"
+        markupButton.accessibilityHint = "Add pencil marks to unfilled cells"
         let settingsButton = UIButton(type: .system)
         settingsButton.setTitle("⚙", for: .normal)
         settingsButton.titleLabel?.textAlignment = .center
         settingsButton.frame.size = settingsButton.intrinsicContentSize
         settingsButton.addTarget(self, action: #selector(settingsTapped(_:)), for: .touchUpInside)
+        settingsButton.accessibilityLabel = "Settings button"
+        settingsButton.accessibilityHint = "Opens the settings screen"
         let clearCellButton = HighlightableButton()
         clearCellButton.setTitle("✕", for: .normal)
         clearCellButton.titleLabel?.textAlignment = .center
@@ -100,12 +111,15 @@ class MainViewController: UIViewController
         clearCellButton.addTarget(self, action: #selector(clearButtonDragExit(_:)),
             for: [.touchDragExit, .touchUpOutside])
         clearCellButton.addTarget(self, action: #selector(clearButtonTouchDown(_:)), for: .touchDown)
+        clearCellButton.accessibilityLabel = "Clear cell button"
+        clearCellButton.accessibilityHint = "Clears the contents of an editable cell"
         
         let startButton = UIButton(type: .system)
         startButton.setTitle("Start", for: .normal)
         startButton.frame.size = startButton.intrinsicContentSize
         startButton.addTarget(self, action: #selector(startButtonTapped(_:)), for: .touchUpInside)
         startButton.isHidden = true
+        startButton.accessibilityHint = "Sets the puzzle and starts the game"
         
         let adBanner = GADBannerView(adSize: kGADAdSizeBanner)
         
@@ -192,14 +206,17 @@ extension MainViewController
         let alertController = UIAlertController(title: "New Game",
             message: "Select a difficulty for the new game", preferredStyle: .actionSheet)
         for difficulty in difficulties {
-            let action = UIAlertAction(title: difficulty, style: .default, handler: {
+            let action = UIAlertAction(title: difficulty.displayableText, style: .default, handler: {
                 self.viewModel.newGame(withTitle: $0.title ?? "")
             })
+            action.accessibilityLabel = difficulty.accessibleText
             alertController.addAction(action)
         }
         alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
         alertController.popoverPresentationController?.sourceView = sender
         alertController.popoverPresentationController?.sourceRect = sender.bounds
+        alertController.accessibilityLabel = "New game menu"
+        alertController.accessibilityHint = "Select a difficulty to start a new game of that difficulty"
         present(alertController, animated: true)
     }
     
@@ -294,7 +311,7 @@ fileprivate extension MainViewController
         numberSelectionView.frame = CGRect(x: 0, y: 0, width: selectionHeight, height: selectionHeight)
         pencilSelectionView.frame = CGRect(x: 0, y: 0, width: selectionHeight, height: selectionHeight)
         clearCellButton.frame = CGRect(x: 0, y: 0, width: clearButtonHeight, height: clearButtonHeight)
-        clearCellButton.titleLabel?.font = clearCellButton.titleLabel?.font.withSize(clearButtonHeight * 0.65)
+        clearCellButton.titleLabel?.font = clearCellButton.titleLabel?.font.withSize(clearButtonHeight * 0.6)
     }
     
     func resizeForPortrait()
@@ -354,6 +371,8 @@ fileprivate extension MainViewController
         
         sudokuView.center = CGPoint(x: midX,
             y: numberSelectionView.frame.origin.y - MARGIN - sudokuView.frame.height / 2)
+        let gap = sudokuView.frame.origin.y - (adBanner.frame.origin.y + adBanner.frame.height)
+        sudokuView.frame.origin.y = adBanner.frame.origin.y + adBanner.frame.height + gap * 2 / 3
         numberSelectionView.frame.origin.x = sudokuView.frame.origin.x
         pencilSelectionView.frame.origin.x =
             sudokuView.frame.origin.x + sudokuView.frame.width - pencilSelectionView.frame.width
@@ -442,23 +461,28 @@ extension MainViewController: MainViewModelDelegate
     func newGameStarted(
         newState: [(index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])])
     {
-        for (index, state, number, pencilMarks) in newState {
-            let colour: UIColor
-            switch state {
-            case .editable: colour = EDITABLE_CELL_COLOUR
-            case .given:    colour = GIVEN_CELL_COLOUR
+        DispatchQueue.main.async {
+            for (index, state, number, pencilMarks) in newState {
+                let newState: CellViewState
+                switch state {
+                case .editable: newState = .editable
+                case .given:    newState = .given
+                }
+                let cell = self.sudokuView.cellAt(tupleRepresentation(index))!
+                
+                cell.flipTo(number: number, newState: newState,
+                    showingPencilMarksAtPositions: pencilMarks.map( { $0 - 1 } ))
             }
-            let cell = sudokuView.cellAt(tupleRepresentation(index))!
             
-            cell.flipTo(number: number, backgroundColour: colour,
-                showingPencilMarksAtPositions: pencilMarks.map( { $0 - 1 } ))
+            self.timerLabel.accessibilityTraits = UIAccessibilityTraitUpdatesFrequently
         }
     }
     
-    func difficultyTextDidChange(_ newText: String)
+    func difficultyTextDidChange(_ newText: String, accessibleText: String)
     {
         DispatchQueue.main.async {
             self.difficultyLabel.text = newText
+            self.difficultyLabel.accessibilityValue = accessibleText
         }
     }
     
@@ -495,9 +519,11 @@ extension MainViewController: MainViewModelDelegate
             break
         case .finished:
             sudokuView.isUserInteractionEnabled = false
+            timerLabel.accessibilityTraits = UIAccessibilityTraitStaticText
             break
         case .successfullySolved:
             viewModel.stopTimer()
+            timerLabel.accessibilityTraits = UIAccessibilityTraitStaticText
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
                 self.sudokuView.gameEnded()
             }
@@ -510,6 +536,7 @@ extension MainViewController: MainViewModelDelegate
         DispatchQueue.main.async {
             self.undoButton.isEnabled = canUndo
             self.undoButton.setTitle(canUndo ? "⏮" : "", for: .normal)
+            self.undoButton.accessibilityTraits = canUndo ? UIAccessibilityTraitButton : UIAccessibilityTraitNotEnabled
         }
     }
     
@@ -517,6 +544,7 @@ extension MainViewController: MainViewModelDelegate
     {
         DispatchQueue.main.async {
             self.timerLabel.text = text
+            self.timerLabel.accessibilityLabel =  "Elapsed time \(text)"
         }
     }
     
@@ -598,7 +626,7 @@ extension MainViewController: MainViewModelDelegate
                 let cell = self.sudokuView.cellAt((i.row, i.column))!
                 switch state {
                 case .given:
-                    cell.cellColour = GIVEN_CELL_COLOUR
+                    cell.state = .given
                     cell.textColour = UIColor.black
                     cell.highlightedCellBackgroundColour = UIColor.white
                     cell.highlightedCellTextColour = UIColor.red
@@ -606,7 +634,7 @@ extension MainViewController: MainViewModelDelegate
                     cell.setNeedsDisplay()
                     break
                 case .editable:
-                    cell.cellColour = EDITABLE_CELL_COLOUR
+                    cell.state = .editable
                     cell.textColour = UIColor.black
                     cell.highlightedCellBackgroundColour = UIColor.white
                     cell.highlightedCellTextColour = UIColor.red
@@ -629,18 +657,8 @@ extension MainViewController: MainViewModelDelegate
     func showPencilMarks(_ pencilMarks: [Int], forCellAt index: SudokuBoardIndex)
     {
         DispatchQueue.main.async {
-            var sortedPencilMarks = pencilMarks.sorted(by: <).makeIterator()
             let cellView = self.sudokuView.cellAt(tupleRepresentation(index))!
-            var pencilMark = sortedPencilMarks.next()
-            for i in 0 ..< cellView.pencilMarkCount {
-                if pencilMark == (i + 1) {
-                    cellView.showPencilMark(inPosition: i)
-                    pencilMark = sortedPencilMarks.next()
-                }
-                else {
-                    cellView.hidePencilMark(inPosition: i)
-                }
-            }
+            cellView.showPencilMarks(inPositions: pencilMarks.map( { $0 - 1 } ))
         }
     }
     
@@ -658,12 +676,6 @@ extension MainViewController: MainViewModelDelegate
 // MARK: - GADBannerViewDelegate Implementation
 extension MainViewController: GADBannerViewDelegate
 {
-    func adViewDidReceiveAd(_ bannerView: GADBannerView)
-    {
-        NSLog("Ad Received")
-    }
-    
-    
     func adView(_ bannerView: GADBannerView, didFailToReceiveAdWithError error: GADRequestError)
     {
         NSLog("Ad Retrieval Failed")

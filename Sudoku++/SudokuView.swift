@@ -36,10 +36,14 @@ class SudokuView: UIView
     init(frame: CGRect, order: Int, pencilMarkTitles: [String])
     {
         self.order = order
-        dimensionality = order * order
-        cells = (0 ..< dimensionality * dimensionality).map { _ in
-            CellView(frame: CGRect.zero, order: order, pencilMarkTitles: pencilMarkTitles)
+        let dimensionality = order * order
+        cells = (0 ..< dimensionality * dimensionality).map {
+            let row = $0 / dimensionality
+            let column = $0 % dimensionality
+            return CellView(frame: CGRect.zero, order: order, pencilMarkTitles: pencilMarkTitles, index:
+                SudokuBoardViewIndex(row: row, column: column))
         }
+        self.dimensionality = dimensionality
         super.init(frame: frame)
         isUserInteractionEnabled = true
         let gestureRecogniser = UITapGestureRecognizer(target: self, action: #selector(tapRecognised(_:)))
@@ -102,6 +106,7 @@ class SudokuView: UIView
     
     func gameEnded()
     {
+        guard !UIAccessibilityIsReduceMotionEnabled() else { return }
         animator.removeAllBehaviors()
         let gravity = UIGravityBehavior(items: [])
         for cell in cells {
