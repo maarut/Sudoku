@@ -259,7 +259,7 @@ class CellView: UIView
     func setNumber(number: String)
     {
         if number.isEmpty {
-            hide(view: self.number) { _ in self.number.text = number }
+            hide(view: self.number) { _ in self.number.text = number; self.number.isHidden = true }
         }
         else {
             showPencilMarks(inPositions: [])
@@ -461,9 +461,6 @@ fileprivate extension CellView
         }
         if isFlashing {
             flash()
-        }
-        else {
-            
         }
     }
     
