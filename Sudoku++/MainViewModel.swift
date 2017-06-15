@@ -421,6 +421,25 @@ public class MainViewModel: Archivable
         delegate?.undoStateChanged(undoManager.canUndo)
         
     }
+    
+    func revealSolution()
+    {
+        guard !sudokuBoard.isSolved else { return }
+        stopTimer()
+        for row in 0 ..< sudokuBoard.dimensionality {
+            for column in 0 ..< sudokuBoard.dimensionality {
+                let index = SudokuBoardIndex(row: row, column: column)
+                let cell = sudokuBoard.cellAt(index)!
+                if cell.number != cell.solution {
+                    cell.number = cell.solution
+                    delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
+                }
+            }
+        }
+        delegate?.gameStateChanged(.finished)
+        undoManager.removeAllActions()
+        delegate?.undoStateChanged(undoManager.canUndo)
+    }
 }
 
 // MARK: - Clear Button State
@@ -553,6 +572,7 @@ fileprivate extension MainViewModel
             delegate?.cell(atIndex: index, didChangeValidityTo: true)
         }
         if sudokuBoard.isSolved {
+            stopTimer()
             delegate?.gameStateChanged(.successfullySolved)
             delegate?.gameStateChanged(.finished)
             undoManager.removeAllActions()

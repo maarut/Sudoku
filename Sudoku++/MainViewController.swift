@@ -19,8 +19,61 @@ fileprivate func convertNumberToString(_ number: Int) -> String
     return number < 10 ? "\(number)" : "\(Character(UnicodeScalar(55 + number)!))"
 }
 
+private class MarkupButtonMenuStateMachine
+{
+    private let lock = NSLock()
+    private var shouldShowRevealSolution = false
+    private var timer: Timer?
+    private var completionTimer: Timer?
+    
+    func startPress(usingLongPressInterval interval: TimeInterval = 0.5,
+        afterTotalDurationForPress duration: TimeInterval = 1.0,
+        call block: @escaping () -> Void = {})
+    {
+        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false, block: { _ in
+            self.lock.lock()
+            self.shouldShowRevealSolution = true
+            self.lock.unlock()
+            self.timer = nil
+        })
+        completionTimer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false, block: { _ in
+            self.timer?.invalidate()
+            self.timer = nil
+            self.lock.lock()
+            self.shouldShowRevealSolution = false
+            self.lock.unlock()
+            block()
+        })
+    }
+    
+    func endPress() -> Bool
+    {
+        timer?.invalidate()
+        timer = nil
+        completionTimer?.invalidate()
+        completionTimer = nil
+        lock.lock()
+        let shouldShowMenu = shouldShowRevealSolution
+        shouldShowRevealSolution = false
+        lock.unlock()
+        return shouldShowMenu
+    }
+    
+    func cancel()
+    {
+        timer?.invalidate()
+        timer = nil
+        completionTimer?.invalidate()
+        completionTimer = nil
+        lock.lock()
+        shouldShowRevealSolution = false
+        lock.unlock()
+    }
+}
+
 class MainViewController: UIViewController
 {
+    fileprivate let markupButtonStateMachine = MarkupButtonMenuStateMachine()
     weak var viewModel: MainViewModel!
     
     weak var sudokuView: SudokuView!
@@ -91,7 +144,9 @@ class MainViewController: UIViewController
         markupButton.setTitle("✏️", for: .normal)
         markupButton.titleLabel?.textAlignment = .center
         markupButton.frame.size = markupButton.intrinsicContentSize
-        markupButton.addTarget(self, action: #selector(markupButtonTapped(_:)), for: .touchUpInside)
+        markupButton.addTarget(self, action: #selector(markupButtonTouchUp(_:)), for: .touchUpInside)
+        markupButton.addTarget(self, action: #selector(markupButtonTouchUpOutside(_:)), for: .touchUpOutside)
+        markupButton.addTarget(self, action: #selector(markupButtonTouchDown(_:forEvent:)), for: .touchDown)
         markupButton.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat.pi, 0.0, 1.0, 0.0)
         markupButton.accessibilityLabel = "Fill pencilmarks button"
         markupButton.accessibilityHint = "Add pencil marks to unfilled cells"
@@ -189,6 +244,22 @@ class MainViewController: UIViewController
 // MARK: - Private Functions
 fileprivate extension MainViewController
 {
+    func showRevealSolutionMenu(near sender: UIView)
+    {
+        let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        alertController.addAction(UIAlertAction(title: "Reveal Solution", style: .default, handler: { _ in
+            self.viewModel.revealSolution()
+        }))
+        alertController.addAction(UIAlertAction(title: "Fill Pencil Marks", style: .default, handler: { _ in
+            self.viewModel.fillInPencilMarks()
+        }))
+        alertController.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        
+        alertController.popoverPresentationController?.sourceView = sender
+        alertController.popoverPresentationController?.sourceRect = sender.bounds
+        present(alertController, animated: true)
+    }
+    
     func requestAds()
     {
         let request = GADRequest()
@@ -230,9 +301,27 @@ extension MainViewController
         viewModel.setPuzzle()
     }
     
-    func markupButtonTapped(_ sender: UIButton)
+    func markupButtonTouchDown(_ sender: UIButton, forEvent event: UIEvent)
     {
-        viewModel.fillInPencilMarks()
+        markupButtonStateMachine.startPress(call: {
+            sender.cancelTracking(with: event)
+            self.showRevealSolutionMenu(near: sender)
+        })
+    }
+    
+    func markupButtonTouchUpOutside(_ sender: UIButton)
+    {
+        markupButtonStateMachine.cancel()
+    }
+    
+    func markupButtonTouchUp(_ sender: UIButton)
+    {
+        if markupButtonStateMachine.endPress() {
+            showRevealSolutionMenu(near: sender)
+        }
+        else {
+            viewModel.fillInPencilMarks()
+        }
     }
     
     func settingsTapped(_ sender: UIButton)
@@ -516,13 +605,13 @@ extension MainViewController: MainViewModelDelegate
         switch newState {
         case .playing:
             sudokuView.isUserInteractionEnabled = true
+            timerLabel.accessibilityTraits = UIAccessibilityTraitUpdatesFrequently
             break
         case .finished:
             sudokuView.isUserInteractionEnabled = false
             timerLabel.accessibilityTraits = UIAccessibilityTraitStaticText
             break
         case .successfullySolved:
-            viewModel.stopTimer()
             timerLabel.accessibilityTraits = UIAccessibilityTraitStaticText
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
                 self.sudokuView.gameEnded()
