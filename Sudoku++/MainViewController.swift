@@ -145,8 +145,9 @@ class MainViewController: UIViewController
         markupButton.titleLabel?.textAlignment = .center
         markupButton.frame.size = markupButton.intrinsicContentSize
         markupButton.addTarget(self, action: #selector(markupButtonTouchUp(_:)), for: .touchUpInside)
-        markupButton.addTarget(self, action: #selector(markupButtonTouchUpOutside(_:)), for: .touchUpOutside)
-        markupButton.addTarget(self, action: #selector(markupButtonTouchDown(_:forEvent:)), for: .touchDown)
+        markupButton.addTarget(self, action: #selector(markupButtonDragOutside(_:)), for: .touchDragExit)
+        markupButton.addTarget(self, action: #selector(markupButtonTouchDown(_:forEvent:)),
+            for: [.touchDown, .touchDragEnter])
         markupButton.layer.transform = CATransform3DRotate(CATransform3DIdentity, CGFloat.pi, 0.0, 1.0, 0.0)
         markupButton.accessibilityLabel = "Fill pencilmarks button"
         markupButton.accessibilityHint = "Add pencil marks to unfilled cells"
@@ -309,7 +310,7 @@ extension MainViewController
         })
     }
     
-    func markupButtonTouchUpOutside(_ sender: UIButton)
+    func markupButtonDragOutside(_ sender: UIButton)
     {
         markupButtonStateMachine.cancel()
     }
