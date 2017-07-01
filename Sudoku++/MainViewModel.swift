@@ -432,10 +432,12 @@ public class MainViewModel: Archivable
                 let cell = sudokuBoard.cellAt(index)!
                 if cell.number != cell.solution {
                     cell.number = cell.solution
+                    cell.pencilMarks.removeAll()
                     delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
                 }
             }
         }
+        sendCurrentState()
         delegate?.gameStateChanged(.finished)
         undoManager.removeAllActions()
         delegate?.undoStateChanged(undoManager.canUndo)
