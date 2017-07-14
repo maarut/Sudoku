@@ -817,13 +817,12 @@ extension MainViewController: MainViewModelDelegate
         }
     }
     
-    func cell(atIndex index: SudokuBoardIndex, didChangeValidityTo isValid: Bool)
+    func cell(atIndex index: SudokuBoardIndex, isValid: Bool)
     {
         DispatchQueue.main.async {
             let cellView = self.sudokuView.cellAt(tupleRepresentation(index))!
             if isValid { cellView.reset() }
             else { cellView.flash() }
-            
         }
     }
 }

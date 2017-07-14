@@ -174,13 +174,6 @@
 			name = "View Model";
 			sourceTree = "<group>";
 		};
-		E3563F101F179D66004EA05C /* Presentation Controller */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "Presentation Controller";
-			sourceTree = "<group>";
-		};
 		E3563F131F17BD11004EA05C /* Cards */ = {
 			isa = PBXGroup;
 			children = (
@@ -326,7 +319,6 @@
 			isa = PBXGroup;
 			children = (
 				E3563F131F17BD11004EA05C /* Cards */,
-				E3563F101F179D66004EA05C /* Presentation Controller */,
 				E369FE201EE5A7B50074765A /* Environments */,
 				E3FD867B1E70134300C8B780 /* Appearance */,
 				E36C687F1E609F3E00F0FFE9 /* Views */,

@@ -161,9 +161,11 @@ class CellView: UIView
     {
         guard isFlashing else { return }
         isFlashing = false
+        isHighlighted = false
         layer.removeAllAnimations()
         layer.backgroundColor = state.colourRepresentation().cgColor
-        layer.borderWidth = 0.0
+        layer.borderWidth = frame.width * 0.02
+        layer.borderColor = borderColour.cgColor
         number.textColor = textColour
     }
     
@@ -178,7 +180,7 @@ class CellView: UIView
         backgroundColourAnimation.toValue = highlightedCellBorderColour.cgColor
         backgroundColourAnimation.repeatCount = Float.greatestFiniteMagnitude
         backgroundColourAnimation.autoreverses = true
-        backgroundColourAnimation.duration = 0.5
+        backgroundColourAnimation.duration = 0.75
         layer.add(backgroundColourAnimation, forKey: "flashing")
         layer.backgroundColor = highlightedCellBorderColour.cgColor
     }

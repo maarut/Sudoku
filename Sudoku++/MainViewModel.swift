@@ -136,7 +136,7 @@ public protocol MainViewModelDelegate: class
     
     func sudokuCells(atIndexes: [SudokuBoardIndex], newState: SudokuCellState)
     func sudokuCells(atIndexes: [SudokuBoardIndex], newState: ButtonState)
-    func cell(atIndex: SudokuBoardIndex, didChangeValidityTo: Bool)
+    func cell(atIndex: SudokuBoardIndex, isValid: Bool)
     func setNumber(_: String, forCellAt: SudokuBoardIndex)
     func showPencilMarks(_: [Int], forCellAt: SudokuBoardIndex)
     
@@ -245,7 +245,7 @@ public class MainViewModel: Archivable
         else {
             fatalError("Couldn't create a new game. NewGameViewModel.newGame(_:)")
         }
-        for invalidCell in invalidCells { delegate?.cell(atIndex: invalidCell, didChangeValidityTo: true) }
+        for invalidCell in invalidCells { delegate?.cell(atIndex: invalidCell, isValid: true) }
         invalidCells = []
         delegate?.setPuzzleStateChanged(sudokuBoard.difficulty == .blank ? .canSet : .isSet)
         var newState = [(index: SudokuBoardIndex, state: SudokuCellState, number: String, pencilMarks: [Int])]()
@@ -396,8 +396,8 @@ public class MainViewModel: Archivable
                 else            { editableCells.append(index) }
             }
         }
-        for index in invalidCells { delegate?.cell(atIndex: index, didChangeValidityTo: false) }
-        for index in allCellsExcluding(invalidCells) { delegate?.cell(atIndex: index, didChangeValidityTo: true) }
+        for index in invalidCells { delegate?.cell(atIndex: index, isValid: false) }
+        for index in allCellsExcluding(invalidCells) { delegate?.cell(atIndex: index, isValid: true) }
         delegate?.sudokuCells(atIndexes: givenCells, newState: .given)
         delegate?.sudokuCells(atIndexes: editableCells, newState: .editable)
         delegate?.undoStateChanged(undoManager.canUndo)
@@ -562,17 +562,17 @@ fileprivate extension MainViewModel
             cell.number = number
             for neighbour in neighbours { setPencilMark(number, forCellAt: neighbour) }
         }
-        delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
-        delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
-        delegate?.undoStateChanged(undoManager.canUndo)
         if !sudokuBoard.isCellAtIndexValid(index) && !invalidCells.contains(index) {
             invalidCells.append(index)
-            delegate?.cell(atIndex: index, didChangeValidityTo: false)
+            delegate?.cell(atIndex: index, isValid: false)
         }
         else if sudokuBoard.isCellAtIndexValid(index) && invalidCells.contains(index) {
             invalidCells.removeFirst(element: index)
-            delegate?.cell(atIndex: index, didChangeValidityTo: true)
+            delegate?.cell(atIndex: index, isValid: true)
         }
+        delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
+        delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
+        delegate?.undoStateChanged(undoManager.canUndo)
         if sudokuBoard.isSolved {
             stopTimer()
             delegate?.gameStateChanged(.successfullySolved)
@@ -643,7 +643,7 @@ fileprivate extension MainViewModel
             delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
             delegate?.undoStateChanged(undoManager.canUndo)
             if let i = invalidCells.removeFirst(element: index) {
-                delegate?.cell(atIndex: i, didChangeValidityTo: true)
+                delegate?.cell(atIndex: i, isValid: true)
             }
         }
     }
