@@ -73,8 +73,14 @@ private class MarkupButtonMenuStateMachine
 
 class MainViewController: UIViewController
 {
+    fileprivate let cardTransition = CardTransitioningDelegate()
     fileprivate let markupButtonStateMachine = MarkupButtonMenuStateMachine()
-    weak var viewModel: MainViewModel!
+    weak var viewModel: MainViewModel! {
+        didSet {
+            viewModel.delegate = self
+            viewModel.sendState()
+        }
+    }
     
     weak var sudokuView: SudokuView!
     weak var numberSelectionView: NumberSelectionView!
@@ -92,15 +98,95 @@ class MainViewController: UIViewController
     
     convenience init(withViewModel viewModel: MainViewModel)
     {
-        self.init()
+        self.init(nibName: nil, bundle: nil)
         self.viewModel = viewModel
+    }
+    
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?)
+    {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        setUpSubviews()
+    }
+    
+    required init?(coder aDecoder: NSCoder)
+    {
+        sudokuView = aDecoder.decodeObject(forKey: "sudokuView") as? SudokuView
+        numberSelectionView = aDecoder.decodeObject(forKey: "numberSelectionView") as? NumberSelectionView
+        pencilSelectionView = aDecoder.decodeObject(forKey: "pencilSelectionView") as? NumberSelectionView
+        tabBar = aDecoder.decodeObject(forKey: "tabBar") as? UIView
+        newGameButton = aDecoder.decodeObject(forKey: "newGameButton") as? UIButton
+        undoButton = aDecoder.decodeObject(forKey: "undoButton") as? UIButton
+        markupButton = aDecoder.decodeObject(forKey: "markupButton") as? UIButton
+        settingsButton = aDecoder.decodeObject(forKey: "settingsButton") as? UIButton
+        clearCellButton = aDecoder.decodeObject(forKey: "clearCellButton") as? HighlightableButton
+        timerLabel = aDecoder.decodeObject(forKey: "timerLabel") as? UILabel
+        difficultyLabel = aDecoder.decodeObject(forKey: "difficultyLabel") as? UILabel
+        startButton = aDecoder.decodeObject(forKey: "startButton") as? UIButton
+        adBanner = aDecoder.decodeObject(forKey: "adBanner") as? GADBannerView
+
+        super.init(coder: aDecoder)
+    }
+    
+    override func encode(with aCoder: NSCoder)
+    {
+        super.encode(with: aCoder)
+        aCoder.encode(sudokuView, forKey: "sudokuView")
+        aCoder.encode(numberSelectionView, forKey: "numberSelectionView")
+        aCoder.encode(pencilSelectionView, forKey: "pencilSelectionView")
+        aCoder.encode(tabBar, forKey: "tabBar")
+        aCoder.encode(newGameButton, forKey: "newGameButton")
+        aCoder.encode(undoButton, forKey: "undoButton")
+        aCoder.encode(markupButton, forKey: "markupButton")
+        aCoder.encode(settingsButton, forKey: "settingsButton")
+        aCoder.encode(clearCellButton, forKey: "clearCellButton")
+        aCoder.encode(timerLabel, forKey: "timerLabel")
+        aCoder.encode(difficultyLabel, forKey: "difficultyLabel")
+        aCoder.encode(startButton, forKey: "startButton")
+        aCoder.encode(adBanner, forKey: "adBanner")
     }
     
     override func loadView()
     {
         view = UIView()
         view.backgroundColor = UIColor.white
-        
+    }
+    
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+        numberSelectionView.delegate = self
+        pencilSelectionView.delegate = self
+        sudokuView.delegate = self
+        adBanner.adUnitID = kAdMobAdUnitId
+        adBanner.delegate = self
+        adBanner.rootViewController = self
+    }
+    
+    override func viewWillAppear(_ animated: Bool)
+    {
+        super.viewWillAppear(animated)
+        viewModel.startTimer()
+        requestAds()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool)
+    {
+        super.viewWillDisappear(animated)
+        viewModel.stopTimer()
+    }
+    
+    override func viewWillLayoutSubviews()
+    {
+        super.viewWillLayoutSubviews()
+        layoutSubviews()
+    }
+}
+
+// MARK: - Private Functions
+fileprivate extension MainViewController
+{
+    func setUpSubviews()
+    {
         let titles = (1 ... order * order).map( { convertNumberToString($0) } )
         let sudokuView = SudokuView(frame: CGRect.zero, order: order, pencilMarkTitles: titles)
         let numberSelectionView = NumberSelectionView(frame: CGRect.zero, order: order, buttonTitles: titles,
@@ -184,15 +270,7 @@ class MainViewController: UIViewController
         tabBar.addSubview(markupButton)
         tabBar.addSubview(settingsButton)
         tabBar.layoutIfNeeded()
-        view.addSubview(numberSelectionView)
-        view.addSubview(pencilSelectionView)
-        view.addSubview(sudokuView)
-        view.addSubview(tabBar)
-        view.addSubview(clearCellButton)
-        view.addSubview(timerLabel)
-        view.addSubview(difficultyLabel)
-        view.addSubview(startButton)
-        view.addSubview(adBanner)
+        
         self.sudokuView = sudokuView
         self.numberSelectionView = numberSelectionView
         self.pencilSelectionView = pencilSelectionView
@@ -206,45 +284,17 @@ class MainViewController: UIViewController
         self.difficultyLabel = difficultyLabel
         self.startButton = startButton
         self.adBanner = adBanner
+        view.addSubview(numberSelectionView)
+        view.addSubview(pencilSelectionView)
+        view.addSubview(sudokuView)
+        view.addSubview(tabBar)
+        view.addSubview(clearCellButton)
+        view.addSubview(timerLabel)
+        view.addSubview(difficultyLabel)
+        view.addSubview(startButton)
+        view.addSubview(adBanner)
     }
     
-    override func viewDidLoad()
-    {
-        super.viewDidLoad()
-        viewModel.delegate = self
-        viewModel.sendState()
-        numberSelectionView.delegate = self
-        pencilSelectionView.delegate = self
-        sudokuView.delegate = self
-        adBanner.adUnitID = kAdMobAdUnitId
-        adBanner.delegate = self
-        adBanner.rootViewController = self
-    }
-    
-    override func viewWillAppear(_ animated: Bool)
-    {
-        super.viewWillAppear(animated)
-        viewModel.startTimer()
-        requestAds()
-        
-    }
-    
-    override func viewWillDisappear(_ animated: Bool)
-    {
-        super.viewWillDisappear(animated)
-        viewModel.stopTimer()
-    }
-    
-    override func viewWillLayoutSubviews()
-    {
-        super.viewWillLayoutSubviews()
-        layoutSubviews()
-    }
-}
-
-// MARK: - Private Functions
-fileprivate extension MainViewController
-{
     func showRevealSolutionMenu(near sender: UIView)
     {
         let alertController = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
@@ -327,7 +377,13 @@ extension MainViewController
     
     func settingsTapped(_ sender: UIButton)
     {
-        gameStateChanged(.successfullySolved)
+        let vc = SettingsViewController()
+        vc.delegate = self
+        vc.modalPresentationStyle = .custom
+        vc.transitioningDelegate = cardTransition
+        cardTransition.interactionController.wireTo(viewController: vc)
+        present(vc, animated: true, completion: nil)
+        viewModel.stopTimer()
     }
     
     func clearButtonDragExit(_ sender: HighlightableButton)
@@ -365,6 +421,15 @@ extension MainViewController: NumberSelectionViewDelegate
         case pencilSelectionView:   viewModel.selectPencilMark(number, event: .releaseActivate)
         default:                    break
         }
+    }
+}
+
+// MARK: -  CardViewControllerDelegate Implementation
+extension MainViewController: CardViewControllerDelegate
+{
+    func didSelectDismiss(_ cardViewController: CardViewController)
+    {
+        viewModel.startTimer()
     }
 }
 
