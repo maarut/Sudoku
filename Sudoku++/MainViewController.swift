@@ -73,7 +73,7 @@ private class MarkupButtonMenuStateMachine
 
 class MainViewController: UIViewController
 {
-    fileprivate let cardTransition = CardTransitioningDelegate()
+//    fileprivate let cardTransition = CardTransitioningDelegate()
     fileprivate let markupButtonStateMachine = MarkupButtonMenuStateMachine()
     weak var viewModel: MainViewModel! {
         didSet {
@@ -379,9 +379,6 @@ extension MainViewController
     {
         let vc = SettingsViewController()
         vc.delegate = self
-        vc.modalPresentationStyle = .custom
-        vc.transitioningDelegate = cardTransition
-        cardTransition.interactionController.wireTo(viewController: vc)
         present(vc, animated: true, completion: nil)
         viewModel.stopTimer()
     }

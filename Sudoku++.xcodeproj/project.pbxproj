@@ -23,10 +23,6 @@
 		E3563EF31EF43204004EA05C /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563EF21EF43204004EA05C /* SettingsViewController.swift */; };
 		E3563F021EFA6B18004EA05C /* CardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563F011EFA6B18004EA05C /* CardViewController.swift */; };
 		E3563F041EFD40E4004EA05C /* RoundedRectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563F031EFD40E4004EA05C /* RoundedRectView.swift */; };
-		E3563F121F179D7E004EA05C /* CardPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563F111F179D7E004EA05C /* CardPresentationController.swift */; };
-		E3563F151F17BD32004EA05C /* CardInteractionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563F141F17BD32004EA05C /* CardInteractionController.swift */; };
-		E3563F171F17C9DF004EA05C /* CardTransitioningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563F161F17C9DF004EA05C /* CardTransitioningDelegate.swift */; };
-		E3563F191F17D3E9004EA05C /* CardAnimationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3563F181F17D3E9004EA05C /* CardAnimationController.swift */; };
 		E359BD981E969CB3005661EE /* MainScreenNumberPickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E359BD971E969CB3005661EE /* MainScreenNumberPickerTests.swift */; };
 		E369FE251EE5A8230074765A /* MCConstants.m in Sources */ = {isa = PBXBuildFile; fileRef = E369FE241EE5A8230074765A /* MCConstants.m */; };
 		E369FE281EE5AD470074765A /* GoogleMobileAds.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E369FE271EE5AD470074765A /* GoogleMobileAds.framework */; };
@@ -92,10 +88,6 @@
 		E3563EF21EF43204004EA05C /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		E3563F011EFA6B18004EA05C /* CardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardViewController.swift; sourceTree = "<group>"; };
 		E3563F031EFD40E4004EA05C /* RoundedRectView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = RoundedRectView.swift; path = "Sudoku++/RoundedRectView.swift"; sourceTree = "<group>"; };
-		E3563F111F179D7E004EA05C /* CardPresentationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardPresentationController.swift; sourceTree = "<group>"; };
-		E3563F141F17BD32004EA05C /* CardInteractionController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardInteractionController.swift; sourceTree = "<group>"; };
-		E3563F161F17C9DF004EA05C /* CardTransitioningDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardTransitioningDelegate.swift; sourceTree = "<group>"; };
-		E3563F181F17D3E9004EA05C /* CardAnimationController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CardAnimationController.swift; sourceTree = "<group>"; };
 		E359BD971E969CB3005661EE /* MainScreenNumberPickerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenNumberPickerTests.swift; sourceTree = "<group>"; };
 		E369FE211EE5A7E10074765A /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		E369FE221EE5A8220074765A /* Sudoku++-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Sudoku++-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -172,17 +164,6 @@
 				E35275DB1E799DE800A2A736 /* MainViewModel.swift */,
 			);
 			name = "View Model";
-			sourceTree = "<group>";
-		};
-		E3563F131F17BD11004EA05C /* Cards */ = {
-			isa = PBXGroup;
-			children = (
-				E3563F141F17BD32004EA05C /* CardInteractionController.swift */,
-				E3563F111F179D7E004EA05C /* CardPresentationController.swift */,
-				E3563F161F17C9DF004EA05C /* CardTransitioningDelegate.swift */,
-				E3563F181F17D3E9004EA05C /* CardAnimationController.swift */,
-			);
-			name = Cards;
 			sourceTree = "<group>";
 		};
 		E369FE201EE5A7B50074765A /* Environments */ = {
@@ -318,7 +299,6 @@
 		E3FD86561E452AA500C8B780 /* Sudoku++ */ = {
 			isa = PBXGroup;
 			children = (
-				E3563F131F17BD11004EA05C /* Cards */,
 				E369FE201EE5A7B50074765A /* Environments */,
 				E3FD867B1E70134300C8B780 /* Appearance */,
 				E36C687F1E609F3E00F0FFE9 /* Views */,
@@ -554,14 +534,10 @@
 				E39FC0B01E58BED200C7AC10 /* UIWindow+Builder.swift in Sources */,
 				E36C68CB1E66F27200F0FFE9 /* SudokuView.swift in Sources */,
 				E33304931EC5C7E800C20E6C /* GameSerialiser.swift in Sources */,
-				E3563F191F17D3E9004EA05C /* CardAnimationController.swift in Sources */,
 				E369FE251EE5A8230074765A /* MCConstants.m in Sources */,
 				E352758C1E687BE100A2A736 /* PrivateAnimationDelegate.swift in Sources */,
 				E3563F021EFA6B18004EA05C /* CardViewController.swift in Sources */,
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
-				E3563F171F17C9DF004EA05C /* CardTransitioningDelegate.swift in Sources */,
-				E3563F151F17BD32004EA05C /* CardInteractionController.swift in Sources */,
-				E3563F121F179D7E004EA05C /* CardPresentationController.swift in Sources */,
 				E3563F041EFD40E4004EA05C /* RoundedRectView.swift in Sources */,
 				E3563EF31EF43204004EA05C /* SettingsViewController.swift in Sources */,
 				E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */,

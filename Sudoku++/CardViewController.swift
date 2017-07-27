@@ -27,7 +27,9 @@ open class CardViewController: UIViewController
         }
     }
     
+    private weak var tapGesture: UITapGestureRecognizer!
     private weak var dismissButton: UIButton!
+    fileprivate let interactionController = CardInteractionController()
     
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?)
     {
@@ -44,6 +46,10 @@ open class CardViewController: UIViewController
             dismissButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             dismissButton.topAnchor.constraint(equalTo: view.topAnchor)
             ])
+        
+        self.modalPresentationStyle = .custom
+        self.transitioningDelegate = self
+        interactionController.wireTo(viewController: self)
     }
     
     required public init?(coder aDecoder: NSCoder)
@@ -74,16 +80,298 @@ open class CardViewController: UIViewController
         modalPresentationCapturesStatusBarAppearance = true
     }
     
+    override open func viewDidAppear(_ animated: Bool)
+    {
+        super.viewDidAppear(true)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapRecognised(_:)))
+        (UIApplication.shared.delegate as? AppDelegate)?.window?.addGestureRecognizer(tap)
+        tapGesture = tap
+    }
+    
+    dynamic private func tapRecognised(_ sender: UITapGestureRecognizer)
+    {
+        let tapLocation = sender.location(in: view)
+        if !view.point(inside: tapLocation, with: nil) {
+            dismiss(animated: true, completion: nil)
+        }
+    }
+    
     override open func viewDidDisappear(_ animated: Bool)
     {
         super.viewDidDisappear(animated)
+        tapGesture.view?.removeGestureRecognizer(tapGesture)
         delegate?.didSelectDismiss(self)
         
     }
     
-    func dismissTapped(_ sender: UIButton)
+    dynamic private func dismissTapped(_ sender: UIButton)
     {
         dismiss(animated: true, completion: nil)
-        delegate?.didSelectDismiss(self)
+    }
+}
+
+// MARK: - UIViewControllerTransitioningDelegate Implementation
+extension CardViewController: UIViewControllerTransitioningDelegate
+{
+    public func presentationController(forPresented presented: UIViewController, presenting: UIViewController?,
+                                source: UIViewController) -> UIPresentationController?
+    {
+        return CardPresentationController(presentedViewController: presented, presenting: presenting)
+    }
+    
+    public func animationController(forPresented presented: UIViewController, presenting: UIViewController,
+                             source: UIViewController) -> UIViewControllerAnimatedTransitioning?
+    {
+        return CardAnimationController(transitionType: .presenting)
+    }
+    
+    public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning?
+    {
+        return CardAnimationController(transitionType: .dismissing)
+    }
+    
+    public func interactionControllerForDismissal(
+        using animator: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning?
+    {
+        return interactionController.interactionInProgress ? interactionController : nil
+    }
+}
+
+// MARK: - CardPresentationController
+private class CardPresentationController: UIPresentationController
+{
+    private let cornerRadius: CGFloat = 10.0
+    private let transformScale: CGFloat = 0.95
+    
+    private let dimmingView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(white: 0, alpha: 0.5)
+        view.alpha = 0
+        return view
+    }()
+    
+    override var shouldPresentInFullscreen: Bool { return false }
+    
+    override var shouldRemovePresentersView: Bool { return false }
+    
+    override var frameOfPresentedViewInContainerView: CGRect {
+        var presenterFrame = presentingViewController.view.frame
+        presenterFrame.size.height *= 0.95
+        presenterFrame.origin.y = presentingViewController.view.frame.height - presenterFrame.height
+        return presenterFrame
+    }
+    
+    override func presentationTransitionWillBegin()
+    {
+        guard let containerView = containerView, let presentedView = presentedView,
+            let presentingView = presentingViewController.view,
+            let transitionCoordinator = presentingViewController.transitionCoordinator else {
+                return
+        }
+        
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.fromValue = 0.0
+        animation.toValue = cornerRadius
+        animation.duration = transitionCoordinator.transitionDuration
+        
+        dimmingView.frame.size = containerView.frame.size
+        containerView.addSubview(dimmingView)
+        containerView.addSubview(presentedView)
+        
+        
+        transitionCoordinator.animate(alongsideTransition: { _ in
+            presentingView.transform = CGAffineTransform(scaleX: self.transformScale, y: self.transformScale)
+            presentingView.layer.add(animation, forKey: "cornerRadius")
+            self.presentedViewController.setNeedsStatusBarAppearanceUpdate()
+            self.dimmingView.alpha = 1.0
+        })
+    }
+    
+    override func presentationTransitionDidEnd(_ completed: Bool)
+    {
+        if !completed {
+            dimmingView.removeFromSuperview()
+        }
+        else {
+            presentingViewController.view.layer.cornerRadius = cornerRadius
+        }
+    }
+    
+    override func dismissalTransitionWillBegin()
+    {
+        guard let transitionCoordinator = presentingViewController.transitionCoordinator,
+            let presentingView = presentingViewController.view else {
+                return
+        }
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.fromValue = cornerRadius
+        animation.toValue = 0.0
+        animation.duration = transitionCoordinator.transitionDuration
+        
+        transitionCoordinator.animateAlongsideTransition(in: presentingView, animation: { _ in
+            self.dimmingView.alpha = 0.0
+            presentingView.transform = .identity
+            presentingView.layer.add(animation, forKey: "cornerRadius")
+            self.presentingViewController.setNeedsStatusBarAppearanceUpdate()
+        }, completion: nil)
+    }
+    
+    override func dismissalTransitionDidEnd(_ completed: Bool) {
+        guard let transitionCoordinator = presentingViewController.transitionCoordinator else { return }
+        if !transitionCoordinator.isCancelled && completed {
+            dimmingView.removeFromSuperview()
+            presentingViewController.view.layer.cornerRadius = 0.0
+        }
+        
+    }
+    
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
+    {
+        super.viewWillTransition(to: size, with: coordinator)
+        
+        guard let containerView = containerView else { return }
+        coordinator.animate(alongsideTransition: { _ in self.dimmingView.frame = containerView.bounds })
+    }
+}
+
+// MARK: - CardAnimationController
+private class CardAnimationController: NSObject, UIViewControllerAnimatedTransitioning
+{
+    enum TransitionType
+    {
+        case presenting
+        case dismissing
+    }
+    
+    private let transitionType: TransitionType
+    
+    init(transitionType: TransitionType)
+    {
+        self.transitionType = transitionType
+    }
+    
+    func transitionDuration(using transitionContext: UIViewControllerContextTransitioning?) -> TimeInterval
+    {
+        return 0.25
+    }
+    
+    private func dismissTranisition(using transitionContext: UIViewControllerContextTransitioning)
+    {
+        guard let fromVC = transitionContext.viewController(forKey: .from) else { return }
+        
+        UIView.animate(withDuration: transitionDuration(using: transitionContext), animations: {
+            fromVC.view.frame.origin.y += fromVC.view.frame.height
+        }, completion: { finished in
+            if transitionContext.transitionWasCancelled {
+                transitionContext.cancelInteractiveTransition()
+                transitionContext.completeTransition(false)
+            }
+            else {
+                transitionContext.finishInteractiveTransition()
+                transitionContext.completeTransition(true)
+            }
+        })
+    }
+    
+    private func presentTransition(using transitionContext: UIViewControllerContextTransitioning)
+    {
+        guard let fromVC = transitionContext.viewController(forKey: .from),
+            let toVC = transitionContext.viewController(forKey: .to) else {
+                return
+        }
+        let finalFrame = transitionContext.finalFrame(for: toVC)
+        let initialFrame = CGRect(origin: CGPoint(x: finalFrame.origin.x, y: fromVC.view.frame.height),
+                                  size: finalFrame.size)
+        transitionContext.containerView.addSubview(toVC.view)
+        toVC.view.frame = initialFrame
+        
+        UIView.animate(withDuration: transitionDuration(using: transitionContext), animations: {
+            toVC.view.frame = finalFrame
+        }, completion: { finished in
+            if transitionContext.transitionWasCancelled {
+                transitionContext.cancelInteractiveTransition()
+                transitionContext.completeTransition(false)
+            }
+            else {
+                transitionContext.finishInteractiveTransition()
+                transitionContext.completeTransition(true)
+            }
+        })
+    }
+    
+    func animateTransition(using transitionContext: UIViewControllerContextTransitioning)
+    {
+        switch transitionType {
+        case .dismissing: dismissTranisition(using: transitionContext)
+        case .presenting: presentTransition(using: transitionContext)
+        }
+    }
+}
+
+// MARK: - CardInteractionController
+private class CardInteractionController: UIPercentDrivenInteractiveTransition
+{
+    var interactionInProgress = false
+    private var shouldCompleteTransition = false
+    private weak var viewController: UIViewController!
+    
+    func wireTo(viewController: UIViewController)
+    {
+        self.viewController = viewController
+        prepareGestureRecognizers(forView: viewController.view)
+    }
+    
+    private func prepareGestureRecognizers(forView view: UIView)
+    {
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognised(_:)))
+        view.addGestureRecognizer(pan)
+    }
+    
+    dynamic private func panGestureRecognised(_ sender: UIPanGestureRecognizer)
+    {
+        let translation = sender.translation(in: sender.view!.superview!)
+        if translation == .zero { return }
+        let direction = determinePanDirection(translation)
+        var progress = translation.y / sender.view!.window!.frame.height
+        progress = min(max(progress, 0.0), 1.0)
+        switch sender.state {
+        case .changed:
+            if !interactionInProgress {
+                if direction == .down {
+                    interactionInProgress = true
+                    
+                    viewController.dismiss(animated: true, completion: nil)
+                }
+                else {
+                    cancel()
+                    sender.isEnabled = false
+                    return
+                }
+            }
+            shouldCompleteTransition = progress > 0.2
+            update(progress)
+        case .ended:
+            interactionInProgress = false
+            
+            if !shouldCompleteTransition { cancel() }
+            else { finish() }
+            sender.isEnabled = true
+        case .cancelled:
+            interactionInProgress = false
+            cancel()
+            sender.isEnabled = true
+        default: break
+        }
+    }
+    
+    private func determinePanDirection(_ point: CGPoint) -> UISwipeGestureRecognizerDirection?
+    {
+        switch (point.x, point.y) {
+        case let (x, y) where abs(x) > abs(y) && x < 0:     return .left
+        case let (x, y) where abs(x) >= abs(y) && x > 0:    return .right
+        case let (x, y) where abs(y) > abs(x) && y < 0:     return .up
+        case let (x, y) where abs(y) >= abs(x) && y > 0:    return .down
+        default:                                            return nil
+        }
     }
 }
