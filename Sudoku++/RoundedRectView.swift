@@ -25,7 +25,6 @@ class RoundedRectView: UIView
     
     override func layoutSubviews()
     {
-        super.layoutSubviews()
         let mask = CAShapeLayer()
         mask.frame = CGRect(origin: CGPoint.zero, size: frame.size)
         let path = CGMutablePath()
@@ -72,6 +71,7 @@ class RoundedRectView: UIView
         path.closeSubpath()
         mask.path = path
         layer.mask = mask
+        super.layoutSubviews()
     }
 
 }

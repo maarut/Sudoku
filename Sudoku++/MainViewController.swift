@@ -433,27 +433,6 @@ extension MainViewController: CardViewControllerDelegate
 // MARK: - Layout Functions
 fileprivate extension MainViewController
 {
-    enum ViewOrientation
-    {
-        case portrait
-        case landscape
-    }
-    
-    func isViewFullScreen(_ size: CGSize) -> Bool
-    {
-        let screenWidth = min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
-        let screenHeight = max(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
-        let viewWidth = min(size.width, size.height)
-        let viewHeight = max(size.width, size.height)
-        return screenWidth == viewWidth && screenHeight == viewHeight
-    }
-    
-    func orientation(ofSize size: CGSize) -> ViewOrientation
-    {
-        if isViewFullScreen(size) && size.width > size.height { return .landscape }
-        return .portrait
-    }
-    
     func resizeUsing(sudokuHeight: CGFloat)
     {
         if sudokuHeight == sudokuView.frame.height { return }
@@ -487,7 +466,7 @@ fileprivate extension MainViewController
     func layoutSubviews()
     {
         UIView.animate(withDuration: 0.25) {
-            if self.view.frame.height > self.view.frame.width { self.setLayoutPortrait(); return }
+            if !self.isViewFullScreen(self.view.frame.size) { self.setLayoutPortrait(); return }
             switch UIApplication.shared.statusBarOrientation {
             case .portrait, .portraitUpsideDown:    self.setLayoutPortrait()
             case .landscapeLeft:                    self.setLayoutLandscapeLeft()

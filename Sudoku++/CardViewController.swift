@@ -140,8 +140,8 @@ extension CardViewController: UIViewControllerTransitioningDelegate
 // MARK: - CardPresentationController
 private class CardPresentationController: UIPresentationController
 {
-    private let cornerRadius: CGFloat = 10.0
-    private let transformScale: CGFloat = 0.95
+    private var cornerRadius: CGFloat = 10.0
+    private var transformScale: CGFloat = 0.95
     
     private let dimmingView: UIView = {
         let view = UIView()
@@ -150,14 +150,36 @@ private class CardPresentationController: UIPresentationController
         return view
     }()
     
+    private lazy var halfScreenPresentation: Bool =
+    {
+        if self.traitCollection.containsTraits(in: UITraitCollection(horizontalSizeClass: .compact)) ||
+            self.traitCollection.containsTraits(in: UITraitCollection(verticalSizeClass: .compact)) {
+            return false
+        }
+        self.transformScale = 1.0
+        self.cornerRadius = 0.0
+        return true
+    }()
+    
     override var shouldPresentInFullscreen: Bool { return false }
     
     override var shouldRemovePresentersView: Bool { return false }
     
     override var frameOfPresentedViewInContainerView: CGRect {
         var presenterFrame = presentingViewController.view.frame
-        presenterFrame.size.height *= 0.95
-        presenterFrame.origin.y = presentingViewController.view.frame.height - presenterFrame.height
+        if halfScreenPresentation {
+            presenterFrame.size.height *= 0.5
+            presenterFrame.size.width *= 0.5
+            presenterFrame.origin = presentingViewController.view.center
+            presenterFrame.origin.y -= presenterFrame.size.height / 2
+            presenterFrame.origin.x -= presenterFrame.size.width / 2
+            (presentedViewController as? CardViewController)?.roundedCorners = .allCorners
+        }
+        else {
+            presenterFrame.size.height *= 0.95
+            presenterFrame.origin.y = presentingViewController.view.frame.height - presenterFrame.height
+        }
+        
         return presenterFrame
     }
     
@@ -180,6 +202,7 @@ private class CardPresentationController: UIPresentationController
         
         
         transitionCoordinator.animate(alongsideTransition: { _ in
+
             presentingView.transform = CGAffineTransform(scaleX: self.transformScale, y: self.transformScale)
             presentingView.layer.add(animation, forKey: "cornerRadius")
             self.presentedViewController.setNeedsStatusBarAppearanceUpdate()
