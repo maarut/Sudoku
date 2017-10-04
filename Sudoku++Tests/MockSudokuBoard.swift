@@ -45,7 +45,7 @@ class MockSudokuBoard: NSObject, Mock, SudokuBoardProtocol
     
     func cellAt(_ index: SudokuBoardIndex) -> Cell?
     {
-        return registerInvocation(.cellAtIndex, args: index, returning: { _ in nil } )
+        return registerInvocation(.cellAtIndex, args: index, returning: { (_: Any?...) in nil } )
     }
     
     func isCellAtIndexValid(_ index: SudokuBoardIndex) -> Bool

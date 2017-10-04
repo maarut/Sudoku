@@ -322,7 +322,7 @@ fileprivate extension MainViewController
 // MARK: - Event Handlers
 extension MainViewController
 {
-    func newGameButtonTapped(_ sender: UIButton)
+    @objc func newGameButtonTapped(_ sender: UIButton)
     {
         let difficulties = viewModel.newGameDifficulties
         let alertController = UIAlertController(title: "New Game",
@@ -342,17 +342,17 @@ extension MainViewController
         present(alertController, animated: true)
     }
     
-    func undoTapped(_ sender: UIButton)
+    @objc func undoTapped(_ sender: UIButton)
     {
         viewModel.undo()
     }
     
-    func startButtonTapped(_ sender: UIButton)
+    @objc func startButtonTapped(_ sender: UIButton)
     {
         viewModel.setPuzzle()
     }
     
-    func markupButtonTouchDown(_ sender: UIButton, forEvent event: UIEvent)
+    @objc func markupButtonTouchDown(_ sender: UIButton, forEvent event: UIEvent)
     {
         markupButtonStateMachine.startPress(call: {
             sender.cancelTracking(with: event)
@@ -360,12 +360,12 @@ extension MainViewController
         })
     }
     
-    func markupButtonDragOutside(_ sender: UIButton)
+    @objc func markupButtonDragOutside(_ sender: UIButton)
     {
         markupButtonStateMachine.cancel()
     }
     
-    func markupButtonTouchUp(_ sender: UIButton)
+    @objc func markupButtonTouchUp(_ sender: UIButton)
     {
         if markupButtonStateMachine.endPress() {
             showRevealSolutionMenu(near: sender)
@@ -375,7 +375,7 @@ extension MainViewController
         }
     }
     
-    func settingsTapped(_ sender: UIButton)
+    @objc func settingsTapped(_ sender: UIButton)
     {
         let vc = SettingsViewController()
         vc.delegate = self
@@ -383,17 +383,17 @@ extension MainViewController
         viewModel.stopTimer()
     }
     
-    func clearButtonDragExit(_ sender: HighlightableButton)
+    @objc func clearButtonDragExit(_ sender: HighlightableButton)
     {
         viewModel.selectClear(event: .release)
     }
     
-    func clearButtonTouchDown(_ sender: HighlightableButton)
+    @objc func clearButtonTouchDown(_ sender: HighlightableButton)
     {
         viewModel.selectClear(event: .press)
     }
     
-    func clearButtonTouchUpInside(_ sender: HighlightableButton)
+    @objc func clearButtonTouchUpInside(_ sender: HighlightableButton)
     {
         viewModel.selectClear(event: .releaseActivate)
     }
@@ -729,7 +729,7 @@ extension MainViewController: MainViewModelDelegate
         DispatchQueue.main.async {
             for row in 0 ..< self.sudokuView.dimensionality {
                 for column in 0 ..< self.sudokuView.dimensionality {
-                    let cellView = self.sudokuView.cellAt(row: row, column: column)!
+                    let cellView = self.sudokuView.cellAt((row: row, column: column))!
                     cellView.deselect()
                 }
             }

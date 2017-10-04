@@ -485,7 +485,7 @@ fileprivate extension MainViewModel
 // MARK: - Timer Functions (Private)
 fileprivate extension MainViewModel
 {
-    dynamic func timerFired(_: Timer)
+    @objc func timerFired(_: Timer)
     {
         counter += 1
         sendNewTimerText()

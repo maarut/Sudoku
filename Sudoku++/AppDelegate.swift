@@ -60,7 +60,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate
         return MainViewModel(withSudokuBoard: SudokuBoard.generatePuzzle(ofOrder: 3, difficulty: .blank)!)
     }
     
-    func save()
+    @objc func save()
     {
         do {
             try gameSerialiser.save(mainViewModel)

@@ -45,7 +45,7 @@ private struct AnyInvocation
 {
     private let _invocation: Any
     
-    init<T: Mock>(_ invocation: MockInvocation<T>)
+    init<T>(_ invocation: MockInvocation<T>)
     {
         self._invocation = invocation
     }
@@ -99,18 +99,18 @@ extension Mock
     
     func stub<T>(_ method: MockMethod, andReturn value: T?)
     {
-        stub(method, withBlock: { _ in value })
+        stub(method, withBlock: { (_: Any?...) in value })
     }
     
     func stub<T>(_ method: MockMethod, andReturn value: T)
     {
-        stub(method, withBlock: { _ in value })
+        stub(method, withBlock: { (_: Any?...) in value })
     }
     
     func stub<T>(_ method: MockMethod, andReturn first: T?, times: Int, thenReturn second: T?)
     {
         var count = 0
-        stub(method, withBlock: { _ -> T? in
+        stub(method, withBlock: { (_: Any?...) -> T? in
             defer { count += 1 }
             return count < times ? first : second
         })
@@ -119,7 +119,7 @@ extension Mock
     func stub<T>(_ method: MockMethod, andReturn first: T, times: Int, thenReturn second: T)
     {
         var count = 0
-        stub(method, withBlock: { _ -> T in
+        stub(method, withBlock: { (_: Any?...) -> T in
             defer { count += 1 }
             return count < times ? first : second
         })
@@ -148,7 +148,7 @@ extension Mock
     func stub<T>(_ method: MockMethod, andIterateThroughReturnValues values: [T])
     {
         var count = 0
-        stub(method, withBlock: { _ -> T in
+        stub(method, withBlock: { (_: Any?...) -> T in
             defer { count = (count + 1) % values.count }
             return values[count]
         })
@@ -157,7 +157,7 @@ extension Mock
     func stub<T>(_ method: MockMethod, andIterateThroughReturnValues values: [T?])
     {
         var count = 0
-        stub(method, withBlock: { _ -> T? in
+        stub(method, withBlock: { (_: Any?...) -> T? in
             defer { count = (count + 1) % values.count }
             return values[count]
         })
@@ -192,12 +192,12 @@ extension Mock
     
     func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning value: T) -> T
     {
-        return registerInvocation(method, args: args, returning: { _ in value })
+        return registerInvocation(method, args: args, returning: { (_: Any?...) in value })
     }
     
     func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning value: T?) -> T?
     {
-        return registerInvocation(method, args: args, returning: { _ in value })
+        return registerInvocation(method, args: args, returning: { (_: Any?...) in value })
     }
     
     func registerInvocation<T>(_ method: MockMethod, args: Any?..., returning block: @escaping (Any?...) -> T?) -> T?

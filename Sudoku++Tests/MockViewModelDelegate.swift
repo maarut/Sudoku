@@ -11,6 +11,8 @@ import Sudoku__
 
 class MockViewModelDelegate: MainViewModelDelegate, Mock
 {
+    
+    
     enum MockMethod: Int
     {
         case numberSelection
@@ -95,12 +97,12 @@ class MockViewModelDelegate: MainViewModelDelegate, Mock
         registerInvocation(.newGameStarted, args: newState)
     }
     
-    func difficultyTextDidChange(_ text: String)
+    func difficultyTextDidChange(_ text: String, accessibleText: String)
     {
-        registerInvocation(.difficultyTextDidChange, args: text)
+        registerInvocation(.difficultyTextDidChange, args: text, accessibleText)
     }
     
-    func cell(atIndex: SudokuBoardIndex, didChangeValidityTo isValid: Bool)
+    func cell(atIndex: SudokuBoardIndex, isValid: Bool)
     {
         registerInvocation(.cellAtIndexValidityChanged, args: atIndex, isValid)
     }

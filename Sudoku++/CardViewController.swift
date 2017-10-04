@@ -88,7 +88,7 @@ open class CardViewController: UIViewController
         tapGesture = tap
     }
     
-    dynamic private func tapRecognised(_ sender: UITapGestureRecognizer)
+    @objc private func tapRecognised(_ sender: UITapGestureRecognizer)
     {
         let tapLocation = sender.location(in: view)
         if !view.point(inside: tapLocation, with: nil) {
@@ -104,7 +104,7 @@ open class CardViewController: UIViewController
         
     }
     
-    dynamic private func dismissTapped(_ sender: UIButton)
+    @objc private func dismissTapped(_ sender: UIButton)
     {
         dismiss(animated: true, completion: nil)
     }
@@ -350,7 +350,7 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
         view.addGestureRecognizer(pan)
     }
     
-    dynamic private func panGestureRecognised(_ sender: UIPanGestureRecognizer)
+    @objc private func panGestureRecognised(_ sender: UIPanGestureRecognizer)
     {
         let translation = sender.translation(in: sender.view!.superview!)
         if translation == .zero { return }
