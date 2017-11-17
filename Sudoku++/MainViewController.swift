@@ -73,7 +73,6 @@ private class MarkupButtonMenuStateMachine
 
 class MainViewController: UIViewController
 {
-//    fileprivate let cardTransition = CardTransitioningDelegate()
     fileprivate let markupButtonStateMachine = MarkupButtonMenuStateMachine()
     weak var viewModel: MainViewModel! {
         didSet {
@@ -469,8 +468,8 @@ fileprivate extension MainViewController
             if !self.isViewFullScreen(self.view.frame.size) { self.setLayoutPortrait(); return }
             switch UIApplication.shared.statusBarOrientation {
             case .portrait, .portraitUpsideDown:    self.setLayoutPortrait()
-            case .landscapeLeft:                    self.setLayoutLandscapeLeft()
-            case .landscapeRight:                   self.setLayoutLandscapeRight()
+            case .landscapeLeft:                    self.setLayoutLandscapeRight()
+            case .landscapeRight:                   self.setLayoutLandscapeLeft()
             case .unknown:                          self.setLayoutUnknown()
             }
         }
