@@ -446,18 +446,18 @@ fileprivate extension MainViewController
     
     func resizeForPortrait()
     {
-        let availableHeight = view.frame.height - statusBarHeight() - TABBAR_HEIGHT - adBanner.frame.height -
-            difficultyLabel.frame.height - timerLabel.frame.height - MARGIN * 2
+        let availableHeight = view.frame.height - statusBarHeight() - safetyArea.bottom - TABBAR_HEIGHT -
+            adBanner.frame.height - difficultyLabel.frame.height - timerLabel.frame.height - MARGIN * 2
         let availableWidth = view.frame.width - MARGIN * 2
         var sudokuHeight = min(MAX_SUDOKU_VIEW_SIZE, (availableHeight * 11 / 15))
         if sudokuHeight > availableWidth { sudokuHeight = availableWidth }
         resizeUsing(sudokuHeight: sudokuHeight)
-        
     }
     
     func resizeForLandscape()
     {
-        let availableHeight = view.frame.height - statusBarHeight() - adBanner.frame.height - MARGIN * 2
+        let availableHeight = view.frame.height - statusBarHeight() - safetyArea.bottom - adBanner.frame.height -
+            MARGIN * 2
         let sudokuHeight = min(MAX_SUDOKU_VIEW_SIZE, availableHeight)
         resizeUsing(sudokuHeight: sudokuHeight)
     }
@@ -482,7 +482,7 @@ fileprivate extension MainViewController
         let midX = view.frame.width / 2
         adBanner.center.x = midX
         adBanner.frame.origin.y = statusBarHeight()
-        tabBar.frame = CGRect(x: 0, y: view.frame.height - TABBAR_HEIGHT,
+        tabBar.frame = CGRect(x: 0, y: view.frame.height - TABBAR_HEIGHT - safetyArea.bottom,
             width: view.frame.width, height: TABBAR_HEIGHT)
         let buttonSpacing = tabBar.frame.width / (buttonCount * 2)
         for (i, button) in [newGameButton, undoButton, markupButton, settingsButton].enumerated() {
@@ -506,6 +506,7 @@ fileprivate extension MainViewController
         numberSelectionView.frame.origin.x = sudokuView.frame.origin.x
         pencilSelectionView.frame.origin.x =
             sudokuView.frame.origin.x + sudokuView.frame.width - pencilSelectionView.frame.width
+        
     }
     
     func setLayoutLandscapeLeft()
@@ -513,10 +514,10 @@ fileprivate extension MainViewController
         resizeForLandscape()
         let buttonCount = CGFloat(tabBar.subviews.count)
         let yOrigin = statusBarHeight() - view.frame.origin.y
-        let yCenter = yOrigin + TABBAR_HEIGHT + (view.frame.height - yOrigin - TABBAR_HEIGHT) / 2
+        let yCenter = yOrigin + TABBAR_HEIGHT + (view.frame.height - yOrigin - TABBAR_HEIGHT - safetyArea.bottom) / 2
         adBanner.frame.origin.y = statusBarHeight()
         adBanner.center.x = view.frame.width / 2
-        sudokuView.center = CGPoint(x: MARGIN + sudokuView.frame.width / 2, y: yCenter)
+        sudokuView.center = CGPoint(x: MARGIN + sudokuView.frame.width / 2 + safetyArea.left, y: yCenter)
         tabBar.frame = CGRect(x: view.frame.width - TABBAR_HEIGHT, y: 0,
             width: TABBAR_HEIGHT, height: view.frame.height)
         let buttonSpacing = tabBar.frame.height / (buttonCount * 2)
@@ -542,9 +543,9 @@ fileprivate extension MainViewController
     {
         resizeForLandscape()
         let buttonCount = CGFloat(tabBar.subviews.count)
-        let sudokuViewXCenter = view.frame.width - MARGIN - sudokuView.frame.width / 2
+        let sudokuViewXCenter = view.frame.width - MARGIN - safetyArea.right - sudokuView.frame.width / 2
         let yOrigin = statusBarHeight() - view.frame.origin.y
-        let yCenter = yOrigin + TABBAR_HEIGHT + (view.frame.height - yOrigin - TABBAR_HEIGHT) / 2
+        let yCenter = yOrigin + TABBAR_HEIGHT + (view.frame.height - safetyArea.bottom - yOrigin - TABBAR_HEIGHT) / 2
         adBanner.frame.origin.y = statusBarHeight()
         adBanner.center.x = view.frame.width / 2
         sudokuView.center = CGPoint(x: sudokuViewXCenter, y: yCenter)

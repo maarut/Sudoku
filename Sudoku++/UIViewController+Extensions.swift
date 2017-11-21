@@ -33,4 +33,15 @@ extension UIViewController
         if isViewFullScreen(size) && size.width > size.height { return .landscape }
         return .portrait
     }
+    
+    var safetyArea: UIEdgeInsets {
+        let safetyArea: UIEdgeInsets
+        if #available(iOS 11, *) {
+            safetyArea = view.safeAreaInsets
+        }
+        else {
+            safetyArea = UIEdgeInsets.zero
+        }
+        return safetyArea
+    }
 }
