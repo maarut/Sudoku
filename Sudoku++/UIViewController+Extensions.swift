@@ -16,21 +16,9 @@ extension UIViewController
         case landscape
     }
     
-    func isViewFullScreen(_ size: CGSize) -> Bool
-    {
-        if let screen = view.window?.screen {
-            let screenWidth = min(screen.bounds.width, screen.bounds.height)
-            let screenHeight = max(screen.bounds.width, screen.bounds.height)
-            let viewWidth = min(size.width, size.height)
-            let viewHeight = max(size.width, size.height)
-            return screenWidth == viewWidth && screenHeight == viewHeight
-        }
-        return true
-    }
-    
     func orientation(ofSize size: CGSize) -> ViewOrientation
     {
-        if isViewFullScreen(size) && size.width > size.height { return .landscape }
+        if size.width > size.height { return .landscape }
         return .portrait
     }
     

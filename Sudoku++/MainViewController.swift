@@ -465,7 +465,7 @@ fileprivate extension MainViewController
     func layoutSubviews()
     {
         UIView.animate(withDuration: 0.25) {
-            if !self.isViewFullScreen(self.view.frame.size) { self.setLayoutPortrait(); return }
+            if self.view.frame.height > self.view.frame.width { self.setLayoutPortrait(); return }
             switch UIApplication.shared.statusBarOrientation {
             case .portrait, .portraitUpsideDown:    self.setLayoutPortrait()
             case .landscapeLeft:                    self.setLayoutLandscapeRight()
