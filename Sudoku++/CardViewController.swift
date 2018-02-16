@@ -336,6 +336,7 @@ private class CardAnimationController: NSObject, UIViewControllerAnimatedTransit
 private class CardInteractionController: UIPercentDrivenInteractiveTransition
 {
     var interactionInProgress = false
+    private var presentedViewOriginY: CGFloat = 0
     private var shouldCompleteTransition = false
     private weak var viewController: UIViewController!
     
@@ -354,11 +355,12 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     @objc private func panGestureRecognised(_ sender: UIPanGestureRecognizer)
     {
         let translation = sender.translation(in: sender.view!.superview!)
-        var progress = translation.y / sender.view!.frame.height
+        var progress = translation.y / (sender.view!.superview!.frame.height - presentedViewOriginY)
         progress = min(max(progress, 0.0), 1.0)
         switch sender.state {
         case .began:
             interactionInProgress = true
+            presentedViewOriginY = sender.view!.frame.origin.y
             viewController.dismiss(animated: true, completion: nil)
             update(progress)
         case .changed:
@@ -371,6 +373,7 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
             sender.isEnabled = true
         case .cancelled:
             interactionInProgress = false
+            presentedViewOriginY = 0
             cancel()
             sender.isEnabled = true
         default: break
