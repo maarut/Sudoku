@@ -282,8 +282,9 @@ private class CardAnimationController: NSObject, UIViewControllerAnimatedTransit
     {
         guard let fromVC = transitionContext.viewController(forKey: .from) else { return }
         
-        UIView.animate(withDuration: transitionDuration(using: transitionContext), animations: {
-            fromVC.view.frame.origin.y += fromVC.view.frame.height
+        UIView.animate(withDuration: transitionDuration(using: transitionContext), delay: 0, options: .curveLinear,
+            animations: {
+            fromVC.view.frame.origin.y = transitionContext.containerView.frame.height
         }, completion: { finished in
             if transitionContext.transitionWasCancelled {
                 transitionContext.cancelInteractiveTransition()
@@ -353,29 +354,18 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     @objc private func panGestureRecognised(_ sender: UIPanGestureRecognizer)
     {
         let translation = sender.translation(in: sender.view!.superview!)
-        if translation == .zero { return }
-        let direction = determinePanDirection(translation)
-        var progress = translation.y / sender.view!.window!.frame.height
+        var progress = translation.y / sender.view!.frame.height
         progress = min(max(progress, 0.0), 1.0)
         switch sender.state {
+        case .began:
+            interactionInProgress = true
+            viewController.dismiss(animated: true, completion: nil)
+            update(progress)
         case .changed:
-            if !interactionInProgress {
-                if direction == .down {
-                    interactionInProgress = true
-                    
-                    viewController.dismiss(animated: true, completion: nil)
-                }
-                else {
-                    cancel()
-                    sender.isEnabled = false
-                    return
-                }
-            }
-            shouldCompleteTransition = progress > 0.2
+            shouldCompleteTransition = progress > 0.3
             update(progress)
         case .ended:
             interactionInProgress = false
-            
             if !shouldCompleteTransition { cancel() }
             else { finish() }
             sender.isEnabled = true
@@ -386,15 +376,5 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
         default: break
         }
     }
-    
-    private func determinePanDirection(_ point: CGPoint) -> UISwipeGestureRecognizerDirection?
-    {
-        switch (point.x, point.y) {
-        case let (x, y) where abs(x) > abs(y) && x < 0:     return .left
-        case let (x, y) where abs(x) >= abs(y) && x > 0:    return .right
-        case let (x, y) where abs(y) > abs(x) && y < 0:     return .up
-        case let (x, y) where abs(y) >= abs(x) && y > 0:    return .down
-        default:                                            return nil
-        }
-    }
 }
+
