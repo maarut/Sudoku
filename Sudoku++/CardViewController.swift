@@ -150,63 +150,48 @@ private class CardPresentationController: UIPresentationController
         return view
     }()
     
-    private lazy var halfScreenPresentation: Bool =
-    {
-        if self.traitCollection.containsTraits(in: UITraitCollection(horizontalSizeClass: .compact)) ||
-            self.traitCollection.containsTraits(in: UITraitCollection(verticalSizeClass: .compact)) {
-            return false
-        }
-        self.transformScale = 1.0
-        self.cornerRadius = 0.0
-        return true
-    }()
-    
     override var shouldPresentInFullscreen: Bool { return false }
     
     override var shouldRemovePresentersView: Bool { return false }
     
     override var frameOfPresentedViewInContainerView: CGRect {
-        var presenterFrame = presentingViewController.view.frame
-        if halfScreenPresentation {
+        guard let containerView = containerView else { return .zero }
+        var presenterFrame = containerView.frame
+        if halfScreenPresentation(for: traitCollection) {
             presenterFrame.size.height *= 0.5
             presenterFrame.size.width *= 0.5
-            presenterFrame.origin = presentingViewController.view.center
+            presenterFrame.origin = containerView.center
             presenterFrame.origin.y -= presenterFrame.size.height / 2
             presenterFrame.origin.x -= presenterFrame.size.width / 2
-            (presentedViewController as? CardViewController)?.roundedCorners = .allCorners
         }
         else {
             presenterFrame.size.height *= 0.95
-            presenterFrame.origin.y = presentingViewController.view.frame.height - presenterFrame.height
+            presenterFrame.origin.y = containerView.frame.height - presenterFrame.height
         }
         
         return presenterFrame
     }
     
+    private func halfScreenPresentation(for traits: UITraitCollection) -> Bool
+    {
+        if traits.containsTraits(in: UITraitCollection(horizontalSizeClass: .compact)) ||
+            traits.containsTraits(in: UITraitCollection(verticalSizeClass: .compact)) {
+            return false
+        }
+        return true
+    }
+    
     override func presentationTransitionWillBegin()
     {
         guard let containerView = containerView, let presentedView = presentedView,
-            let presentingView = presentingViewController.view,
             let transitionCoordinator = presentingViewController.transitionCoordinator else {
                 return
         }
-        
-        let animation = CABasicAnimation(keyPath: "cornerRadius")
-        animation.fromValue = 0.0
-        animation.toValue = cornerRadius
-        animation.duration = transitionCoordinator.transitionDuration
-        
         dimmingView.frame.size = containerView.frame.size
         containerView.addSubview(dimmingView)
         containerView.addSubview(presentedView)
-        
-        
         transitionCoordinator.animate(alongsideTransition: { _ in
-
-            presentingView.transform = CGAffineTransform(scaleX: self.transformScale, y: self.transformScale)
-            presentingView.layer.add(animation, forKey: "cornerRadius")
-            self.presentedViewController.setNeedsStatusBarAppearanceUpdate()
-            self.dimmingView.alpha = 1.0
+            self.layoutPresentedView(usingCoordinator: transitionCoordinator)
         })
     }
     
@@ -253,7 +238,36 @@ private class CardPresentationController: UIPresentationController
         super.viewWillTransition(to: size, with: coordinator)
         
         guard let containerView = containerView else { return }
-        coordinator.animate(alongsideTransition: { _ in self.dimmingView.frame = containerView.bounds })
+        coordinator.animate(alongsideTransition: { _ in
+            self.dimmingView.frame = containerView.bounds
+            self.layoutPresentedView(usingCoordinator: coordinator)
+        }, completion: { _ in self.presentingViewController.view.layer.cornerRadius = self.cornerRadius })
+    }
+    
+    private func layoutPresentedView(usingCoordinator coordinator: UIViewControllerTransitionCoordinator)
+    {
+        guard let presentedView = presentedView, let presentingView = presentingViewController.view else { return }
+        presentingView.transform = .identity
+        if let frame = containerView?.frame { presentingView.frame = frame }
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.fromValue = cornerRadius
+        animation.duration = coordinator.transitionDuration
+        if halfScreenPresentation(for: traitCollection) {
+            (presentedViewController as? CardViewController)?.roundedCorners = .allCorners
+            transformScale = 1.0
+            cornerRadius = 0.0
+        }
+        else {
+            (presentedViewController as? CardViewController)?.roundedCorners = [.topLeft, .topRight]
+            transformScale = 0.95
+            cornerRadius = 10.0
+            presentingView.transform = CGAffineTransform.identity.scaledBy(x: transformScale, y: transformScale)
+        }
+        dimmingView.alpha = 1.0
+        animation.toValue = cornerRadius
+        presentingView.layer.add(animation, forKey: "cornerRadius")
+        presentedView.frame = frameOfPresentedViewInContainerView
+        presentingViewController.setNeedsStatusBarAppearanceUpdate()
     }
 }
 
