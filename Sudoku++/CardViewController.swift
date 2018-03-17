@@ -116,6 +116,7 @@ extension CardViewController: UIViewControllerTransitioningDelegate
     public func presentationController(forPresented presented: UIViewController, presenting: UIViewController?,
                                 source: UIViewController) -> UIPresentationController?
     {
+        interactionController.wireTo(presentingViewController: source)
         return CardPresentationController(presentedViewController: presented, presenting: presenting)
     }
     
@@ -353,6 +354,13 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     private var presentedViewOriginY: CGFloat = 0
     private var shouldCompleteTransition = false
     private weak var viewController: UIViewController!
+    private weak var presentingViewController: UIViewController?
+    private var presentingViewControllerPauseTime: TimeInterval = 0
+    
+    func wireTo(presentingViewController: UIViewController)
+    {
+        self.presentingViewController = presentingViewController
+    }
     
     func wireTo(viewController: UIViewController)
     {
@@ -392,6 +400,54 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
             sender.isEnabled = true
         default: break
         }
+    }
+    
+    override func startInteractiveTransition(_ transitionContext: UIViewControllerContextTransitioning)
+    {
+        super.startInteractiveTransition(transitionContext)
+        if let presentingViewController = presentingViewController {
+            let layer = presentingViewController.view.layer
+            let pausedTime = layer.convertTime(CACurrentMediaTime(), from: nil)
+            layer.speed = 0.0;
+            layer.timeOffset = pausedTime;
+            presentingViewControllerPauseTime = pausedTime;
+        }
+    }
+    
+    override func update(_ percentComplete: CGFloat)
+    {
+        if let presentingViewController = presentingViewController {
+            let layer = presentingViewController.view.layer
+            layer.timeOffset = presentingViewControllerPauseTime + TimeInterval(duration * percentComplete)
+        }
+        super.update(percentComplete)
+    }
+    
+    override func finish()
+    {
+        if let presentingViewController = presentingViewController {
+            let layer = presentingViewController.view.layer
+            let offset = layer.timeOffset
+            layer.speed = 1.0;
+            layer.timeOffset = 0.0;
+            let timeSincePause = layer.convertTime(CACurrentMediaTime(), from: nil) - offset;
+            layer.beginTime = timeSincePause;
+        }
+        super.finish()
+    }
+    
+    override func cancel()
+    {
+        if let presentingViewController = presentingViewController {
+            let layer = presentingViewController.view.layer
+            layer.speed = -1.0;
+            layer.beginTime = CACurrentMediaTime();
+            let delay = Int((duration + 0.05) * 1000);
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delay)) {
+                layer.speed = 1.0;
+            }
+        }
+        super.cancel()
     }
 }
 
