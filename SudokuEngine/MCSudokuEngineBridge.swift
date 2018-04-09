@@ -332,7 +332,7 @@ fileprivate extension SudokuBoard
             if let number = function(i) { description += number }
             else { description += "." }
             if (column + 1) % order == 0 {
-                description += "|";
+                description += "|"
                 if (column + 1) == dimensionality {
                     description += "\n"
                 }

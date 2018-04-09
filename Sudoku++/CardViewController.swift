@@ -408,9 +408,9 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
         if let presentingViewController = presentingViewController {
             let layer = presentingViewController.view.layer
             let pausedTime = layer.convertTime(CACurrentMediaTime(), from: nil)
-            layer.speed = 0.0;
-            layer.timeOffset = pausedTime;
-            presentingViewControllerPauseTime = pausedTime;
+            layer.speed = 0.0
+            layer.timeOffset = pausedTime
+            presentingViewControllerPauseTime = pausedTime
         }
     }
     
@@ -428,10 +428,10 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
         if let presentingViewController = presentingViewController {
             let layer = presentingViewController.view.layer
             let offset = layer.timeOffset
-            layer.speed = 1.0;
-            layer.timeOffset = 0.0;
-            let timeSincePause = layer.convertTime(CACurrentMediaTime(), from: nil) - offset;
-            layer.beginTime = timeSincePause;
+            layer.speed = 1.0
+            layer.timeOffset = 0.0
+            let timeSincePause = layer.convertTime(CACurrentMediaTime(), from: nil) - offset
+            layer.beginTime = timeSincePause
         }
         super.finish()
     }
@@ -440,11 +440,11 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     {
         if let presentingViewController = presentingViewController {
             let layer = presentingViewController.view.layer
-            layer.speed = -1.0;
-            layer.beginTime = CACurrentMediaTime();
-            let delay = Int((duration + 0.05) * 1000);
+            layer.speed = -1.0
+            layer.beginTime = CACurrentMediaTime()
+            let delay = Int((duration + 0.05) * 1000)
             DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(delay)) {
-                layer.speed = 1.0;
+                layer.speed = 1.0
             }
         }
         super.cancel()
