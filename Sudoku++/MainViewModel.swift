@@ -34,7 +34,6 @@ private enum MainScreenAction
 // MARK: - MainScreenState Definition
 private enum MainScreenState
 {
-    case highlightCell(SudokuBoardIndex)
     case highlightPencilMark(Int)
     case highlightNumber(Int)
     case highlightClear
@@ -43,11 +42,6 @@ private enum MainScreenState
     func advanceWith(action: MainScreenAction) -> MainScreenState
     {
         switch self {
-        case .highlightCell(let index):
-            switch action {
-            case .selectedClear, .selectedNumber(_), .selectedPencilMark(_): return self
-            case .selectedCell(let newIndex): return (index != newIndex) ? .highlightCell(newIndex) : .begin
-            }
         case .highlightPencilMark(let pencilMark):
             switch action {
             case .selectedCell(_):                          return self
@@ -71,10 +65,10 @@ private enum MainScreenState
             }
         case .begin:
             switch action {
-            case .selectedCell(let index):              return .highlightCell(index)
             case .selectedClear:                        return .highlightClear
             case .selectedNumber(let number):           return .highlightNumber(number)
             case .selectedPencilMark(let pencilMark):   return .highlightPencilMark(pencilMark)
+            default:                                    return .begin
             }
         }
     }
@@ -300,35 +294,17 @@ public class MainViewModel: Archivable
         case .begin:                                delegate?.removeHighlights()
         case .highlightNumber(let number):          highlightCellsContaining(number)
         case .highlightPencilMark(let pencilMark):  highlightCellsContaining(pencilMark)
-        case .highlightCell(let cell):
-            highlightCellAt(cell)
-            delegate?.numberSelection(newState: .normal, forNumber: nil)
-            delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
-            delegate?.clearButton(newState: .normal)
-            break
-        case .highlightClear:
-            break
+        case .highlightClear:                       break
         }
     }
     
     func selectPencilMark(_ number: Int, event: ButtonEvent)
     {
-        switch currentState {
-        case .highlightCell(let index): setPencilMark(number, forCellAt: index)
-        default:                        break
-        }
-        
         currentState = currentState.advanceWith(action: .selectedPencilMark(number))
         
         switch currentState {
         case .begin:
             delegate?.removeHighlights()
-            break
-        case .highlightCell(let index):
-            highlightCellAt(index)
-            delegate?.numberSelection(newState: .normal, forNumber: nil)
-            delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
-            delegate?.clearButton(newState: .normal)
             break
         case .highlightPencilMark(let number):
             highlightCellsContaining(number)
@@ -344,22 +320,12 @@ public class MainViewModel: Archivable
     func selectNumber(_ number: Int, event: ButtonEvent)
     {
         guard event == .releaseActivate else { return }
-        switch currentState {
-        case .highlightCell(let index): setNumber(number, forCellAt: index)
-        default:                        break
-        }
         
         currentState = currentState.advanceWith(action: .selectedNumber(number))
         
         switch currentState {
         case .begin:
             delegate?.removeHighlights()
-            break
-        case .highlightCell(let index):
-            highlightCellAt(index)
-            delegate?.numberSelection(newState: .normal, forNumber: nil)
-            delegate?.pencilMarkSelection(newState: .normal, forNumber: nil)
-            delegate?.clearButton(newState: .normal)
             break
         case .highlightNumber(let number):
             highlightCellsContaining(number)
@@ -462,19 +428,12 @@ fileprivate extension MainViewModel
     
     func clearReleaseActivate()
     {
-        switch currentState {
-        case .highlightCell(let index): clearCellAt(index)
-        default:                        break
-        }
         currentState = currentState.advanceWith(action: .selectedClear)
         switch currentState {
         case .highlightClear:
             delegate?.removeHighlights()
             delegate?.clearButton(newState: .selected)
             break
-        case .highlightCell(let index):
-            highlightCellAt(index)
-            fallthrough
         default:
             delegate?.clearButton(newState: .normal)
             break
@@ -523,9 +482,6 @@ fileprivate extension MainViewModel
     func sendCurrentState()
     {
         switch currentState {
-        case .highlightCell(let index):
-            highlightCellAt(index)
-            break
         case .highlightClear:
             delegate?.clearButton(newState: .selected)
             break
@@ -676,7 +632,6 @@ fileprivate extension MainViewModel
     func updateStateDuringUndoOperation()
     {
         switch currentState {
-        case .highlightCell(let index):                                         highlightCellAt(index)
         case .highlightNumber(let number), .highlightPencilMark(let number):    highlightCellsContaining(number)
         default:                                                                delegate?.removeHighlights()
         }
