@@ -526,6 +526,12 @@ fileprivate extension MainViewModel
             invalidCells.removeFirst(element: index)
             delegate?.cell(atIndex: index, isValid: true)
         }
+        for neighbourIndex in cell.neighbours {
+            if sudokuBoard.isCellAtIndexValid(neighbourIndex) && invalidCells.contains(neighbourIndex) {
+                invalidCells.removeFirst(element: neighbourIndex)
+                delegate?.cell(atIndex: neighbourIndex, isValid: true)
+            }
+        }
         delegate?.showPencilMarks(Array(cell.pencilMarks), forCellAt: index)
         delegate?.setNumber(convertNumberToString(cell.number), forCellAt: index)
         delegate?.undoStateChanged(undoManager.canUndo)
