@@ -108,6 +108,11 @@ open class CardViewController: UIViewController
     {
         dismiss(animated: true, completion: nil)
     }
+    
+    func updateInteractionDismissal(state: UIGestureRecognizerState, translation: CGPoint)
+    {
+        interactionController.panUpdated(state: state, translation: translation)
+    }
 }
 
 // MARK: - UIViewControllerTransitioningDelegate Implementation
@@ -231,7 +236,6 @@ private class CardPresentationController: UIPresentationController
             dimmingView.removeFromSuperview()
             presentingViewController.view.layer.cornerRadius = 0.0
         }
-        
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator)
@@ -351,7 +355,7 @@ private class CardAnimationController: NSObject, UIViewControllerAnimatedTransit
 private class CardInteractionController: UIPercentDrivenInteractiveTransition
 {
     var interactionInProgress = false
-    private var presentedViewOriginY: CGFloat = 0
+    private var presentedViewOriginY: CGFloat = .infinity
     private var shouldCompleteTransition = false
     private weak var viewController: UIViewController!
     private weak var presentingViewController: UIViewController?
@@ -370,34 +374,43 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     
     private func prepareGestureRecognizers(forView view: UIView)
     {
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognised(_:)))
-        view.addGestureRecognizer(pan)
+        let panGestureRecogniser = UIPanGestureRecognizer(target: self, action: #selector(panGestureRecognised(_:)))
+        view.addGestureRecognizer(panGestureRecogniser)
     }
     
     @objc private func panGestureRecognised(_ sender: UIPanGestureRecognizer)
     {
-        let translation = sender.translation(in: sender.view!.superview!)
-        var progress = translation.y / (sender.view!.superview!.frame.height - presentedViewOriginY)
+        let translation = sender.translation(in: self.viewController.view.superview!)
+        panUpdated(state: sender.state, translation: translation)
+    }
+    
+    func panUpdated(state: UIGestureRecognizerState, translation: CGPoint)
+    {
+        var progress = translation.y / (viewController.view.frame.height - presentedViewOriginY)
         progress = min(max(progress, 0.0), 1.0)
-        switch sender.state {
+        switch state {
         case .began:
             interactionInProgress = true
-            presentedViewOriginY = sender.view!.frame.origin.y
+            presentedViewOriginY = viewController.view.frame.origin.y
             viewController.dismiss(animated: true, completion: nil)
             update(progress)
         case .changed:
+            if presentedViewOriginY == .infinity {
+                interactionInProgress = true
+                presentedViewOriginY = viewController.view.frame.origin.y
+                viewController.dismiss(animated: true, completion: nil)
+                update(progress)
+            }
             shouldCompleteTransition = progress > 0.3
             update(progress)
         case .ended:
             interactionInProgress = false
             if !shouldCompleteTransition { cancel() }
             else { finish() }
-            sender.isEnabled = true
         case .cancelled:
             interactionInProgress = false
-            presentedViewOriginY = 0
+            presentedViewOriginY = .infinity
             cancel()
-            sender.isEnabled = true
         default: break
         }
     }

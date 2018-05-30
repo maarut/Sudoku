@@ -37,6 +37,8 @@
 		E39FC0B01E58BED200C7AC10 /* UIWindow+Builder.swift in Sources */ = {isa = PBXBuildFile; fileRef = E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */; };
 		E3B4AB081E97C153007E170F /* MainScreenPencilPickerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B4AB071E97C153007E170F /* MainScreenPencilPickerTests.swift */; };
 		E3B4AB0A1E99169D007E170F /* MainScreenSudokuBoardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3B4AB091E99169D007E170F /* MainScreenSudokuBoardTests.swift */; };
+		E3C612F5208877CA0031634A /* RatingRequestTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C612F4208877CA0031634A /* RatingRequestTableViewCell.swift */; };
+		E3C612F720887FCB0031634A /* SettingsHeaderTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C612F620887FCB0031634A /* SettingsHeaderTableViewCell.swift */; };
 		E3E8457A1E8ABA1300243A98 /* Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E845791E8ABA1300243A98 /* Mock.swift */; };
 		E3E8457C1E8ACCD700243A98 /* MainScreenClearButtonTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E8457B1E8ACCD700243A98 /* MainScreenClearButtonTests.swift */; };
 		E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3FD86571E452AA500C8B780 /* AppDelegate.swift */; };
@@ -113,6 +115,8 @@
 		E39FC0AF1E58BED200C7AC10 /* UIWindow+Builder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIWindow+Builder.swift"; sourceTree = "<group>"; };
 		E3B4AB071E97C153007E170F /* MainScreenPencilPickerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenPencilPickerTests.swift; sourceTree = "<group>"; };
 		E3B4AB091E99169D007E170F /* MainScreenSudokuBoardTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenSudokuBoardTests.swift; sourceTree = "<group>"; };
+		E3C612F4208877CA0031634A /* RatingRequestTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RatingRequestTableViewCell.swift; path = "Sudoku++/RatingRequestTableViewCell.swift"; sourceTree = "<group>"; };
+		E3C612F620887FCB0031634A /* SettingsHeaderTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SettingsHeaderTableViewCell.swift; path = "Sudoku++/SettingsHeaderTableViewCell.swift"; sourceTree = "<group>"; };
 		E3E845791E8ABA1300243A98 /* Mock.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mock.swift; sourceTree = "<group>"; };
 		E3E8457B1E8ACCD700243A98 /* MainScreenClearButtonTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainScreenClearButtonTests.swift; sourceTree = "<group>"; };
 		E3FD86541E452AA500C8B780 /* Sudoku++.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sudoku++.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -218,6 +222,8 @@
 				E352758D1E699F7100A2A736 /* NumberSelectionView.swift */,
 				E35275DD1E81642000A2A736 /* HighlightableButton.swift */,
 				E3563F031EFD40E4004EA05C /* RoundedRectView.swift */,
+				E3C612F4208877CA0031634A /* RatingRequestTableViewCell.swift */,
+				E3C612F620887FCB0031634A /* SettingsHeaderTableViewCell.swift */,
 			);
 			name = Views;
 			path = ..;
@@ -543,9 +549,11 @@
 				E3563F021EFA6B18004EA05C /* CardViewController.swift in Sources */,
 				E3FD86581E452AA500C8B780 /* AppDelegate.swift in Sources */,
 				E3563F041EFD40E4004EA05C /* RoundedRectView.swift in Sources */,
+				E3C612F5208877CA0031634A /* RatingRequestTableViewCell.swift in Sources */,
 				E3563EF31EF43204004EA05C /* SettingsViewController.swift in Sources */,
 				E35275DC1E799DE800A2A736 /* MainViewModel.swift in Sources */,
 				E352758E1E699F7100A2A736 /* NumberSelectionView.swift in Sources */,
+				E3C612F720887FCB0031634A /* SettingsHeaderTableViewCell.swift in Sources */,
 				E36C68C71E649B3000F0FFE9 /* UIColor+Convenience.swift in Sources */,
 				E307D5191ECF03D9001748CA /* Utils.swift in Sources */,
 			);
