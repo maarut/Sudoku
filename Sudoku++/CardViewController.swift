@@ -128,6 +128,7 @@ extension CardViewController: UIViewControllerTransitioningDelegate
     public func animationController(forPresented presented: UIViewController, presenting: UIViewController,
                              source: UIViewController) -> UIViewControllerAnimatedTransitioning?
     {
+        interactionController.wireTo(presentingViewController: source)
         return CardAnimationController(transitionType: .presenting)
     }
     
@@ -358,7 +359,7 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     private var presentedViewOriginY: CGFloat = .infinity
     private var shouldCompleteTransition = false
     private weak var viewController: UIViewController!
-    private weak var presentingViewController: UIViewController?
+    private weak var presentingViewController: UIViewController!
     private var presentingViewControllerPauseTime: TimeInterval = 0
     
     func wireTo(presentingViewController: UIViewController)
@@ -386,7 +387,7 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
     
     func panUpdated(state: UIGestureRecognizerState, translation: CGPoint)
     {
-        var progress = translation.y / (viewController.view.frame.height - presentedViewOriginY)
+        var progress = translation.y / (presentingViewController.view.frame.height - presentedViewOriginY)
         progress = min(max(progress, 0.0), 1.0)
         switch state {
         case .began:

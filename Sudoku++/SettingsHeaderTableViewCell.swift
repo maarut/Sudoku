@@ -52,17 +52,25 @@ class SettingsHeaderTableViewCell: UITableViewCell
 
         contentView.addSubview(headerBar)
         contentView.addSubview(titleLabel)
+        let titleLabelLeading: NSLayoutConstraint
+        if #available(iOS 11.0, *) {
+            titleLabelLeading = titleLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(
+                contentView.leadingAnchor, multiplier: 1)
+        } else {
+            titleLabelLeading = titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10)
+        }
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            titleLabel.bottomAnchor.constraint(equalTo: headerBar.topAnchor),
-            headerBar.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            headerBar.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 10),
             headerBar.leftAnchor.constraint(equalTo: contentView.leftAnchor),
             headerBar.rightAnchor.constraint(equalTo: contentView.rightAnchor),
-            headerBar.heightAnchor.constraint(equalToConstant: 10)
+            headerBar.topAnchor.constraint(equalTo: contentView.topAnchor, constant: -10),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
+            titleLabelLeading,
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
         contentView.setNeedsLayout()
+        contentView.bringSubview(toFront: titleLabel)
     }
     
     override func awakeFromNib()

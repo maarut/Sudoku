@@ -63,8 +63,8 @@ extension SettingsViewController: UITableViewDataSource
 {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell
     {
-        let cell: UITableViewCell = UITableViewCell()
-        /*if indexPath.row == 0 {
+        let cell: UITableViewCell = UITableViewCell()/*
+        if indexPath.row == 0 {
             let headerCell: SettingsHeaderTableViewCell
             if let c = tableView.dequeueReusableCell(
                 withIdentifier: SettingsHeaderTableViewCell.reuseIdentifier) as? SettingsHeaderTableViewCell {
@@ -85,12 +85,28 @@ extension SettingsViewController: UITableViewDataSource
             }
             cell.textLabel?.text = "\(indexPath.section) \(indexPath.row)"
         }*/
+        switch indexPath.section {
+        case 0:
+            cell.textLabel?.numberOfLines = 0
+            cell.textLabel?.text = """
+            
+            The rules for Sudoku are straightforward. Each column, row and box must be filled with the numbers 1 to \
+            9, with no duplicates in any region. That's it!
+            
+            Sudoku is a simple game, that's difficult to master. I hope you have fun solving!
+            """
+        case 1: break
+        case 2: break
+        case 3: break
+        case 4: break
+        default: break
+        }
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     {
-        return 2
+        return 1
     }
     
     func numberOfSections(in tableView: UITableView) -> Int
@@ -107,6 +123,7 @@ extension SettingsViewController: UITableViewDataSource
             
             I read all emails, but am only able to respond to a handful. Please bare with me if you don't hear back \
             straight away.
+            
             """
         case 3:
             return """
@@ -118,14 +135,16 @@ extension SettingsViewController: UITableViewDataSource
             Any tip given will also remove ads from the app.
             
             Thanks
+            
             """
         case 4:
             return """
             If you enjoy using this app, please take some time to leave a review on the App Store. \
             It really helps others find the app.
+            
             """
         default:
-            return "\(section) - Footer"
+            return nil
         }
     }
 }
@@ -134,9 +153,27 @@ extension SettingsViewController: UITableViewDelegate
 {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView?
     {
+        
         let headerCell = SettingsHeaderTableViewCell()
-        headerCell.titleLabel.text = "Hello \(section)"
-        headerCell.headerBar.backgroundColor = .blue
+        headerCell.headerBar.backgroundColor = UIColor(hexValue: 0xD8EBFF)
+        switch section {
+        case 0:
+            // How to Play
+            headerCell.titleLabel.text = "How to Play"
+            
+        case 1:
+            // About
+            headerCell.titleLabel.text = "About"
+        case 2:
+            // Support
+            headerCell.titleLabel.text = "Support"
+        case 3:
+            // Tip
+            headerCell.titleLabel.text = "Tip"
+        case 4:
+            headerCell.titleLabel.text = "Leave a Review"
+        default: return nil
+        }
         return headerCell
     }
 }
