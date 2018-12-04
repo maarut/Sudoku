@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate
     var timer: Timer!
     
     func application(_ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool
     {
         window = UIWindow.buildWindow()
         let rootVC = MainViewController(nibName: nil, bundle: nil)

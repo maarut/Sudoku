@@ -11,7 +11,7 @@ import UIKit
 extension UIWindow
 {
     static func buildWindow(for screen: UIScreen = UIScreen.main,
-        with level: UIWindowLevel = UIWindowLevelNormal) -> UIWindow
+        with level: UIWindow.Level = UIWindow.Level.normal) -> UIWindow
     {
         let window = UIWindow(frame: screen.bounds)
         window.screen = screen

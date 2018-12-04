@@ -106,7 +106,7 @@ class SudokuView: UIView
     
     func gameEnded()
     {
-        guard !UIAccessibilityIsReduceMotionEnabled() else { return }
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
         animator.removeAllBehaviors()
         let gravity = UIGravityBehavior(items: [])
         for cell in cells {

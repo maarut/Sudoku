@@ -302,7 +302,7 @@ fileprivate extension SudokuBoard
 {
     func isCellValid(_ cell: Cell) -> Bool
     {
-        for neighbour in cell.neighbours.flatMap( { cellAt($0) } ) {
+        for neighbour in cell.neighbours.compactMap( { cellAt($0) } ) {
             if let n = neighbour.number, n == cell.number {
                 return false
             }

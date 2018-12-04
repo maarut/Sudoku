@@ -275,7 +275,7 @@ class CellView: UIView
     {
         if number == self.number.text && newState == state {
             let newMarks = Set(pencilMarks)
-            let visibleMarks = Set(self.pencilMarks.enumerated().flatMap( { !$0.element.isHidden ? $0.offset : nil } ))
+            let visibleMarks = Set(self.pencilMarks.enumerated().compactMap( { !$0.element.isHidden ? $0.offset : nil } ))
             if newMarks == visibleMarks { return }
         }
         
@@ -287,7 +287,7 @@ class CellView: UIView
         defer { self.state = newState; updateAccessibilityInformation() }
         displayPencilMarksInPositions(pencilMarks)
         
-        guard !UIAccessibilityIsReduceMotionEnabled() else { return }
+        guard !UIAccessibility.isReduceMotionEnabled else { return }
         
         guard let newSnapshots = getSnapshotOf(view: self) else { return }
         let oldLayers = createLayersFromCurrentSnapshot(currentSnapshots)
@@ -305,7 +305,7 @@ class CellView: UIView
         let animation = CABasicAnimation(keyPath: "transform.rotation.x")
         animation.beginTime = animationBeginTime
         animation.timingFunction = CAMediaTimingFunction(controlPoints: 0.5, 0, 0.75, 0.5)
-        animation.fillMode = kCAFillModeBoth
+        animation.fillMode = CAMediaTimingFillMode.both
         animation.fromValue = 0.0
         animation.toValue = -CGFloat.pi
         animation.duration = animationDuration
@@ -331,7 +331,7 @@ class CellView: UIView
         opacityAnimation.beginTime = animationBeginTime
         opacityAnimation.duration = animationDuration
         opacityAnimation.timingFunction = CAMediaTimingFunction(controlPoints: 1.0, 0.0, 1.0, 0.0)
-        opacityAnimation.fillMode = kCAFillModeBackwards
+        opacityAnimation.fillMode = CAMediaTimingFillMode.backwards
         oldLayers.bottom.add(opacityAnimation, forKey: "opacity")
         oldLayers.top.add(opacityAnimation, forKey: "opacity")
         oldLayers.bottom.opacity = 0.0
@@ -429,7 +429,7 @@ fileprivate extension CellView
     {
         accessibilityLabel = "sudoku cell at row: \(index.row + 1), column: \(index.column + 1). \(state.description)"
         if number.text?.isEmpty ?? true {
-            let visiblePencilMarks = pencilMarks.flatMap( { $0.isHidden ? nil : $0.text } )
+            let visiblePencilMarks = pencilMarks.compactMap( { $0.isHidden ? nil : $0.text } )
             if visiblePencilMarks.isEmpty {
                 accessibilityValue = "Blank"
             }
@@ -468,7 +468,7 @@ fileprivate extension CellView
     
     func show(view: UIView)
     {
-        guard !UIAccessibilityIsReduceMotionEnabled() else {
+        guard !UIAccessibility.isReduceMotionEnabled else {
             view.isHidden = false
             return
         }
@@ -495,7 +495,7 @@ fileprivate extension CellView
     
     func hide(view: UIView, completionHandler f: ((Bool) -> Void)? = nil)
     {
-        guard !UIAccessibilityIsReduceMotionEnabled() else {
+        guard !UIAccessibility.isReduceMotionEnabled else {
             view.isHidden = true
             f?(false)
             return

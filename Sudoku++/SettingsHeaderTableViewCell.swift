@@ -22,7 +22,7 @@ class SettingsHeaderTableViewCell: UITableViewCell
         initialise()
     }
     
-    override init(style: UITableViewCellStyle, reuseIdentifier: String?)
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?)
     {
         titleLabel = UILabel()
         headerBar = UIView()
@@ -54,8 +54,8 @@ class SettingsHeaderTableViewCell: UITableViewCell
         contentView.addSubview(titleLabel)
         let titleLabelLeading: NSLayoutConstraint
         if #available(iOS 11.0, *) {
-            titleLabelLeading = titleLabel.leadingAnchor.constraintEqualToSystemSpacingAfter(
-                contentView.leadingAnchor, multiplier: 1)
+            titleLabelLeading = titleLabel.leadingAnchor.constraint(
+                equalToSystemSpacingAfter: contentView.leadingAnchor, multiplier: 1)
         } else {
             titleLabelLeading = titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10)
         }
@@ -70,7 +70,7 @@ class SettingsHeaderTableViewCell: UITableViewCell
             titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
         contentView.setNeedsLayout()
-        contentView.bringSubview(toFront: titleLabel)
+        contentView.bringSubviewToFront(titleLabel)
     }
     
     override func awakeFromNib()

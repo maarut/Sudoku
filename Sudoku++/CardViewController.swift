@@ -109,7 +109,7 @@ open class CardViewController: UIViewController
         dismiss(animated: true, completion: nil)
     }
     
-    func updateInteractionDismissal(state: UIGestureRecognizerState, translation: CGPoint)
+    func updateInteractionDismissal(state: UIGestureRecognizer.State, translation: CGPoint)
     {
         interactionController.panUpdated(state: state, translation: translation)
     }
@@ -385,7 +385,7 @@ private class CardInteractionController: UIPercentDrivenInteractiveTransition
         panUpdated(state: sender.state, translation: translation)
     }
     
-    func panUpdated(state: UIGestureRecognizerState, translation: CGPoint)
+    func panUpdated(state: UIGestureRecognizer.State, translation: CGPoint)
     {
         var progress = translation.y / (presentingViewController.view.frame.height - presentedViewOriginY)
         progress = min(max(progress, 0.0), 1.0)

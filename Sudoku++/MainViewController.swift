@@ -224,7 +224,7 @@ fileprivate extension MainViewController
         undoButton.addTarget(self, action: #selector(undoTapped(_:)), for: .touchUpInside)
         undoButton.accessibilityLabel = "Undo button"
         undoButton.accessibilityHint = "Undoes the previous action"
-        undoButton.accessibilityTraits = UIAccessibilityTraitNotEnabled
+        undoButton.accessibilityTraits = UIAccessibilityTraits.notEnabled
         let markupButton = UIButton(type: .system)
         markupButton.setTitle("✏️", for: .normal)
         markupButton.titleLabel?.textAlignment = .center
@@ -605,7 +605,7 @@ extension MainViewController: MainViewModelDelegate
                     showingPencilMarksAtPositions: pencilMarks.map( { $0 - 1 } ))
             }
             
-            self.timerLabel.accessibilityTraits = UIAccessibilityTraitUpdatesFrequently
+            self.timerLabel.accessibilityTraits = UIAccessibilityTraits.updatesFrequently
         }
     }
     
@@ -647,14 +647,14 @@ extension MainViewController: MainViewModelDelegate
         switch newState {
         case .playing:
             sudokuView.isUserInteractionEnabled = true
-            timerLabel.accessibilityTraits = UIAccessibilityTraitUpdatesFrequently
+            timerLabel.accessibilityTraits = UIAccessibilityTraits.updatesFrequently
             break
         case .finished:
             sudokuView.isUserInteractionEnabled = false
-            timerLabel.accessibilityTraits = UIAccessibilityTraitStaticText
+            timerLabel.accessibilityTraits = UIAccessibilityTraits.staticText
             break
         case .successfullySolved:
-            timerLabel.accessibilityTraits = UIAccessibilityTraitStaticText
+            timerLabel.accessibilityTraits = UIAccessibilityTraits.staticText
             DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
                 self.sudokuView.gameEnded()
             }
@@ -667,7 +667,7 @@ extension MainViewController: MainViewModelDelegate
         DispatchQueue.main.async {
             self.undoButton.isEnabled = canUndo
             self.undoButton.setTitle(canUndo ? "⏮" : "", for: .normal)
-            self.undoButton.accessibilityTraits = canUndo ? UIAccessibilityTraitButton : UIAccessibilityTraitNotEnabled
+            self.undoButton.accessibilityTraits = canUndo ? UIAccessibilityTraits.button : UIAccessibilityTraits.notEnabled
         }
     }
     
